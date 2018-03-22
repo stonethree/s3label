@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html>
+
+<body>
+
+    <p>Original image</p>
+    <img id="orig_image" width="220" height="277" src="img_the_scream.jpg" alt="Original image" style="display: none;">
+
+    <!-- <p>Ground truth label</p> -->
+    <canvas id="canvas" width="400" height="300" style="border:1px solid #d3d3d3;">
+        Your browser does not support the HTML5 canvas tag.
+    </canvas>
+
+    <!-- Next and previous buttons -->
+    <a class="prev" onclick="setCurrentImage(-1)">&#10094;</a>
+    <a class="next" onclick="setCurrentImage(1)">&#10095;</a>
+
+    <input type="file" id="fileElem" multiple accept="image/*" style="display:none" onchange="handleFiles(this.files)">
+    <a href="#" id="fileSelect">Select some files</a>
+    <div id="fileList">
+        <p>No files selected!</p>
+    </div>
+
+    <script>
+
+        // load images from disk using file browser
+
+        window.URL = window.URL || window.webkitURL;
+
+        var fileSelect = document.getElementById("fileSelect"),
+            fileElem = document.getElementById("fileElem"),
+            fileList = document.getElementById("fileList");
+
+        fileSelect.addEventListener("click", function (e) {
+            if (fileElem) {
+                fileElem.click();
+            }
+            e.preventDefault(); // prevent navigation to "#"
+        }, false);
+
+        function handleFiles(files) {
+            if (!files.length) {
+                fileList.innerHTML = "<p>No files selected!</p>";
+            }
+            else {
+                // fileList.innerHTML = "";
+                // var list = document.createElement("ul");
+                // fileList.appendChild(list);
+                // for (var i = 0; i < files.length; i++) {
+                //     var li = document.createElement("li");
+                //     list.appendChild(li);
+
+                //     var img = new Image();
+                //     img.src = window.URL.createObjectURL(files[i]);
+                //     img.height = 60;
+                //     img.onload = function () {
+                //         window.URL.revokeObjectURL(this.src);
+                //     }
+                //     li.appendChild(img);
+                //     var info = document.createElement("span");
+                //     info.innerHTML = files[i].name + ": " + files[i].size + " bytes";
+                //     li.appendChild(info);
+                // }
+
+                fileList.innerHTML = "<p>Loaded " + files.length + " files!</p>";
+            }
+
+            console.log("Files: " + files.length);
+            // console.log("Files: " + files.length);
+        }
+
+
+        // change image based on arrow keys and clicks
+
+        var image_index = 0;
+
+        window.addEventListener('keydown', this.check, false);
+
+        function check(e) {
+            var code = e.keyCode;
+            switch (code) {
+                case 37:  //Left key
+                case 40: setCurrentImage(-1); break; //Down key
+                case 38:  //Up key
+                case 39: setCurrentImage(1); break; //Right key
+
+                default: console.log(code); //Everything else
+            }
+        }
+
+        function setCurrentImage(n) {
+            num_images = fileElem.files.length;
+
+            if (num_images) {
+                image_index += n;
+
+                if (image_index < 0) {
+                    image_index = 0;
+                }
+                else if (image_index >= num_images) {
+                    image_index = num_images - 1;
+                }
+
+                console.log("File path: " + fileElem.files[image_index].name);
+                // document.getElementById("orig_image").src=fileElem.files[image_index].name;
+
+                // document.getElementById("orig_image").src = window.URL.createObjectURL(fileElem.files[image_index]);
+                // document.getElementById("orig_image").onload = function () {
+                //         window.URL.revokeObjectURL(this.src);
+                // }
+
+                var canvas = document.getElementById("canvas");
+                var ctx = canvas.getContext("2d");
+                var url = URL.createObjectURL(fileElem.files[image_index]);
+
+                var img = new Image();
+                img.onload = function () {
+                    ctx.drawImage(img, 20, 20);
+                }
+                img.src = url;
+            }
+
+            console.log("Image index: " + image_index + ", " + num_images);
+        }
+
+
+        // draw segmentation regions over image
+
+        window.onload = function () {
+            var canvas = document.getElementById("canvas");
+            var ctx = canvas.getContext("2d");
+            var img = document.getElementById("orig_image");
+
+
+            // // some hotfixes... ( ≖_≖)
+            // document.body.style.margin = 0;
+            // canvas.style.position = 'fixed';
+
+            // // get canvas 2D context and set him correct size
+            // // var ctx = canvas.getContext('2d');
+            // resize();
+
+            // // last known position
+            // var pos = { x: 0, y: 0 };
+
+            // window.addEventListener('resize', resize);
+            // document.addEventListener('mousemove', draw);
+            // document.addEventListener('mousedown', setPosition);
+            // document.addEventListener('mouseenter', setPosition);
+
+            // // new position from mouse event
+            // function setPosition(e) {
+            //     pos.x = e.clientX;
+            //     pos.y = e.clientY;
+            // }
+
+            // // resize canvas
+            // function resize() {
+            //     ctx.canvas.width = window.innerWidth;
+            //     ctx.canvas.height = window.innerHeight;
+            // }
+
+            // function draw(e) {
+            //     // mouse left button must be pressed
+            //     if (e.buttons !== 1) return;
+
+            //     ctx.beginPath(); // begin
+
+            //     ctx.lineWidth = 3;
+            //     ctx.lineCap = 'round';
+            //     ctx.strokeStyle = '#c0392b';
+
+            //     ctx.moveTo(pos.x, pos.y); // from
+            //     setPosition(e);
+            //     ctx.lineTo(pos.x, pos.y); // to
+
+            //     ctx.stroke(); // draw it!
+            // }
+
+            // ctx.drawImage(img, 10, 10);
+
+
+        }
+
+
+
+
+    </script>
+
+</body>
+
+</html>
