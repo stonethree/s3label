@@ -1,8 +1,13 @@
 from flask import Flask, jsonify, request, abort, send_file
+from flask_cors import CORS, cross_origin
 import json
 
 # set the project root directory as the static folder, you can set others.
 app = Flask(__name__, static_url_path='')
+
+# https://stackoverflow.com/questions/26980713/solve-cross-origin-resource-sharing-with-flask
+# pip install -U flask-cors
+CORS(app)
 
 datasets = [
     {
