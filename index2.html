@@ -14,8 +14,12 @@
 
     <h1>A Title</h1>
 
-    <canvas id="c" width="500" height="300" style="border: 1px solid #ccc"></canvas>
-    <canvas id="c2" width="500" height="300" style="border: 1px solid #ccc"></canvas>
+    <div id="canvasesdiv" style="position:relative; width:400px; height:300px">
+        <canvas id="c" width="500" height="300" style="border: 1px solid #ccc; z-index: 2; position:absolute; left:0px; top:0px;"></canvas>
+        <canvas id="c2" width="500" height="300" style="border: 1px solid #ccc; z-index: 1; position:absolute; left:0px; top:0px;"></canvas>
+    </div>
+
+    <p>Testing...</p>
 
     <script>
         var el = document.getElementById('c');
@@ -30,6 +34,8 @@
         ctx.lineWidth = 3;
         ctx.fillStyle = 'rgba(255, 0, 0, 0.2)';
 
+        ctx2.fillStyle = 'rgba(0, 255, 0, 0.2)';
+        ctx2.fillRect(0, 0, ctx2.canvas.width, ctx2.canvas.height);
 
         window.addEventListener('keydown', this.keyHandler, false);
 
