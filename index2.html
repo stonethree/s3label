@@ -43,20 +43,29 @@
             e.preventDefault();
         }
 
-
+        function getMousePos(canvas, event) {
+            // https://stackoverflow.com/questions/17130395/real-mouse-position-in-canvas
+            var rect = canvas.getBoundingClientRect();
+            return {
+                x: event.clientX - rect.left,
+                y: event.clientY - rect.top
+            };
+        }
 
         el.onmousedown = function (e) {
             isDrawing = true;
             ctx.lineJoin = ctx.lineCap = 'round';
             ctx.beginPath();
-            ctx.moveTo(e.clientX, e.clientY);
-            currentPath.push([e.clientX, e.clientY]);
+            coords = getMousePos(ctx.canvas, e);
+            ctx.moveTo(coords.x, coords.y);
+            currentPath.push([coords.x, coords.y]);
         };
         el.onmousemove = function (e) {
             if (isDrawing) {
-                ctx.lineTo(e.clientX, e.clientY);
+                coords = getMousePos(ctx.canvas, e);
+                ctx.lineTo(coords.x, coords.y);
                 ctx.stroke();
-                currentPath.push([e.clientX, e.clientY]);
+                currentPath.push([coords.x, coords.y]);
             }
         };
         el.onmouseup = function () {
@@ -67,7 +76,7 @@
             ctx.fill();
 
             // drawPolygon(ctx2, currentPath);
-            
+
 
             console.log("currentPath: " + currentPath);
 
