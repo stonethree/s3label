@@ -33,6 +33,10 @@
                 <input type="radio" name="semantic_label" value="other"> Other
             </form>
         </div>
+        <div class="slidecontainer">
+            <span>Opacity</span>
+            <input id="opacity_slider" type="range" min="0" max="100" value="20" class="slider">
+        </div>
     </div>
 
     <div id="canvasesdiv" style="position:relative; width:500px; height:300px">
@@ -114,9 +118,6 @@
             ctx.stroke();
             ctx.fill();
 
-            // drawPolygon(ctx2, currentPath);
-
-
             console.log("currentPath: " + currentPath);
 
             paths.push({ 'path': currentPath, 'label': active_label });
@@ -189,6 +190,17 @@
             active_label = label_class = document.querySelector('input[name="semantic_label"]:checked').value;
             setColour(colours[active_label], opacity);
             console.log("active_label: " + active_label);
+        }
+
+        // detect opacity changes
+
+        var slider = document.getElementById("opacity_slider");
+
+        slider.oninput = function () {
+            console.log("opacity: " + this.value);
+            opacity = this.value / 100.;
+
+            drawAllPolygons(ctx, paths);
         }
     </script>
 </body>
