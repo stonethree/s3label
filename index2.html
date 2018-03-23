@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- <script src="static/fetch_data.js"></script> -->
+    <!-- <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script> -->
+    <!-- <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" crossorigin="anonymous"> -->
+    <title>S3 Label</title>
+</head>
+
+<body>
+
+    <h1>A Title</h1>
+
+    <canvas id="c" width="500" height="300" style="border: 1px solid #ccc"></canvas>
+    <canvas id="c2" width="500" height="300" style="border: 1px solid #ccc"></canvas>
+
+    <script>
+        var el = document.getElementById('c');
+        var el2 = document.getElementById('c2');
+        var ctx = el.getContext('2d');
+        var ctx2 = el2.getContext('2d');
+        var isDrawing;
+        var paths = [];
+        var currentPath = [];
+
+        ctx.lineWidth = ctx2.lineWidth = 3;
+        ctx.fillStyle = ctx2.fillStyle = 'rgba(255, 0, 0, 0.2)';
+
+        el.onmousedown = function (e) {
+            isDrawing = true;
+            ctx.lineJoin = ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.moveTo(e.clientX, e.clientY);
+            currentPath.push([e.clientX, e.clientY]);
+        };
+        el.onmousemove = function (e) {
+            if (isDrawing) {
+                ctx.lineTo(e.clientX, e.clientY);
+                ctx.stroke();
+                currentPath.push([e.clientX, e.clientY]);
+            }
+        };
+        el.onmouseup = function () {
+            isDrawing = false;
+
+            ctx.closePath();
+            ctx.stroke();
+            ctx.fill();
+
+            drawPolygon();
+
+            console.log("currentPath: " + currentPath);
+
+            paths.push(currentPath);
+            currentPath = [];
+        };
+
+        function drawPolygon() {
+            ctx2.beginPath();
+            ctx2.moveTo(currentPath[0][0], currentPath[0][1]);
+
+            for (i = 1; i < currentPath.length; i++) {
+                ctx2.lineTo(currentPath[i][0], currentPath[i][1]);
+            }
+
+            ctx2.closePath();
+            ctx2.stroke();
+            ctx2.fill();
+        }
+    </script>
+</body>
+
+</html>
