@@ -29,6 +29,22 @@
         ctx.lineWidth = ctx2.lineWidth = 3;
         ctx.fillStyle = ctx2.fillStyle = 'rgba(255, 0, 0, 0.2)';
 
+
+        window.addEventListener('keydown', this.keyHandler, false);
+
+        function keyHandler(e) {
+            if (e.ctrlKey && e.code === "KeyU") {
+                console.log("Undo");
+                undo();
+                drawAllPolygons(ctx2, paths);
+            }
+
+            e.stopPropagation();
+            e.preventDefault();
+        }
+
+
+
         el.onmousedown = function (e) {
             isDrawing = true;
             ctx.lineJoin = ctx.lineCap = 'round';
@@ -50,25 +66,44 @@
             ctx.stroke();
             ctx.fill();
 
-            drawPolygon();
+            // drawPolygon(ctx2, currentPath);
+            
 
             console.log("currentPath: " + currentPath);
 
             paths.push(currentPath);
             currentPath = [];
+
+            drawAllPolygons(ctx2, paths);
         };
 
-        function drawPolygon() {
-            ctx2.beginPath();
-            ctx2.moveTo(currentPath[0][0], currentPath[0][1]);
+        function undo() {
+            if (paths.length > 0) {
+                paths.pop();
+            }
+        }
 
-            for (i = 1; i < currentPath.length; i++) {
-                ctx2.lineTo(currentPath[i][0], currentPath[i][1]);
+        function drawAllPolygons(context, path_list) {
+            context.clearRect(0, 0, context.canvas.width, context.canvas.height);
+
+            for (let i = 0; i < path_list.length; i++) {
+                drawPolygon(context, path_list[i]);
+                console.log("Drawing polygon " + i);
+            }
+            console.log("Num paths:" + path_list.length);
+        }
+
+        function drawPolygon(context, path) {
+            context.beginPath();
+            context.moveTo(path[0][0], path[0][1]);
+
+            for (let i = 1; i < path.length; i++) {
+                context.lineTo(path[i][0], path[i][1]);
             }
 
-            ctx2.closePath();
-            ctx2.stroke();
-            ctx2.fill();
+            context.closePath();
+            context.stroke();
+            context.fill();
         }
     </script>
 </body>
