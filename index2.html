@@ -33,9 +33,15 @@
                 <input type="radio" name="semantic_label" value="other"> Other
             </form>
         </div>
-        <div class="slidecontainer">
-            <span>Opacity</span>
-            <input id="opacity_slider" type="range" min="0" max="100" value="20" class="slider">
+        <div class="graphics_settings">
+            <div id="stroke_slider_container">
+                <span>Stroke thickness</span>
+                <input id="stroke_thickness_slider" type="range" min="0" max="10" value="3" class="slider">
+            </div>
+            <div id="opacity_slider_container">
+                <span>Opacity</span>
+                <input id="opacity_slider" type="range" min="0" max="100" value="20" class="slider">
+            </div>
         </div>
     </div>
 
@@ -58,6 +64,7 @@
             'belt': [0, 255, 0],
             'other': [0, 0, 255]
         };
+        var use_stroke = true;
         var opacity = 0.2;
         var active_label = 'individual_rock';
 
@@ -115,7 +122,9 @@
             isDrawing = false;
 
             ctx.closePath();
-            ctx.stroke();
+            if (use_stroke) {
+                ctx.stroke();
+            }
             ctx.fill();
 
             console.log("currentPath: " + currentPath);
@@ -158,7 +167,9 @@
             }
 
             context.closePath();
-            context.stroke();
+            if (use_stroke) {
+                context.stroke();
+            }
             context.fill();
         }
 
@@ -192,12 +203,26 @@
             console.log("active_label: " + active_label);
         }
 
-        // detect opacity changes
+        // detect stroke thickness and opacity slider changes
 
-        var slider = document.getElementById("opacity_slider");
+        var stroke_thickness_slider = document.getElementById("stroke_thickness_slider");
+        var opacity_slider = document.getElementById("opacity_slider");
 
-        slider.oninput = function () {
-            console.log("opacity: " + this.value);
+        stroke_thickness_slider.oninput = function () {
+
+            if (this.value > 0) {
+                ctx.lineWidth = this.value;
+                use_stroke = true;
+            }
+            else {
+                ctx.lineWidth = 1;
+                use_stroke = false;
+            }
+
+            drawAllPolygons(ctx, paths);
+        }
+
+        opacity_slider.oninput = function () {
             opacity = this.value / 100.;
 
             drawAllPolygons(ctx, paths);
