@@ -25,9 +25,10 @@
         var isDrawing;
         var paths = [];
         var currentPath = [];
+        var paths_redo = [];
 
-        ctx.lineWidth = ctx2.lineWidth = 3;
-        ctx.fillStyle = ctx2.fillStyle = 'rgba(255, 0, 0, 0.2)';
+        ctx.lineWidth = 3;
+        ctx.fillStyle = 'rgba(255, 0, 0, 0.2)';
 
 
         window.addEventListener('keydown', this.keyHandler, false);
@@ -36,7 +37,12 @@
             if (e.ctrlKey && e.code === "KeyU") {
                 console.log("Undo");
                 undo();
-                drawAllPolygons(ctx2, paths);
+                drawAllPolygons(ctx, paths);
+            }
+            else if (e.ctrlKey && e.code === "KeyR") {
+                console.log("Redo");
+                redo();
+                drawAllPolygons(ctx, paths);
             }
 
             e.stopPropagation();
@@ -53,6 +59,7 @@
         }
 
         el.onmousedown = function (e) {
+            paths_redo = [];
             isDrawing = true;
             ctx.lineJoin = ctx.lineCap = 'round';
             ctx.beginPath();
@@ -83,12 +90,18 @@
             paths.push(currentPath);
             currentPath = [];
 
-            drawAllPolygons(ctx2, paths);
+            drawAllPolygons(ctx, paths);
         };
 
         function undo() {
             if (paths.length > 0) {
-                paths.pop();
+                paths_redo.push(paths.pop());
+            }
+        }
+
+        function redo() {
+            if (paths_redo.length > 0) {
+                paths.push(paths_redo.pop());
             }
         }
 
