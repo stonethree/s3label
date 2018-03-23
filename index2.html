@@ -12,14 +12,33 @@
 
 <body>
 
-    <h1>A Title</h1>
+    <h1>S3 Label</h1>
 
-    <div id="canvasesdiv" style="position:relative; width:400px; height:300px">
+    <div id="drawingtools">
+        <div id="tools">
+            <span>Tools</span>
+            <form>
+                <input type="radio" name="tool" value="freehand" checked> Freehand
+                <br>
+                <input type="radio" name="tool" value="polygon"> Polygon
+            </form>
+        </div>
+        <div id="semantic_labels">
+            <span>Semantic Labels</span>
+            <form>
+                <input type="radio" name="semantic_label" value="individual_rock" checked> Individual rock
+                <br>
+                <input type="radio" name="semantic_label" value="belt"> Belt
+                <br>
+                <input type="radio" name="semantic_label" value="other"> Other
+            </form>
+        </div>
+    </div>
+
+    <div id="canvasesdiv" style="position:relative; width:500px; height:300px">
         <canvas id="c" width="500" height="300" style="border: 1px solid #ccc; z-index: 2; position:absolute; left:0px; top:0px;"></canvas>
         <canvas id="c2" width="500" height="300" style="border: 1px solid #ccc; z-index: 1; position:absolute; left:0px; top:0px;"></canvas>
     </div>
-
-    <p>Testing...</p>
 
     <script>
         var el = document.getElementById('c');
@@ -30,11 +49,18 @@
         var paths = [];
         var currentPath = [];
         var paths_redo = [];
+        var colours = {
+            'individual_rock': [255, 0, 0],
+            'belt': [0, 255, 0],
+            'other': [0, 0, 255]
+        };
+        var opacity = 0.2;
+        var active_label = 'individual_rock';
 
         ctx.lineWidth = 3;
-        ctx.fillStyle = 'rgba(255, 0, 0, 0.2)';
+        ctx.fillStyle = setColour(colours[active_label], opacity);
 
-        ctx2.fillStyle = 'rgba(0, 255, 0, 0.2)';
+        ctx2.fillStyle = 'rgba(0, 255, 255, 0.2)';
         ctx2.fillRect(0, 0, ctx2.canvas.width, ctx2.canvas.height);
 
         window.addEventListener('keydown', this.keyHandler, false);
@@ -93,7 +119,7 @@
 
             console.log("currentPath: " + currentPath);
 
-            paths.push(currentPath);
+            paths.push({ 'path': currentPath, 'label': active_label });
             currentPath = [];
 
             drawAllPolygons(ctx, paths);
@@ -115,8 +141,9 @@
             context.clearRect(0, 0, context.canvas.width, context.canvas.height);
 
             for (let i = 0; i < path_list.length; i++) {
-                drawPolygon(context, path_list[i]);
-                console.log("Drawing polygon " + i);
+                setColour(colours[path_list[i].label], opacity);
+                drawPolygon(context, path_list[i].path);
+                console.log("Drawing polygon " + i + ' label: ' + path_list[i].label + ' colour: ' + context.fillStyle);
             }
             console.log("Num paths:" + path_list.length);
         }
@@ -132,6 +159,36 @@
             context.closePath();
             context.stroke();
             context.fill();
+        }
+
+        // detect tool and colour changes
+
+        var toolRadioButtons = document.getElementsByName("tool");
+        var semanticLabelRadioButtons = document.getElementsByName("semantic_label");
+
+        for (var i = 0; toolRadioButtons[i]; i++)
+            toolRadioButtons[i].onclick = setActiveTool;
+
+        for (var i = 0; semanticLabelRadioButtons[i]; i++)
+            semanticLabelRadioButtons[i].onclick = setActiveLabel;
+
+        function setActiveTool() {
+            active_tool = document.querySelector('input[name="tool"]:checked').value;
+            console.log("active_tool: " + active_tool);
+        }
+
+        function formatColour(rgb, alpha) {
+            return 'rgba(' + rgb[0] + ',' + rgb[1] + ',' + rgb[2] + ',' + alpha + ')';
+        }
+
+        function setColour(rgb, alpha) {
+            ctx.fillStyle = formatColour(rgb, alpha);
+        }
+
+        function setActiveLabel() {
+            active_label = label_class = document.querySelector('input[name="semantic_label"]:checked').value;
+            setColour(colours[active_label], opacity);
+            console.log("active_label: " + active_label);
         }
     </script>
 </body>
