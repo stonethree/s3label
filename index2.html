@@ -76,6 +76,7 @@
             'belt': [0, 255, 0],
             'other': [0, 0, 255]
         };
+        var padX = padY = 80;
         var use_stroke = true;
         var opacity = opacity_slider.value / 100.;
         var active_label = 'individual_rock';
@@ -186,11 +187,16 @@
         }
 
         function drawPolygon(context, path) {
+            let w = context.canvas.width;
+            let h = context.canvas.height;
+
             context.beginPath();
-            context.moveTo(path[0][0], path[0][1]);
+            context.moveTo(Math.max(padX, Math.min(path[0][0], w-padX)), 
+                           Math.max(padY, Math.min(path[0][1], h-padY)));
 
             for (let i = 1; i < path.length; i++) {
-                context.lineTo(path[i][0], path[i][1]);
+                context.lineTo(Math.max(padX, Math.min(path[i][0], w-padX)), 
+                               Math.max(padY, Math.min(path[i][1], h-padY)));
             }
 
             context.closePath();

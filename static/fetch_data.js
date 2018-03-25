@@ -26,7 +26,7 @@ function showImage(responseAsBlob) {
     img.onload = function () {
         setCanvasSize(canvas_fg, img.width, img.height);
         setCanvasSize(canvas_bg, img.width, img.height);
-        ctx2.drawImage(img, 0, 0);
+        ctx2.drawImage(img, padX, padY);
     }
     img.src = imgUrl;
 }
@@ -40,9 +40,9 @@ function fetchAndDisplayImage(pathToResource) {
 }
 
 function setCanvasSize(c, width, height) {
-    c.width = width;
-    c.height = height;
-    c.style.width = width + 'px';
-    c.style.height = height + 'px';
-    console.log('c '+ c.width + ', ' + c.height);
+    c.width = width + padX * 2;
+    c.height = height + padX * 2;
+    c.style.width = width + padX * 2 + 'px';
+    c.style.height = height + padX * 2 + 'px';
+    console.log('c '+ c.width + ', ' + c.height, padX, padY);
 }
