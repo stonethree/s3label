@@ -6,48 +6,56 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- <script src="static/fetch_data.js"></script> -->
     <!-- <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script> -->
-    <!-- <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" crossorigin="anonymous"> -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" crossorigin="anonymous">
     <title>S3 Label</title>
 </head>
 
 <body>
 
-    <h1>S3 Label</h1>
+    <div class="container">
 
-    <div id="drawingtools">
-        <div id="tools">
-            <span>Tools</span>
-            <form>
-                <input type="radio" name="tool" value="freehand" checked> Freehand
-                <br>
-                <input type="radio" name="tool" value="polygon"> Polygon
-            </form>
-        </div>
-        <div id="semantic_labels">
-            <span>Semantic Labels</span>
-            <form>
-                <input type="radio" name="semantic_label" value="individual_rock" checked> Individual rock
-                <br>
-                <input type="radio" name="semantic_label" value="belt"> Belt
-                <br>
-                <input type="radio" name="semantic_label" value="other"> Other
-            </form>
-        </div>
-        <div class="graphics_settings">
-            <div id="stroke_slider_container">
-                <span>Stroke thickness</span>
-                <input id="stroke_thickness_slider" type="range" min="0" max="10" value="3" class="slider">
-            </div>
-            <div id="opacity_slider_container">
-                <span>Opacity</span>
-                <input id="opacity_slider" type="range" min="0" max="100" value="20" class="slider">
-            </div>
-        </div>
-    </div>
+        <h1>S3 Label</h1>
 
-    <div id="canvasesdiv" style="position:relative; width:500px; height:300px">
-        <canvas id="c" width="500" height="300" style="border: 1px solid #ccc; z-index: 2; position:absolute; left:0px; top:0px;"></canvas>
-        <canvas id="c2" width="500" height="300" style="border: 1px solid #ccc; z-index: 1; position:absolute; left:0px; top:0px;"></canvas>
+        <div id="drawingtools">
+            <div class="row">
+                <div id="tools" class="col">
+                    <span>Tools</span>
+                    <form>
+                        <input type="radio" name="tool" value="freehand" checked> Freehand
+                        <br>
+                        <input type="radio" name="tool" value="polygon"> Polygon
+                    </form>
+                </div>
+                <div id="semantic_labels" class="col">
+                    <span>Semantic Labels</span>
+                    <form>
+                        <input type="radio" name="semantic_label" value="individual_rock" checked> Individual rock
+                        <br>
+                        <input type="radio" name="semantic_label" value="belt"> Belt
+                        <br>
+                        <input type="radio" name="semantic_label" value="other"> Other
+                    </form>
+                </div>
+                <div id="graphics_settings" class="col">
+                    <div id="stroke_slider_container">
+                        <span>Stroke thickness</span>
+                        <input id="stroke_thickness_slider" type="range" min="0" max="10" value="1" class="slider">
+                    </div>
+                    <div id="opacity_slider_container">
+                        <span>Opacity</span>
+                        <input id="opacity_slider" type="range" min="0" max="100" value="20" class="slider">
+                    </div>
+                </div>
+                <div id="clear_canvas_container" class="col">
+                    <button type="submit" onclick="clearCanvas();">Clear canvas</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="canvasesdiv" style="position:relative; width:500px; height:300px">
+            <canvas id="c" width="500" height="300" style="border: 1px solid #ccc; z-index: 2; position:absolute; left:0px; top:0px;"></canvas>
+            <canvas id="c2" width="500" height="300" style="border: 1px solid #ccc; z-index: 1; position:absolute; left:0px; top:0px;"></canvas>
+        </div>
     </div>
 
     <script>
@@ -67,8 +75,11 @@
         var use_stroke = true;
         var opacity = 0.2;
         var active_label = 'individual_rock';
+        var active_tool = document.querySelector('input[name="tool"]:checked').value;
 
-        ctx.lineWidth = 3;
+        ctx.lineWidth = 1;
+        // ctx.setLineDash([]);
+        // ctx.setLineDash([4, 4]);
         ctx.fillStyle = setColour(colours[active_label], opacity);
 
         ctx2.fillStyle = 'rgba(0, 255, 255, 0.2)';
@@ -129,7 +140,7 @@
 
             console.log("currentPath: " + currentPath);
 
-            paths.push({ 'path': currentPath, 'label': active_label });
+            paths.push({ 'path': currentPath, 'label': active_label, 'type': active_tool });
             currentPath = [];
 
             drawAllPolygons(ctx, paths);
@@ -226,6 +237,14 @@
             opacity = this.value / 100.;
 
             drawAllPolygons(ctx, paths);
+        }
+
+        // clear canvas
+
+        function clearCanvas() {
+            ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+            paths = [];
+            paths_redo = [];
         }
     </script>
 </body>
