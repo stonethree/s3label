@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- <script src="static/fetch_data.js"></script> -->
+    <script src="static/fetch_data.js"></script>
     <!-- <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script> -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" crossorigin="anonymous">
     <title>S3 Label</title>
@@ -39,11 +39,11 @@
                 <div id="graphics_settings" class="col">
                     <div id="stroke_slider_container">
                         <span>Stroke thickness</span>
-                        <input id="stroke_thickness_slider" type="range" min="0" max="10" value="1" class="slider">
+                        <input id="stroke_thickness_slider" type="range" min="0" max="10" value="2" class="slider">
                     </div>
                     <div id="opacity_slider_container">
                         <span>Opacity</span>
-                        <input id="opacity_slider" type="range" min="0" max="100" value="20" class="slider">
+                        <input id="opacity_slider" type="range" min="0" max="100" value="50" class="slider">
                     </div>
                 </div>
                 <div id="clear_canvas_container" class="col">
@@ -52,17 +52,21 @@
             </div>
         </div>
 
-        <div id="canvasesdiv" style="position:relative; width:500px; height:300px">
-            <canvas id="c" width="500" height="300" style="border: 1px solid #ccc; z-index: 2; position:absolute; left:0px; top:0px;"></canvas>
-            <canvas id="c2" width="500" height="300" style="border: 1px solid #ccc; z-index: 1; position:absolute; left:0px; top:0px;"></canvas>
+        <div id="canvasesdiv" style="position:relative; ">
+            <canvas id="canvas-fg" width="900" height="350" style="width:900px;height:350px; border: 1px solid #ccc; z-index: 2; position:absolute; left:0px; top:0px;"></canvas>
+            <canvas id="canvas-bg" width="900" height="350" style="width:900px;height:350px; border: 1px solid #ccc; z-index: 1; position:absolute; left:0px; top:0px;"></canvas>
+            <!-- width:900px;height:350px; -->
         </div>
     </div>
 
     <script>
-        var el = document.getElementById('c');
-        var el2 = document.getElementById('c2');
+        var el = document.getElementById('canvas-fg');
+        var el2 = document.getElementById('canvas-bg');
         var ctx = el.getContext('2d');
-        var ctx2 = el2.getContext('2d');
+        var ctx_bg = el2.getContext('2d');
+        var stroke_thickness_slider = document.getElementById("stroke_thickness_slider");
+        var opacity_slider = document.getElementById("opacity_slider");
+
         var isDrawing;
         var paths = [];
         var currentPath = [];
@@ -73,30 +77,36 @@
             'other': [0, 0, 255]
         };
         var use_stroke = true;
-        var opacity = 0.2;
+        var opacity = opacity_slider.value / 100.;
         var active_label = 'individual_rock';
         var active_tool = document.querySelector('input[name="tool"]:checked').value;
 
-        ctx.lineWidth = 1;
+        ctx.lineWidth = stroke_thickness_slider.value;
         // ctx.setLineDash([]);
         // ctx.setLineDash([4, 4]);
         ctx.fillStyle = setColour(colours[active_label], opacity);
 
-        ctx2.fillStyle = 'rgba(0, 255, 255, 0.2)';
-        ctx2.fillRect(0, 0, ctx2.canvas.width, ctx2.canvas.height);
-
         window.addEventListener('keydown', this.keyHandler, false);
 
         function keyHandler(e) {
-            if (e.ctrlKey && e.code === "KeyU") {
+            if (e.ctrlKey && e.code === "KeyZ") {
                 console.log("Undo");
                 undo();
                 drawAllPolygons(ctx, paths);
             }
-            else if (e.ctrlKey && e.code === "KeyR") {
+            else if (e.ctrlKey && e.code === "KeyY") {
                 console.log("Redo");
                 redo();
                 drawAllPolygons(ctx, paths);
+            }
+            else if (e.code === "KeyA") {
+                fetchAndDisplayImage('http://127.0.0.1:5000/image_labeler/api/v1.0/input_images/1');
+            }
+            else if (e.code === "KeyB") {
+                fetchAndDisplayImage('http://127.0.0.1:5000/image_labeler/api/v1.0/input_images/2');
+            }
+            else if (e.code === "KeyC") {
+                fetchAndDisplayImage('http://127.0.0.1:5000/image_labeler/api/v1.0/input_images/3');
             }
 
             e.stopPropagation();
@@ -118,12 +128,18 @@
             ctx.lineJoin = ctx.lineCap = 'round';
             ctx.beginPath();
             coords = getMousePos(ctx.canvas, e);
+            if (coords.x == undefined || coords.y == undefined) {
+                console.log("coords undef:" + coords);
+            }
             ctx.moveTo(coords.x, coords.y);
             currentPath.push([coords.x, coords.y]);
         };
         el.onmousemove = function (e) {
             if (isDrawing) {
                 coords = getMousePos(ctx.canvas, e);
+                if (coords.x == undefined || coords.y == undefined) {
+                    console.log("coords undef:" + coords);
+                }
                 ctx.lineTo(coords.x, coords.y);
                 ctx.stroke();
                 currentPath.push([coords.x, coords.y]);
@@ -215,9 +231,6 @@
         }
 
         // detect stroke thickness and opacity slider changes
-
-        var stroke_thickness_slider = document.getElementById("stroke_thickness_slider");
-        var opacity_slider = document.getElementById("opacity_slider");
 
         stroke_thickness_slider.oninput = function () {
 
