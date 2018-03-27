@@ -7,7 +7,7 @@ app = Flask(__name__, static_url_path='')
 
 # https://stackoverflow.com/questions/26980713/solve-cross-origin-resource-sharing-with-flask
 # pip install -U flask-cors
-CORS(app)
+CORS(app, resources={r"/api/*": {"origins": "*"}})
 
 datasets = [
     {
