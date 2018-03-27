@@ -168,34 +168,32 @@
             if (counter < 3) {
                 // subtract all previous paths from this new path
                 for (var i = 0; i < paths.length; i++) {
-                    let poly = convertPathToPolygon(paths[i].path);
-
-                    // 
+                    let poly = paths[i].path;
                     currentPolygon = PolyBool.difference(currentPolygon, poly);
                 }
 
                 if (currentPolygon.regions.length > 0) {
-                    paths.push({ 'path': convertPolygonToPath(currentPolygon), 'label': active_label, 'type': active_tool });
+                    paths.push({ 'path': currentPolygon, 'label': active_label, 'type': active_tool });
                 }
                 console.log('new poly');
             }
             else if (counter < 6) {
                 // append to last polygon
-                let poly = convertPathToPolygon(paths[paths.length - 1].path);
+                let poly = paths[paths.length - 1].path;
                 currentPolygon = PolyBool.union(currentPolygon, poly);
 
                 if (currentPolygon.regions.length > 0) {
-                    paths[paths.length - 1] = { 'path': convertPolygonToPath(currentPolygon), 'label': active_label, 'type': active_tool };
+                    paths[paths.length - 1] = { 'path': currentPolygon, 'label': active_label, 'type': active_tool };
                 }
                 console.log('append poly');
             }
             else {
                 // subtract from last polygon
-                let poly = convertPathToPolygon(paths[paths.length - 1].path);
+                let poly = paths[paths.length - 1].path;
                 currentPolygon = PolyBool.difference(poly, currentPolygon);
 
                 if (currentPolygon.regions.length > 0) {
-                    paths[paths.length - 1] = { 'path': convertPolygonToPath(currentPolygon), 'label': active_label, 'type': active_tool };
+                    paths[paths.length - 1] = { 'path': currentPolygon, 'label': active_label, 'type': active_tool };
                 }
                 console.log('erase poly');
             }
@@ -225,10 +223,11 @@
 
             for (let i = 0; i < path_list.length; i++) {
                 setColour(colours[path_list[i].label], opacity);
-                drawPolygon(context, path_list[i].path);
-                // console.log("Drawing polygon " + i + ' label: ' + path_list[i].label + ' colour: ' + context.fillStyle);
+                let paths_to_draw = convertPolygonToPaths(path_list[i].path);
+                for (let j = 0; j < paths_to_draw.length; j++) {
+                    drawPolygon(context, paths_to_draw[j]);
+                }
             }
-            // console.log("Num paths:" + path_list.length);
         }
 
         function drawPolygon(context, path) {

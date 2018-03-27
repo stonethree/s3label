@@ -1,5 +1,5 @@
-function convertPolygonToPath(polygon) {
-    return polygon.regions[0];
+function convertPolygonToPaths(polygon) {
+    return polygon.regions;
 }
 
 function convertPathToPolygon(path) {
