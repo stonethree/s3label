@@ -5,6 +5,10 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="static/fetch_data.js"></script>
+    <script src="static/polygon_operations.js"></script>
+    <script src="node_modules\polybooljs\dist\polybool.js"></script>
+    <!-- <script src="node_modules\polybooljs\dist\bundle.js"></script> -->
+    <!-- <script src="node_modules\poly-bool\bundle.js"></script> -->
     <!-- <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script> -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" crossorigin="anonymous">
     <title>S3 Label</title>
@@ -82,6 +86,8 @@
         var active_label = 'individual_rock';
         var active_tool = document.querySelector('input[name="tool"]:checked').value;
 
+        var counter = 0;    // testing purposes
+
         ctx.lineWidth = stroke_thickness_slider.value;
         // ctx.setLineDash([]);
         // ctx.setLineDash([4, 4]);
@@ -157,10 +163,49 @@
 
             console.log("currentPath: " + currentPath);
 
-            paths.push({ 'path': currentPath, 'label': active_label, 'type': active_tool });
+            let currentPolygon = convertPathToPolygon(currentPath);
+
+            if (counter < 3) {
+                // subtract all previous paths from this new path
+                for (var i = 0; i < paths.length; i++) {
+                    let poly = convertPathToPolygon(paths[i].path);
+
+                    // 
+                    currentPolygon = PolyBool.difference(currentPolygon, poly);
+                }
+
+                if (currentPolygon.regions.length > 0) {
+                    paths.push({ 'path': convertPolygonToPath(currentPolygon), 'label': active_label, 'type': active_tool });
+                }
+                console.log('new poly');
+            }
+            else if (counter < 6) {
+                // append to last polygon
+                let poly = convertPathToPolygon(paths[paths.length - 1].path);
+                currentPolygon = PolyBool.union(currentPolygon, poly);
+
+                if (currentPolygon.regions.length > 0) {
+                    paths[paths.length - 1] = { 'path': convertPolygonToPath(currentPolygon), 'label': active_label, 'type': active_tool };
+                }
+                console.log('append poly');
+            }
+            else {
+                // subtract from last polygon
+                let poly = convertPathToPolygon(paths[paths.length - 1].path);
+                currentPolygon = PolyBool.difference(poly, currentPolygon);
+
+                if (currentPolygon.regions.length > 0) {
+                    paths[paths.length - 1] = { 'path': convertPolygonToPath(currentPolygon), 'label': active_label, 'type': active_tool };
+                }
+                console.log('erase poly');
+            }
+
+            // console.log('currentPolygon:', currentPolygon);
+
             currentPath = [];
 
             drawAllPolygons(ctx, paths);
+            counter ++;
         };
 
         function undo() {
@@ -181,9 +226,9 @@
             for (let i = 0; i < path_list.length; i++) {
                 setColour(colours[path_list[i].label], opacity);
                 drawPolygon(context, path_list[i].path);
-                console.log("Drawing polygon " + i + ' label: ' + path_list[i].label + ' colour: ' + context.fillStyle);
+                // console.log("Drawing polygon " + i + ' label: ' + path_list[i].label + ' colour: ' + context.fillStyle);
             }
-            console.log("Num paths:" + path_list.length);
+            // console.log("Num paths:" + path_list.length);
         }
 
         function drawPolygon(context, path) {
@@ -191,12 +236,12 @@
             let h = context.canvas.height;
 
             context.beginPath();
-            context.moveTo(Math.max(padX, Math.min(path[0][0], w-padX)), 
-                           Math.max(padY, Math.min(path[0][1], h-padY)));
+            context.moveTo(Math.max(padX, Math.min(path[0][0], w - padX)),
+                Math.max(padY, Math.min(path[0][1], h - padY)));
 
             for (let i = 1; i < path.length; i++) {
-                context.lineTo(Math.max(padX, Math.min(path[i][0], w-padX)), 
-                               Math.max(padY, Math.min(path[i][1], h-padY)));
+                context.lineTo(Math.max(padX, Math.min(path[i][0], w - padX)),
+                    Math.max(padY, Math.min(path[i][1], h - padY)));
             }
 
             context.closePath();
