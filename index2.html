@@ -121,12 +121,15 @@
             }
             else if (e.code === "KeyA") {
                 fetchAndDisplayImage('http://127.0.0.1:5000/image_labeler/api/v1.0/input_images/1');
+                clearCanvas();
             }
             else if (e.code === "KeyB") {
                 fetchAndDisplayImage('http://127.0.0.1:5000/image_labeler/api/v1.0/input_images/2');
+                clearCanvas();
             }
             else if (e.code === "KeyC") {
                 fetchAndDisplayImage('http://127.0.0.1:5000/image_labeler/api/v1.0/input_images/3');
+                clearCanvas();
             }
 
             e.stopPropagation();
