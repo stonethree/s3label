@@ -96,9 +96,6 @@
         var active_label = 'individual_rock';
         var active_tool = document.querySelector('input[name="tool"]:checked').value;
         var active_mode = document.querySelector('input[name="mode"]:checked').value;
-        var selected_polygon_id = undefined;
-
-        var counter = 0;    // testing purposes
 
         ctx.lineWidth = stroke_thickness_slider.value;
         // ctx.setLineDash([]);
@@ -184,7 +181,7 @@
                 // new polygon
 
                 if (currentPolygon.regions.length > 0) {
-                    polygons.push({ 'polygon': currentPolygon, 'label': active_label, 'type': active_tool });
+                    polygons.push({ 'polygon': currentPolygon, 'label': active_label, 'type': active_tool, 'selected': true });
                 }
                 console.log('new poly');
             }
@@ -196,7 +193,7 @@
                 }
 
                 if (currentPolygon.regions.length > 0) {
-                    polygons.push({ 'polygon': currentPolygon, 'label': active_label, 'type': active_tool });
+                    polygons.push({ 'polygon': currentPolygon, 'label': active_label, 'type': active_tool, 'selected': true });
                 }
                 console.log('new poly');
             }
@@ -206,7 +203,7 @@
                 currentPolygon = PolyBool.union(currentPolygon, poly);
 
                 if (currentPolygon.regions.length > 0) {
-                    polygons[polygons.length - 1] = { 'polygon': currentPolygon, 'label': active_label, 'type': active_tool };
+                    polygons[polygons.length - 1] = { 'polygon': currentPolygon, 'label': active_label, 'type': active_tool, 'selected': true };
                 }
                 console.log('append poly');
             }
@@ -216,7 +213,7 @@
                 currentPolygon = PolyBool.difference(poly, currentPolygon);
 
                 if (currentPolygon.regions.length > 0) {
-                    polygons[polygons.length - 1] = { 'polygon': currentPolygon, 'label': active_label, 'type': active_tool };
+                    polygons[polygons.length - 1] = { 'polygon': currentPolygon, 'label': active_label, 'type': active_tool, 'selected': true };
                 }
                 console.log('erase poly');
             }
@@ -224,13 +221,15 @@
                 console.error('Undefined tool mode:', active_mode);
             }
 
-            // console.log('currentPolygon:', currentPolygon);
-
             currentPath = [];
 
+            // deselect all previous polygons
+
+            for (let i = 0; i < polygons.length - 1; i++) {
+                polygons[i].selected = false;
+            }
+
             drawAllPolygons(ctx, polygons);
-            // drawSelectedPolygon(ctx, polygonSelected);
-            counter++;
         };
 
         function undo() {
@@ -249,31 +248,38 @@
             context.clearRect(0, 0, context.canvas.width, context.canvas.height);
 
             for (let i = 0; i < polygon_list.length; i++) {
-                setColour(colours[polygon_list[i].label], opacity);
-                let paths_to_draw = convertPolygonToPaths(polygon_list[i].polygon);
-
-
-                // console.log("i_:", i, paths_to_draw.length)
-
-                if (i == 2) {
-                    var currentLineWidth = context.lineWidth;
-                    var currentStrokeStyle = context.strokeStyle;
-                    // ctx.setLineDash([]);
-                    // context.setLineDash([4, 4]);
-                    context.strokeStyle = "#FF0000";
-                    context.lineWidth = currentLineWidth + 2;
-                }
-
-                for (let j = 0; j < paths_to_draw.length; j++) {
-                    drawPolygon(context, paths_to_draw[j]);
-                }
-                context.lineWidth = currentLineWidth;
-                // context.setLineDash([]);
-                context.strokeStyle = currentStrokeStyle;
+                drawPolygon(context, polygon_list[i]);
             }
         }
 
-        function drawPolygon(context, path) {
+        function drawPolygon(context, polygon) {
+            setColour(colours[polygon.label], opacity);
+            let paths_to_draw = convertPolygonToPaths(polygon.polygon);
+
+            if (polygon.selected) {
+                // draw selected polygon
+
+                var currentStrokeStyle = context.strokeStyle;
+                context.strokeStyle = "#FF0000";
+                context.setLineDash([4, 4]);
+
+                for (let j = 0; j < paths_to_draw.length; j++) {
+                    drawPath(context, paths_to_draw[j]);
+                }
+
+                context.strokeStyle = currentStrokeStyle;
+                context.setLineDash([]);
+            }
+            else {
+                // draw unselected polygon
+                
+                for (let j = 0; j < paths_to_draw.length; j++) {
+                    drawPath(context, paths_to_draw[j]);
+                }
+            }
+        }
+
+        function drawPath(context, path) {
             let w = context.canvas.width;
             let h = context.canvas.height;
 
@@ -285,9 +291,6 @@
                 context.lineTo(Math.max(padX, Math.min(path[i][0], w - padX)),
                     Math.max(padY, Math.min(path[i][1], h - padY)));
             }
-
-
-
 
             context.closePath();
             if (use_stroke) {
