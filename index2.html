@@ -131,6 +131,13 @@
                 fetchAndDisplayImage('http://127.0.0.1:5000/image_labeler/api/v1.0/input_images/3');
                 clearCanvas();
             }
+            else if (e.code === 'Delete') {
+                polygons = deleteSelectedPolygons(polygons);
+                drawAllPolygons(ctx, polygons);
+            }
+            else {
+                console.log(e.code);
+            }
 
             e.stopPropagation();
             e.preventDefault();
@@ -323,6 +330,12 @@
                 context.stroke();
             }
             context.fill();
+        }
+
+        function deleteSelectedPolygons(polygons) {
+            polygons = polygons.filter(poly => !poly.selected);
+
+            return polygons;
         }
 
         // detect tool and colour changes
