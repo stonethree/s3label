@@ -7,8 +7,6 @@
     <script src="static/fetch_data.js"></script>
     <script src="static/polygon_operations.js"></script>
     <script src="node_modules\polybooljs\dist\polybool.js"></script>
-    <!-- <script src="node_modules\polybooljs\dist\bundle.js"></script> -->
-    <!-- <script src="node_modules\poly-bool\bundle.js"></script> -->
     <!-- <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script> -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" crossorigin="anonymous">
     <title>S3 Label</title>
@@ -33,9 +31,9 @@
                 <div id="tool_modes" class="col">
                     <span>Modes</span>
                     <form>
-                        <input type="radio" name="mode" value="new" checked> New region
+                        <input type="radio" name="mode" value="new"> New region
                         <br>
-                        <input type="radio" name="mode" value="no-overlap"> Non-overlapping
+                        <input type="radio" name="mode" value="no-overlap" checked> Non-overlapping
                         <br>
                         <input type="radio" name="mode" value="append"> Append
                         <br>
@@ -84,7 +82,7 @@
         var opacity_slider = document.getElementById("opacity_slider");
 
         var isDrawing;
-        var paths = [];
+        var polygons = [];
         var currentPath = [];
         var paths_redo = [];
         var colours = {
@@ -98,6 +96,7 @@
         var active_label = 'individual_rock';
         var active_tool = document.querySelector('input[name="tool"]:checked').value;
         var active_mode = document.querySelector('input[name="mode"]:checked').value;
+        var selected_polygon_id = undefined;
 
         var counter = 0;    // testing purposes
 
@@ -112,12 +111,12 @@
             if (e.ctrlKey && e.code === "KeyZ") {
                 console.log("Undo");
                 undo();
-                drawAllPolygons(ctx, paths);
+                drawAllPolygons(ctx, polygons);
             }
             else if (e.ctrlKey && e.code === "KeyY") {
                 console.log("Redo");
                 redo();
-                drawAllPolygons(ctx, paths);
+                drawAllPolygons(ctx, polygons);
             }
             else if (e.code === "KeyA") {
                 fetchAndDisplayImage('http://127.0.0.1:5000/image_labeler/api/v1.0/input_images/1');
@@ -146,7 +145,7 @@
         }
 
         el.onmousedown = function (e) {
-            paths_redo = [];
+            polygons_redo = [];
             isDrawing = true;
             ctx.lineJoin = ctx.lineCap = 'round';
             ctx.beginPath();
@@ -185,43 +184,43 @@
                 // new polygon
 
                 if (currentPolygon.regions.length > 0) {
-                    paths.push({ 'polygon': currentPolygon, 'label': active_label, 'type': active_tool });
+                    polygons.push({ 'polygon': currentPolygon, 'label': active_label, 'type': active_tool });
                 }
                 console.log('new poly');
             }
             else if (active_mode == 'no-overlap') {
-                // subtract all previous paths from this new path
-                for (var i = 0; i < paths.length; i++) {
-                    let poly = paths[i].polygon;
+                // subtract all previous polygons from this new path
+                for (var i = 0; i < polygons.length; i++) {
+                    let poly = polygons[i].polygon;
                     currentPolygon = PolyBool.difference(currentPolygon, poly);
                 }
 
                 if (currentPolygon.regions.length > 0) {
-                    paths.push({ 'polygon': currentPolygon, 'label': active_label, 'type': active_tool });
+                    polygons.push({ 'polygon': currentPolygon, 'label': active_label, 'type': active_tool });
                 }
                 console.log('new poly');
             }
             else if (active_mode == 'append') {
                 // append to last polygon
-                let poly = paths[paths.length - 1].polygon;
+                let poly = polygons[polygons.length - 1].polygon;
                 currentPolygon = PolyBool.union(currentPolygon, poly);
 
                 if (currentPolygon.regions.length > 0) {
-                    paths[paths.length - 1] = { 'polygon': currentPolygon, 'label': active_label, 'type': active_tool };
+                    polygons[polygons.length - 1] = { 'polygon': currentPolygon, 'label': active_label, 'type': active_tool };
                 }
                 console.log('append poly');
             }
             else if (active_mode == 'erase') {
                 // subtract from last polygon
-                let poly = paths[paths.length - 1].polygon;
+                let poly = polygons[polygons.length - 1].polygon;
                 currentPolygon = PolyBool.difference(poly, currentPolygon);
 
                 if (currentPolygon.regions.length > 0) {
-                    paths[paths.length - 1] = { 'polygon': currentPolygon, 'label': active_label, 'type': active_tool };
+                    polygons[polygons.length - 1] = { 'polygon': currentPolygon, 'label': active_label, 'type': active_tool };
                 }
                 console.log('erase poly');
             }
-            else{
+            else {
                 console.error('Undefined tool mode:', active_mode);
             }
 
@@ -229,31 +228,48 @@
 
             currentPath = [];
 
-            drawAllPolygons(ctx, paths);
-            counter ++;
+            drawAllPolygons(ctx, polygons);
+            // drawSelectedPolygon(ctx, polygonSelected);
+            counter++;
         };
 
         function undo() {
-            if (paths.length > 0) {
-                paths_redo.push(paths.pop());
+            if (polygons.length > 0) {
+                polygons_redo.push(polygons.pop());
             }
         }
 
         function redo() {
-            if (paths_redo.length > 0) {
-                paths.push(paths_redo.pop());
+            if (polygons_redo.length > 0) {
+                polygons.push(polygons_redo.pop());
             }
         }
 
-        function drawAllPolygons(context, path_list) {
+        function drawAllPolygons(context, polygon_list) {
             context.clearRect(0, 0, context.canvas.width, context.canvas.height);
 
-            for (let i = 0; i < path_list.length; i++) {
-                setColour(colours[path_list[i].label], opacity);
-                let paths_to_draw = convertPolygonToPaths(path_list[i].polygon);
+            for (let i = 0; i < polygon_list.length; i++) {
+                setColour(colours[polygon_list[i].label], opacity);
+                let paths_to_draw = convertPolygonToPaths(polygon_list[i].polygon);
+
+
+                // console.log("i_:", i, paths_to_draw.length)
+
+                if (i == 2) {
+                    var currentLineWidth = context.lineWidth;
+                    var currentStrokeStyle = context.strokeStyle;
+                    // ctx.setLineDash([]);
+                    // context.setLineDash([4, 4]);
+                    context.strokeStyle = "#FF0000";
+                    context.lineWidth = currentLineWidth + 2;
+                }
+
                 for (let j = 0; j < paths_to_draw.length; j++) {
                     drawPolygon(context, paths_to_draw[j]);
                 }
+                context.lineWidth = currentLineWidth;
+                // context.setLineDash([]);
+                context.strokeStyle = currentStrokeStyle;
             }
         }
 
@@ -269,6 +285,9 @@
                 context.lineTo(Math.max(padX, Math.min(path[i][0], w - padX)),
                     Math.max(padY, Math.min(path[i][1], h - padY)));
             }
+
+
+
 
             context.closePath();
             if (use_stroke) {
@@ -329,21 +348,21 @@
                 use_stroke = false;
             }
 
-            drawAllPolygons(ctx, paths);
+            drawAllPolygons(ctx, polygons);
         }
 
         opacity_slider.oninput = function () {
             opacity = this.value / 100.;
 
-            drawAllPolygons(ctx, paths);
+            drawAllPolygons(ctx, polygons);
         }
 
         // clear canvas
 
         function clearCanvas() {
             ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-            paths = [];
-            paths_redo = [];
+            polygons = [];
+            polygons_redo = [];
         }
     </script>
 </body>
