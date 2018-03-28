@@ -20,7 +20,7 @@
 
         <div id="drawingtools">
             <div class="row">
-                <div id="tools" class="col">
+                <div id="tools" class="col border-right">
                     <span>Tools</span>
                     <form>
                         <input type="radio" name="tool" value="freehand" checked> Freehand
@@ -28,19 +28,25 @@
                         <input type="radio" name="tool" value="polygon"> Polygon
                     </form>
                 </div>
-                <div id="tool_modes" class="col">
+                <div id="tool_modes" class="col border-right">
                     <span>Modes</span>
                     <form>
-                        <input type="radio" name="mode" value="new"> New region
-                        <br>
-                        <input type="radio" name="mode" value="no-overlap" checked> Non-overlapping
+                        <input type="radio" name="mode" value="new" checked> New
                         <br>
                         <input type="radio" name="mode" value="append"> Append
                         <br>
                         <input type="radio" name="mode" value="erase"> Erase
                     </form>
                 </div>
-                <div id="semantic_labels" class="col">
+                <div id="choose_overlap" class="col border-right">
+                    <span>Overlap Mode</span>
+                    <form>
+                        <input type="radio" name="overlap_mode" value="overlap"> Overlapping
+                        <br>
+                        <input type="radio" name="overlap_mode" value="no-overlap" checked> Non-overlapping
+                    </form>
+                </div>
+                <div id="semantic_labels" class="col border-right">
                     <span>Semantic Labels</span>
                     <form>
                         <input type="radio" name="semantic_label" value="individual_rock" checked> Individual rock
@@ -69,7 +75,6 @@
         <div id="canvasesdiv" style="position:relative; ">
             <canvas id="canvas-fg" width="900" height="350" style="width:900px;height:350px; border: 1px solid #ccc; z-index: 2; position:absolute; left:0px; top:0px;"></canvas>
             <canvas id="canvas-bg" width="900" height="350" style="width:900px;height:350px; border: 1px solid #ccc; z-index: 1; position:absolute; left:0px; top:0px;"></canvas>
-            <!-- width:900px;height:350px; -->
         </div>
     </div>
 
@@ -96,10 +101,9 @@
         var active_label = 'individual_rock';
         var active_tool = document.querySelector('input[name="tool"]:checked').value;
         var active_mode = document.querySelector('input[name="mode"]:checked').value;
+        var active_overlap_mode = document.querySelector('input[name="overlap_mode"]:checked').value;
 
         ctx.lineWidth = stroke_thickness_slider.value;
-        // ctx.setLineDash([]);
-        // ctx.setLineDash([4, 4]);
         ctx.fillStyle = setColour(colours[active_label], opacity);
 
         window.addEventListener('keydown', this.keyHandler, false);
@@ -173,19 +177,17 @@
             }
             ctx.fill();
 
-            console.log("currentPath: " + currentPath);
-
             let currentPolygon = convertPathToPolygon(currentPath);
 
-            if (active_mode == 'new') {
+            if (active_mode == 'new' && active_overlap_mode == 'overlap') {
                 // new polygon
 
                 if (currentPolygon.regions.length > 0) {
                     polygons.push({ 'polygon': currentPolygon, 'label': active_label, 'type': active_tool, 'selected': true });
                 }
-                console.log('new poly');
+                console.log('new overlap poly');
             }
-            else if (active_mode == 'no-overlap') {
+            else if (active_mode == 'new' && active_overlap_mode == 'no-overlap') {
                 // subtract all previous polygons from this new path
                 for (var i = 0; i < polygons.length; i++) {
                     let poly = polygons[i].polygon;
@@ -195,9 +197,9 @@
                 if (currentPolygon.regions.length > 0) {
                     polygons.push({ 'polygon': currentPolygon, 'label': active_label, 'type': active_tool, 'selected': true });
                 }
-                console.log('new poly');
+                console.log('new no overlap poly');
             }
-            else if (active_mode == 'append') {
+            else if (active_mode == 'append' && active_overlap_mode == 'overlap') {
                 // append to last polygon
                 let poly = polygons[polygons.length - 1].polygon;
                 currentPolygon = PolyBool.union(currentPolygon, poly);
@@ -205,7 +207,31 @@
                 if (currentPolygon.regions.length > 0) {
                     polygons[polygons.length - 1] = { 'polygon': currentPolygon, 'label': active_label, 'type': active_tool, 'selected': true };
                 }
-                console.log('append poly');
+                console.log('append overlap poly');
+            }
+            else if (active_mode == 'append' && active_overlap_mode == 'no-overlap') {
+                // subtract all previous polygons from this new path
+                for (var i = 0; i < polygons.length; i++) {
+                    if (!polygons[i].selected) {
+                        currentPolygon = PolyBool.difference(currentPolygon, polygons[i].polygon);
+                    }
+                }
+
+                // append to last polygon (TODO: should append to selected polygon)
+                if (polygons.length > 0) {
+                    let poly = polygons[polygons.length - 1].polygon;
+                    currentPolygon = PolyBool.union(currentPolygon, poly);
+                }
+
+                if (currentPolygon.regions.length > 0) {
+                    if (polygons.length > 0) {
+                        polygons[polygons.length - 1] = { 'polygon': currentPolygon, 'label': active_label, 'type': active_tool, 'selected': true };
+                    }
+                    else {
+                        polygons.push({ 'polygon': currentPolygon, 'label': active_label, 'type': active_tool, 'selected': true });
+                    }
+                }
+                console.log('append no overlap poly');
             }
             else if (active_mode == 'erase') {
                 // subtract from last polygon
@@ -218,7 +244,7 @@
                 console.log('erase poly');
             }
             else {
-                console.error('Undefined tool mode:', active_mode);
+                console.error('Undefined tool mode:', active_mode, active_overlap_mode);
             }
 
             currentPath = [];
@@ -272,7 +298,7 @@
             }
             else {
                 // draw unselected polygon
-                
+
                 for (let j = 0; j < paths_to_draw.length; j++) {
                     drawPath(context, paths_to_draw[j]);
                 }
@@ -303,6 +329,7 @@
 
         var toolRadioButtons = document.getElementsByName("tool");
         var toolModeRadioButtons = document.getElementsByName("mode");
+        var overlapModeRadioButtons = document.getElementsByName("overlap_mode");
         var semanticLabelRadioButtons = document.getElementsByName("semantic_label");
 
         for (var i = 0; toolRadioButtons[i]; i++)
@@ -310,6 +337,9 @@
 
         for (var i = 0; toolModeRadioButtons[i]; i++)
             toolModeRadioButtons[i].onclick = setActiveToolMode;
+
+        for (var i = 0; overlapModeRadioButtons[i]; i++)
+            overlapModeRadioButtons[i].onclick = setActiveOverlapMode;
 
         for (var i = 0; semanticLabelRadioButtons[i]; i++)
             semanticLabelRadioButtons[i].onclick = setActiveLabel;
@@ -322,6 +352,11 @@
         function setActiveToolMode() {
             active_mode = document.querySelector('input[name="mode"]:checked').value;
             console.log("active_mode: " + active_mode);
+        }
+
+        function setActiveOverlapMode() {
+            active_overlap_mode = document.querySelector('input[name="overlap_mode"]:checked').value;
+            console.log("active_overlap_mode: " + active_overlap_mode);
         }
 
         function formatColour(rgb, alpha) {
