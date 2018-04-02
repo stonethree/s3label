@@ -144,6 +144,12 @@
                 console.log('num final polys:', polygons.length, 'num redo polys:', polygons_redo.length)
                 drawAllPolygons(ctx, polygons);
             }
+            else if (e.code === 'Escape') {
+                for (let i = 0; i < polygons.length; i++) {
+                    polygons[i].selected = false;
+                }
+                drawAllPolygons(ctx, polygons);
+            }
             else if (e.code === 'Space') {
                 if (previous_tool === undefined && !isDrawing) {
                     previous_tool = active_tool;
