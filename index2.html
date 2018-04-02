@@ -214,6 +214,14 @@
                 }
                 ctx.fill();
 
+                if (active_mode == 'new') {
+                    // deselect all previous polygons
+
+                    for (let i = 0; i < polygons.length; i++) {
+                        polygons[i].selected = false;
+                    }
+                }
+
                 let currentPolygon = convertPathToPolygon(currentPath);
 
                 if (active_mode == 'new' && active_overlap_mode == 'overlap') {
@@ -254,7 +262,7 @@
                         }
                     }
 
-                    // append to last polygon (TODO: should append to selected polygon)
+                    // append to last polygon (TODO: should append to selected polygons)
                     if (polygons.length > 0) {
                         let poly = polygons[polygons.length - 1].polygon;
                         currentPolygon = PolyBool.union(currentPolygon, poly);
@@ -271,26 +279,24 @@
                     console.log('append no overlap poly');
                 }
                 else if (active_mode == 'erase') {
-                    // subtract from last polygon
-                    let poly = polygons[polygons.length - 1].polygon;
-                    currentPolygon = PolyBool.difference(poly, currentPolygon);
+                    // subtract from selected polygon(s)
 
-                    if (currentPolygon.regions.length > 0) {
-                        polygons[polygons.length - 1] = { 'polygon': currentPolygon, 'label': active_label, 'type': active_tool, 'selected': true };
+                    for (var i = 0; i < polygons.length; i++) {
+                        if (polygons[i].selected) {
+                            newPolygon = PolyBool.difference(polygons[i].polygon, currentPolygon);
+
+                            if (newPolygon.regions.length > 0) {
+                                polygons[i].polygon = newPolygon;
+                            }
+                            console.log('erase poly');
+                        }
                     }
-                    console.log('erase poly');
                 }
                 else {
                     console.error('Undefined tool mode:', active_mode, active_overlap_mode);
                 }
 
                 currentPath = [];
-
-                // deselect all previous polygons
-
-                for (let i = 0; i < polygons.length - 1; i++) {
-                    polygons[i].selected = false;
-                }
 
                 drawAllPolygons(ctx, polygons);
             }
