@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="static/fetch_data.js"></script>
     <script src="static/polygon_operations.js"></script>
-    <script src="node_modules\polybooljs\dist\polybool.js"></script>
+    <script src="node_modules/polybooljs/dist/polybool.js"></script>
     <!-- <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script> -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" crossorigin="anonymous">
     <title>S3 Label</title>
@@ -26,6 +26,8 @@
                         <input type="radio" name="tool" value="freehand" checked> Freehand
                         <br>
                         <input type="radio" name="tool" value="polygon"> Polygon
+                        <br>
+                        <input type="radio" name="tool" value="select"> Select
                     </form>
                 </div>
                 <div id="tool_modes" class="col border-right">
@@ -153,116 +155,145 @@
         }
 
         el.onmousedown = function (e) {
-            polygons_redo = [];
-            isDrawing = true;
-            ctx.lineJoin = ctx.lineCap = 'round';
-            ctx.beginPath();
             coords = getMousePos(ctx.canvas, e);
+
             if (coords.x == undefined || coords.y == undefined) {
                 console.log("coords undef:" + coords);
             }
-            ctx.moveTo(coords.x, coords.y);
-            currentPath.push([coords.x, coords.y]);
+
+            if (active_tool == 'freehand') {
+                polygons_redo = [];
+                isDrawing = true;
+                ctx.lineJoin = ctx.lineCap = 'round';
+                ctx.beginPath();
+                ctx.moveTo(coords.x, coords.y);
+                currentPath.push([coords.x, coords.y]);
+            }
+            else if (active_tool == 'select') {
+                // check which polygons the point lies within
+
+                for (var jjj = 0; jjj < polygons.length; jjj++) {
+                    currentPolygon = polygons[jjj];
+                    var selected = false;
+
+                    for (var iii = 0; iii < currentPolygon.polygon.regions.length; iii++) {
+                        xs = currentPolygon.polygon.regions[iii].map(p => p[0]);
+                        ys = currentPolygon.polygon.regions[iii].map(p => p[1]);
+
+                        if (isPointInPolygon(coords.x, coords.y, xs, ys)) {
+                            selected = true;
+                        }
+                    }
+
+                    currentPolygon.selected = selected;
+                }
+
+                drawAllPolygons(ctx, polygons);
+            }
         };
         el.onmousemove = function (e) {
-            if (isDrawing) {
-                coords = getMousePos(ctx.canvas, e);
-                if (coords.x == undefined || coords.y == undefined) {
-                    console.log("coords undef:" + coords);
+            if (active_tool == 'freehand') {
+                if (isDrawing) {
+                    coords = getMousePos(ctx.canvas, e);
+                    if (coords.x == undefined || coords.y == undefined) {
+                        console.log("coords undef:" + coords);
+                    }
+                    ctx.lineTo(coords.x, coords.y);
+                    ctx.stroke();
+                    currentPath.push([coords.x, coords.y]);
                 }
-                ctx.lineTo(coords.x, coords.y);
-                ctx.stroke();
-                currentPath.push([coords.x, coords.y]);
             }
         };
         el.onmouseup = function () {
-            isDrawing = false;
+            if (active_tool == 'freehand') {
+                isDrawing = false;
 
-            ctx.closePath();
-            if (use_stroke) {
-                ctx.stroke();
-            }
-            ctx.fill();
-
-            let currentPolygon = convertPathToPolygon(currentPath);
-
-            if (active_mode == 'new' && active_overlap_mode == 'overlap') {
-                // new polygon
-
-                if (currentPolygon.regions.length > 0) {
-                    polygons.push({ 'polygon': currentPolygon, 'label': active_label, 'type': active_tool, 'selected': true });
+                ctx.closePath();
+                if (use_stroke) {
+                    ctx.stroke();
                 }
-                console.log('new overlap poly');
-            }
-            else if (active_mode == 'new' && active_overlap_mode == 'no-overlap') {
-                // subtract all previous polygons from this new path
-                for (var i = 0; i < polygons.length; i++) {
-                    let poly = polygons[i].polygon;
-                    currentPolygon = PolyBool.difference(currentPolygon, poly);
-                }
+                ctx.fill();
 
-                if (currentPolygon.regions.length > 0) {
-                    polygons.push({ 'polygon': currentPolygon, 'label': active_label, 'type': active_tool, 'selected': true });
-                }
-                console.log('new no overlap poly');
-            }
-            else if (active_mode == 'append' && active_overlap_mode == 'overlap') {
-                // append to last polygon
-                let poly = polygons[polygons.length - 1].polygon;
-                currentPolygon = PolyBool.union(currentPolygon, poly);
+                let currentPolygon = convertPathToPolygon(currentPath);
 
-                if (currentPolygon.regions.length > 0) {
-                    polygons[polygons.length - 1] = { 'polygon': currentPolygon, 'label': active_label, 'type': active_tool, 'selected': true };
-                }
-                console.log('append overlap poly');
-            }
-            else if (active_mode == 'append' && active_overlap_mode == 'no-overlap') {
-                // subtract all previous polygons from this new path
-                for (var i = 0; i < polygons.length; i++) {
-                    if (!polygons[i].selected) {
-                        currentPolygon = PolyBool.difference(currentPolygon, polygons[i].polygon);
-                    }
-                }
+                if (active_mode == 'new' && active_overlap_mode == 'overlap') {
+                    // new polygon
 
-                // append to last polygon (TODO: should append to selected polygon)
-                if (polygons.length > 0) {
-                    let poly = polygons[polygons.length - 1].polygon;
-                    currentPolygon = PolyBool.union(currentPolygon, poly);
-                }
-
-                if (currentPolygon.regions.length > 0) {
-                    if (polygons.length > 0) {
-                        polygons[polygons.length - 1] = { 'polygon': currentPolygon, 'label': active_label, 'type': active_tool, 'selected': true };
-                    }
-                    else {
+                    if (currentPolygon.regions.length > 0) {
                         polygons.push({ 'polygon': currentPolygon, 'label': active_label, 'type': active_tool, 'selected': true });
                     }
+                    console.log('new overlap poly');
                 }
-                console.log('append no overlap poly');
-            }
-            else if (active_mode == 'erase') {
-                // subtract from last polygon
-                let poly = polygons[polygons.length - 1].polygon;
-                currentPolygon = PolyBool.difference(poly, currentPolygon);
+                else if (active_mode == 'new' && active_overlap_mode == 'no-overlap') {
+                    // subtract all previous polygons from this new path
+                    for (var i = 0; i < polygons.length; i++) {
+                        let poly = polygons[i].polygon;
+                        currentPolygon = PolyBool.difference(currentPolygon, poly);
+                    }
 
-                if (currentPolygon.regions.length > 0) {
-                    polygons[polygons.length - 1] = { 'polygon': currentPolygon, 'label': active_label, 'type': active_tool, 'selected': true };
+                    if (currentPolygon.regions.length > 0) {
+                        polygons.push({ 'polygon': currentPolygon, 'label': active_label, 'type': active_tool, 'selected': true });
+                    }
+                    console.log('new no overlap poly');
                 }
-                console.log('erase poly');
+                else if (active_mode == 'append' && active_overlap_mode == 'overlap') {
+                    // append to last polygon
+                    let poly = polygons[polygons.length - 1].polygon;
+                    currentPolygon = PolyBool.union(currentPolygon, poly);
+
+                    if (currentPolygon.regions.length > 0) {
+                        polygons[polygons.length - 1] = { 'polygon': currentPolygon, 'label': active_label, 'type': active_tool, 'selected': true };
+                    }
+                    console.log('append overlap poly');
+                }
+                else if (active_mode == 'append' && active_overlap_mode == 'no-overlap') {
+                    // subtract all previous polygons from this new path
+                    for (var i = 0; i < polygons.length; i++) {
+                        if (!polygons[i].selected) {
+                            currentPolygon = PolyBool.difference(currentPolygon, polygons[i].polygon);
+                        }
+                    }
+
+                    // append to last polygon (TODO: should append to selected polygon)
+                    if (polygons.length > 0) {
+                        let poly = polygons[polygons.length - 1].polygon;
+                        currentPolygon = PolyBool.union(currentPolygon, poly);
+                    }
+
+                    if (currentPolygon.regions.length > 0) {
+                        if (polygons.length > 0) {
+                            polygons[polygons.length - 1] = { 'polygon': currentPolygon, 'label': active_label, 'type': active_tool, 'selected': true };
+                        }
+                        else {
+                            polygons.push({ 'polygon': currentPolygon, 'label': active_label, 'type': active_tool, 'selected': true });
+                        }
+                    }
+                    console.log('append no overlap poly');
+                }
+                else if (active_mode == 'erase') {
+                    // subtract from last polygon
+                    let poly = polygons[polygons.length - 1].polygon;
+                    currentPolygon = PolyBool.difference(poly, currentPolygon);
+
+                    if (currentPolygon.regions.length > 0) {
+                        polygons[polygons.length - 1] = { 'polygon': currentPolygon, 'label': active_label, 'type': active_tool, 'selected': true };
+                    }
+                    console.log('erase poly');
+                }
+                else {
+                    console.error('Undefined tool mode:', active_mode, active_overlap_mode);
+                }
+
+                currentPath = [];
+
+                // deselect all previous polygons
+
+                for (let i = 0; i < polygons.length - 1; i++) {
+                    polygons[i].selected = false;
+                }
+
+                drawAllPolygons(ctx, polygons);
             }
-            else {
-                console.error('Undefined tool mode:', active_mode, active_overlap_mode);
-            }
-
-            currentPath = [];
-
-            // deselect all previous polygons
-
-            for (let i = 0; i < polygons.length - 1; i++) {
-                polygons[i].selected = false;
-            }
-
-            drawAllPolygons(ctx, polygons);
         };
 
         function undo() {
@@ -313,6 +344,7 @@
         }
 
         function drawPath(context, path) {
+
             let w = context.canvas.width;
             let h = context.canvas.height;
 
