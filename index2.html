@@ -91,7 +91,8 @@
         var isDrawing;
         var polygons = [];
         var currentPath = [];
-        var paths_redo = [];
+        var polygons_redo = [];
+        var polygons_undo = [];
         var colours = {
             'individual_rock': [255, 0, 0],
             'belt': [0, 255, 0],
@@ -134,7 +135,11 @@
                 clearCanvas();
             }
             else if (e.code === 'Delete') {
-                polygons = deleteSelectedPolygons(polygons);
+                // polygons = deleteSelectedPolygons(polygons);
+                console.log('num orig polys:', polygons.length, 'num redo polys:', polygons_redo.length)
+                polygons_undo.push(...polygons.filter(poly => poly.selected));
+                polygons = polygons.filter(poly => !poly.selected);
+                console.log('num final polys:', polygons.length, 'num redo polys:', polygons_redo.length)
                 drawAllPolygons(ctx, polygons);
             }
             else {
@@ -303,7 +308,10 @@
         };
 
         function undo() {
-            if (polygons.length > 0) {
+            if (polygons_undo.length > 0) {
+                polygons.push(polygons_undo.pop());
+            }
+            else if (polygons.length > 0) {
                 polygons_redo.push(polygons.pop());
             }
         }
