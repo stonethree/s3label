@@ -32,7 +32,7 @@
                 </div>
                 <div id="tool_modes" class="col border-right">
                     <span>Modes</span>
-                    <form>
+                    <form id="mode_form">
                         <input type="radio" name="mode" value="new" checked> New
                         <br>
                         <input type="radio" name="mode" value="append"> Append
@@ -106,6 +106,7 @@
         var active_mode = document.querySelector('input[name="mode"]:checked').value;
         var active_overlap_mode = document.querySelector('input[name="overlap_mode"]:checked').value;
         var previous_tool = undefined;
+        var previous_mode = undefined;
 
         ctx.lineWidth = stroke_thickness_slider.value;
         ctx.fillStyle = setColour(colours[active_label], opacity);
@@ -151,6 +152,22 @@
                     console.log('temp selecting (down)')
                 }
             }
+            else if (e.code.startsWith('Shift')) {
+                if (previous_mode === undefined && !isDrawing) {
+                    previous_mode = active_mode;
+                    active_mode = 'append';
+                    document.getElementById("mode_form").mode.value = active_mode;
+                    console.log('temp mode append (down)')
+                }
+            }
+            else if (e.code.startsWith('Alt')) {
+                if (previous_mode === undefined && !isDrawing) {
+                    previous_mode = active_mode;
+                    active_mode = 'erase';
+                    document.getElementById("mode_form").mode.value = active_mode;
+                    console.log('temp mode erase (down)')
+                }
+            }
             else {
                 console.log(e.code);
             }
@@ -166,6 +183,22 @@
                     previous_tool = undefined;
                     document.getElementById("tools_form").tool.value = active_tool;
                     console.log('temp selecting (up)')
+                }
+            }
+            else if (e.code.startsWith('Shift')) {
+                if (previous_mode) {
+                    active_mode = previous_mode;
+                    previous_mode = undefined;
+                    document.getElementById("mode_form").mode.value = active_mode;
+                    console.log('temp mode append (up)')
+                }
+            }
+            else if (e.code.startsWith('Alt')) {
+                if (previous_mode) {
+                    active_mode = previous_mode;
+                    previous_mode = undefined;
+                    document.getElementById("mode_form").mode.value = active_mode;
+                    console.log('temp mode erase (up)')
                 }
             }
             else {
