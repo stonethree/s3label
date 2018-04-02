@@ -22,7 +22,7 @@
             <div class="row">
                 <div id="tools" class="col border-right">
                     <span>Tools</span>
-                    <form>
+                    <form id="tools_form">
                         <input type="radio" name="tool" value="freehand" checked> Freehand
                         <br>
                         <input type="radio" name="tool" value="polygon"> Polygon
@@ -105,11 +105,13 @@
         var active_tool = document.querySelector('input[name="tool"]:checked').value;
         var active_mode = document.querySelector('input[name="mode"]:checked').value;
         var active_overlap_mode = document.querySelector('input[name="overlap_mode"]:checked').value;
+        var previous_tool = undefined;
 
         ctx.lineWidth = stroke_thickness_slider.value;
         ctx.fillStyle = setColour(colours[active_label], opacity);
 
         window.addEventListener('keydown', this.keyHandler, false);
+        window.addEventListener('keyup', this.keyHandlerUp, false);
 
         function keyHandler(e) {
             if (e.ctrlKey && e.code === "KeyZ") {
@@ -135,12 +137,36 @@
                 clearCanvas();
             }
             else if (e.code === 'Delete') {
-                // polygons = deleteSelectedPolygons(polygons);
                 console.log('num orig polys:', polygons.length, 'num redo polys:', polygons_redo.length)
                 polygons_undo.push(...polygons.filter(poly => poly.selected));
                 polygons = polygons.filter(poly => !poly.selected);
                 console.log('num final polys:', polygons.length, 'num redo polys:', polygons_redo.length)
                 drawAllPolygons(ctx, polygons);
+            }
+            else if (e.code === 'Space') {
+                if (previous_tool === undefined && !isDrawing) {
+                    previous_tool = active_tool;
+                    active_tool = 'select';
+                    document.getElementById("tools_form").tool.value = active_tool;
+                    console.log('temp selecting (down)')
+                }
+            }
+            else {
+                console.log(e.code);
+            }
+
+            e.stopPropagation();
+            e.preventDefault();
+        }
+
+        function keyHandlerUp(e) {
+            if (e.code === 'Space') {
+                if (previous_tool) {
+                    active_tool = previous_tool;
+                    previous_tool = undefined;
+                    document.getElementById("tools_form").tool.value = active_tool;
+                    console.log('temp selecting (up)')
+                }
             }
             else {
                 console.log(e.code);
@@ -376,12 +402,6 @@
                 context.stroke();
             }
             context.fill();
-        }
-
-        function deleteSelectedPolygons(polygons) {
-            polygons = polygons.filter(poly => !poly.selected);
-
-            return polygons;
         }
 
         // detect tool and colour changes
