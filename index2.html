@@ -250,7 +250,7 @@
                     currentPolygon = PolyBool.union(currentPolygon, poly);
 
                     if (currentPolygon.regions.length > 0) {
-                        polygons[polygons.length - 1] = { 'polygon': currentPolygon, 'label': active_label, 'type': active_tool, 'selected': true };
+                        polygons[polygons.length - 1].polygon = currentPolygon;
                     }
                     console.log('append overlap poly');
                 }
@@ -270,7 +270,7 @@
 
                     if (currentPolygon.regions.length > 0) {
                         if (polygons.length > 0) {
-                            polygons[polygons.length - 1] = { 'polygon': currentPolygon, 'label': active_label, 'type': active_tool, 'selected': true };
+                            polygons[polygons.length - 1].polygon = currentPolygon;
                         }
                         else {
                             polygons.push({ 'polygon': currentPolygon, 'label': active_label, 'type': active_tool, 'selected': true });
