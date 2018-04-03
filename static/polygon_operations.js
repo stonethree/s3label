@@ -31,3 +31,17 @@ function isPointInPolygon(x, y, cornersX, cornersY) {
         return false;
     }
 }
+
+function getSelectedPolygonIndex(polygons) {
+    // get the index of the last selected polygon in the list
+
+    var index = -1;
+
+    for (var i = 0; i < polygons.length; i++) {
+        if (polygons[i].selected) {
+            index = i;
+        }
+    }
+
+    return index;
+}

@@ -315,12 +315,15 @@
                     console.log('new no overlap poly');
                 }
                 else if (active_mode == 'append' && active_overlap_mode == 'overlap') {
-                    // append to last polygon
-                    let poly = polygons[polygons.length - 1].polygon;
-                    currentPolygon = PolyBool.union(currentPolygon, poly);
+                    // if multiple polygons selected, deselect the least recently created one
+                    var polyIndex = getSelectedPolygonIndex(polygons);
 
-                    if (currentPolygon.regions.length > 0) {
-                        polygons[polygons.length - 1].polygon = currentPolygon;
+                    if (polyIndex >= 0) {
+                        // append to last polygon
+                        let poly = polygons[polyIndex].polygon;
+                        currentPolygon = PolyBool.union(currentPolygon, poly);
+
+                        polygons[polyIndex].polygon = currentPolygon;
                     }
                     console.log('append overlap poly');
                 }
@@ -332,18 +335,18 @@
                         }
                     }
 
-                    // append to last polygon (TODO: should append to selected polygons)
-                    if (polygons.length > 0) {
-                        let poly = polygons[polygons.length - 1].polygon;
-                        currentPolygon = PolyBool.union(currentPolygon, poly);
-                    }
+                    // if multiple polygons selected, deselect the least recently created one
+                    var polyIndex = getSelectedPolygonIndex(polygons);
 
-                    if (currentPolygon.regions.length > 0) {
+                    if (polyIndex >= 0) {
+                        // append to last polygon (TODO: should append to selected polygons)
                         if (polygons.length > 0) {
-                            polygons[polygons.length - 1].polygon = currentPolygon;
+                            let poly = polygons[polyIndex].polygon;
+                            currentPolygon = PolyBool.union(currentPolygon, poly);
                         }
-                        else {
-                            polygons.push({ 'polygon': currentPolygon, 'label': active_label, 'type': active_tool, 'selected': true });
+
+                        if (currentPolygon.regions.length > 0) {
+                            polygons[polyIndex].polygon = currentPolygon;
                         }
                     }
                     console.log('append no overlap poly');
