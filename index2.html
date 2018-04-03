@@ -313,6 +313,15 @@
             }
             ctx.fill();
 
+            // do not add polygon if it has zero area
+            if (!isPolygonLargeEnough(currentPath)) {
+                console.log('polygon too small! discarding it')
+
+                currentPath = [];
+                drawAllPolygons(ctx, polygons);
+                return;
+            }
+
             if (active_mode == 'new') {
                 // deselect all previous polygons
 
