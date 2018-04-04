@@ -10,46 +10,54 @@ create user s3_label_admin with password 's3_label_admin;';
 -- 3. Create tables
 
 create table datasets(
-    id SERIAL PRIMARY KEY,
-    site VARCHAR,
-    sensor VARCHAR,
-    description VARCHAR);
+    dataset_id SERIAL PRIMARY KEY,
+    site VARCHAR NOT NULL,
+    sensor VARCHAR NOT NULL,
+    dataset_description VARCHAR NOT NULL);
 
 create table dataset_groups(
-    id SERIAL PRIMARY KEY,
-    label_task_id INTEGER REFERENCES datasets(id),
-    dataset_id INTEGER);
+    group_id SERIAL PRIMARY KEY,
+    group_name VARCHAR UNIQUE NOT NULL,
+    group_description VARCHAR);
+
+create table dataset_group_lists(
+    group_id INTEGER REFERENCES dataset_groups(group_id),
+    dataset_id INTEGER REFERENCES datasets(dataset_id),
+    PRIMARY KEY (group_id, dataset_id));
 
 create table label_tasks(
-    id SERIAL PRIMARY KEY,
-    dataset_group_id INTEGER REFERENCES dataset_groups(id),
-    title VARCHAR,
-    description VARCHAR,
+    label_task_id SERIAL PRIMARY KEY,
+    dataset_group_id INTEGER REFERENCES dataset_groups(group_id),
+    title VARCHAR NOT NULL,
+    description VARCHAR NOT NULL,
     example_labeling VARCHAR);
 
 create table input_data(
-    id SERIAL PRIMARY KEY,
-    dataset_id INTEGER REFERENCES datasets(id),
-    image_path VARCHAR,
-    priority INTEGER);
+    input_data_id SERIAL PRIMARY KEY,
+    dataset_id INTEGER REFERENCES datasets(dataset_id),
+    image_path VARCHAR NOT NULL,
+    priority INTEGER NOT NULL);
 
 create table users(
-    id SERIAL PRIMARY KEY,
-    user_code VARCHAR,
-    first_name VARCHAR,
-    last_name VARCHAR);
+    user_id SERIAL PRIMARY KEY,
+    user_code VARCHAR UNIQUE NOT NULL,
+    first_name VARCHAR NOT NULL,
+    last_name VARCHAR NOT NULL,
+    email VARCHAR UNIQUE NOT NULL);
 
 create table labels(
-    id SERIAL PRIMARY KEY,
-    input_data_id INTEGER REFERENCES datasets(id),
-    label_task_id INTEGER REFERENCES label_tasks(id),
-    user_id INTEGER REFERENCES users(id),
-    in_progress BOOLEAN,
-    verified_done BOOLEAN,
-    paid BOOLEAN);
+    label_id SERIAL PRIMARY KEY,
+    input_data_id INTEGER REFERENCES input_data(input_data_id),
+    label_task_id INTEGER REFERENCES label_tasks(label_task_id),
+    user_id INTEGER REFERENCES users(user_id),
+    in_progress BOOLEAN DEFAULT FALSE NOT NULL,
+    verified BOOLEAN DEFAULT FALSE NOT NULL,
+    paid BOOLEAN DEFAULT FALSE NOT NULL);
 
 create table label_history(
-    id SERIAL PRIMARY KEY,
-    label_id INTEGER REFERENCES labels(id),
+    label_history_id SERIAL PRIMARY KEY,
+    label_id INTEGER REFERENCES labels(label_id),
     timestamp_edit TIMESTAMPTZ,
-    label_serialised VARCHAR);
+    label_serialised VARCHAR NOT NULL,
+    UNIQUE (label_id, timestamp_edit));
+ALTER TABLE label_history ALTER COLUMN timestamp_edit SET DEFAULT now();
