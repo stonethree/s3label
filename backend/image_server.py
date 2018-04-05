@@ -1,6 +1,9 @@
-from flask import Flask, jsonify, request, abort, send_file
+from flask import Flask, jsonify, request, abort, send_file, make_response
 from flask_cors import CORS, cross_origin
 import json
+from sqlalchemy import create_engine
+
+from backend.lib import sql_queries
 
 # set the project root directory as the static folder, you can set others.
 app = Flask(__name__, static_url_path='')
@@ -9,38 +12,15 @@ app = Flask(__name__, static_url_path='')
 # pip install -U flask-cors
 CORS(app, resources={r"/*": {"origins": "*"}})
 
+config = {'username': 'postgres',
+          'password': 'postgres',
+          'ip': 'localhost',
+          'database_name': 's3_label'}
 
-def get_images_for_label_task(label_task_id):
-    """
-    Get list of images for the current label task
-
-    :param label_task_id:
-    :return:
-    """
-
-    # get IDs of datasets corresponding to this label task
-
-    dataset_ids = [md['dataset_id'] for md in merged_datasets if md['label_task_id'] == label_task_id]
-
-    # get all images in these datasets
-
-    return [im for im in input_images if im['dataset_id'] in dataset_ids]
-
-
-def get_unlabeled_image(images):
-    """
-    Get an unlabeled image from the list of images
-
-    :param images: list of images
-    :return: an unlabeled image
-    """
-
-    # unlabeled_ims = [im for im in images if im['']]
-
-    if len(images) > 0:
-        return images[0]
-    else:
-        return None
+engine = create_engine('postgresql://{}:{}@{}:5432/{}'.format(config['username'],
+                                                              config['password'],
+                                                              config['ip'],
+                                                              config['database_name']))
 
 
 @app.route('/')
@@ -50,15 +30,17 @@ def homepage():
 
 @app.route('/image_labeler/api/v1.0/label_tasks', methods=['GET'])
 def get_label_tasks():
-    return jsonify({'label_tasks': label_tasks})
+    df_label_tasks = sql_queries.get_label_tasks(engine)
+
+    if df_label_tasks is not None:
+        resp = make_response(df_label_tasks.to_json(orient='records'), 200)
+        resp.mimetype = "application/javascript"
+        return resp
+    else:
+        abort(404)
 
 
-@app.route('/image_labeler/api/v1.0/datasets', methods=['GET'])
-def get_datasets():
-    return jsonify({'datasets': datasets})
-
-
-@app.route('/image_labeler/api/v1.0/unlabeled_images/<int:label_task_id>', methods=['GET'])
+@app.route('/image_labeler/api/v1.0/unlabeled_images/label_task/<int:label_task_id>', methods=['GET'])
 def get_unlabeled_image_id(label_task_id):
     """
     Get ID of a new image for the given label task, that has not yet been labeled or being labeled by another user
@@ -67,23 +49,33 @@ def get_unlabeled_image_id(label_task_id):
     :return:
     """
 
-    image_list = get_images_for_label_task(label_task_id)
+    offset = request.args.get('offset', 0)
+    limit = request.args.get('limit', None)
+    print('offset:', offset, 'limit:', limit)
 
-    unlabeled_image = get_unlabeled_image(image_list)
+    try:
+        if limit is not None:
+            limit = int(limit)
 
-    if unlabeled_image is None:
-        abort(404)
-    else:
-        return jsonify({'input_image_id': unlabeled_image['id']})
+        df_unlabeled_images = sql_queries.get_unlabeled_images(label_task_id, engine, num_images=limit)
+
+        if df_unlabeled_images is None:
+            abort(404)
+        else:
+            df_input_data_ids = df_unlabeled_images[['input_data_id']]
+
+            resp = make_response(df_input_data_ids.to_json(orient='records'), 200)
+            resp.mimetype = "application/javascript"
+            return resp
+    except Exception:
+        abort(400)
 
 
 @app.route('/image_labeler/api/v1.0/input_images/<int:input_image_id>', methods=['GET'])
 def get_image(input_image_id):
-    matching_images = [im for im in input_images if im['id'] == input_image_id]
+    im_path = sql_queries.get_input_data_path(input_image_id, engine)
 
-    if len(matching_images) > 0:
-        im_path = matching_images[0]['image_path']
-
+    if im_path is not None:
         return send_file(im_path)
     else:
         abort(404)

@@ -36,7 +36,7 @@ create table input_data(
     input_data_id SERIAL PRIMARY KEY,
     dataset_id INTEGER REFERENCES datasets(dataset_id),
     image_path VARCHAR NOT NULL,
-    priority INTEGER NOT NULL);
+    priority INTEGER DEFAULT 1 NOT NULL);     -- TODO: need to make "priority" linked to a label task, since an image can be high priority for one task and low for another
 
 create table users(
     user_id SERIAL PRIMARY KEY,

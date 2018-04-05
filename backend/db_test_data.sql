@@ -28,5 +28,6 @@ INSERT INTO users (user_code, first_name, last_name, email) VALUES ('U34DA', 'Ji
 
 INSERT INTO labels (input_data_id, label_task_id, user_id, in_progress) VALUES (1, 1, 1, true);
 INSERT INTO labels (input_data_id, label_task_id, user_id) VALUES (2, 1, 1);
+INSERT INTO labels (input_data_id, label_task_id, user_id) VALUES (3, 1, 1);
 
 INSERT INTO label_history (label_id, label_serialised) VALUES (2, '{{test: 123}}');
