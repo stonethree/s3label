@@ -5,9 +5,14 @@
 
 -- 2. Create the user 's3_label_admin'
 
-create user s3_label_admin with password 's3_label_admin;';
+--create user s3_label_admin with password 's3_label_admin;';
 
--- 3. Create tables
+-- 3. Drop existing tables
+
+--DROP SCHEMA public CASCADE;
+--CREATE SCHEMA public;
+
+-- 4. Create tables
 
 create table datasets(
     dataset_id SERIAL PRIMARY KEY,
@@ -21,34 +26,34 @@ create table dataset_groups(
     group_description VARCHAR);
 
 create table dataset_group_lists(
-    group_id INTEGER REFERENCES dataset_groups(group_id),
-    dataset_id INTEGER REFERENCES datasets(dataset_id),
+    group_id INTEGER REFERENCES dataset_groups(group_id) ON DELETE CASCADE,
+    dataset_id INTEGER REFERENCES datasets(dataset_id) ON DELETE CASCADE,
     PRIMARY KEY (group_id, dataset_id));
 
 create table label_tasks(
     label_task_id SERIAL PRIMARY KEY,
-    dataset_group_id INTEGER REFERENCES dataset_groups(group_id),
+    dataset_group_id INTEGER REFERENCES dataset_groups(group_id) ON DELETE CASCADE,
     title VARCHAR NOT NULL,
     description VARCHAR NOT NULL,
     example_labeling VARCHAR);
 
 create table input_data(
     input_data_id SERIAL PRIMARY KEY,
-    dataset_id INTEGER REFERENCES datasets(dataset_id),
-    image_path VARCHAR NOT NULL,
-    priority INTEGER DEFAULT 1 NOT NULL);     -- TODO: need to make "priority" linked to a label task, since an image can be high priority for one task and low for another
+    dataset_id INTEGER REFERENCES datasets(dataset_id) ON DELETE CASCADE,
+    image_path VARCHAR NOT NULL);
 
 create table users(
     user_id SERIAL PRIMARY KEY,
     user_code VARCHAR UNIQUE NOT NULL,
+    password VARCHAR NOT NULL,
     first_name VARCHAR NOT NULL,
     last_name VARCHAR NOT NULL,
     email VARCHAR UNIQUE NOT NULL);
 
 create table labels(
     label_id SERIAL PRIMARY KEY,
-    input_data_id INTEGER REFERENCES input_data(input_data_id),
-    label_task_id INTEGER REFERENCES label_tasks(label_task_id),
+    input_data_id INTEGER REFERENCES input_data(input_data_id) ON DELETE CASCADE,
+    label_task_id INTEGER REFERENCES label_tasks(label_task_id) ON DELETE CASCADE,
     user_id INTEGER REFERENCES users(user_id),
     in_progress BOOLEAN DEFAULT FALSE NOT NULL,
     verified BOOLEAN DEFAULT FALSE NOT NULL,
@@ -56,8 +61,14 @@ create table labels(
 
 create table label_history(
     label_history_id SERIAL PRIMARY KEY,
-    label_id INTEGER REFERENCES labels(label_id),
+    label_id INTEGER REFERENCES labels(label_id) ON DELETE CASCADE,
     timestamp_edit TIMESTAMPTZ,
     label_serialised VARCHAR NOT NULL,
     UNIQUE (label_id, timestamp_edit));
 ALTER TABLE label_history ALTER COLUMN timestamp_edit SET DEFAULT now();
+
+create table priorities(
+    priority_id SERIAL PRIMARY KEY,
+    input_data_id INTEGER REFERENCES input_data(input_data_id) ON DELETE CASCADE,
+    label_task_id INTEGER REFERENCES label_tasks(label_task_id) ON DELETE CASCADE,
+    priority INTEGER DEFAULT 1 NOT NULL);

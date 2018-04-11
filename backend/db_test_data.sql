@@ -15,19 +15,26 @@ INSERT INTO label_tasks(dataset_group_id, title, description) VALUES (1, 'Rock p
 INSERT INTO label_tasks(dataset_group_id, title, description) VALUES (2, 'Rock particle segmentation subset', 'Multi-instance segmentation for rock particles');
 INSERT INTO label_tasks(dataset_group_id, title, description) VALUES (3, 'Froth segmentation', 'Multi-instance segmentation for froth bubbles');
 
-INSERT INTO input_data(dataset_id, image_path, priority) VALUES (1, 'test_images/image.jpg', 1);
-INSERT INTO input_data(dataset_id, image_path, priority) VALUES (1, 'test_images/image2.jpg', 5);
-INSERT INTO input_data(dataset_id, image_path, priority) VALUES (2, 'test_images/image3.jpg', 6);
-INSERT INTO input_data(dataset_id, image_path, priority) VALUES (2, 'test_images/image4.jpg', 6);
-INSERT INTO input_data(dataset_id, image_path, priority) VALUES (2, 'test_images/image_test.jpg', 5);
-INSERT INTO input_data(dataset_id, image_path, priority) VALUES (3, 'test_images/froth_image.jpg', 3);
+INSERT INTO input_data(dataset_id, image_path) VALUES (1, 'test_images/image.jpg');
+INSERT INTO input_data(dataset_id, image_path) VALUES (1, 'test_images/image2.jpg');
+INSERT INTO input_data(dataset_id, image_path) VALUES (2, 'test_images/image3.jpg');
+INSERT INTO input_data(dataset_id, image_path) VALUES (2, 'test_images/image4.jpg');
+INSERT INTO input_data(dataset_id, image_path) VALUES (2, 'test_images/image_test.jpg');
+INSERT INTO input_data(dataset_id, image_path) VALUES (3, 'test_images/froth_image.jpg');
 
-INSERT INTO users (user_code, first_name, last_name, email) VALUES ('3Hx45', 'Shaun', 'Irwin', 'shaun.irwin@stonethree.com');
-INSERT INTO users (user_code, first_name, last_name, email) VALUES ('79ACF', 'Kristo', 'Botha', 'kristo.botha@stonethree.com');
-INSERT INTO users (user_code, first_name, last_name, email) VALUES ('U34DA', 'Jimmy', 'Smith', 'test@gmail.com');
+INSERT INTO users (user_code, password, first_name, last_name, email) VALUES ('3Hx45', 'abc', 'Shaun', 'Irwin', 'shaun.irwin@stonethree.com');
+INSERT INTO users (user_code, password, first_name, last_name, email) VALUES ('79ACF', 'def', 'Kristo', 'Botha', 'kristo.botha@stonethree.com');
+INSERT INTO users (user_code, password, first_name, last_name, email) VALUES ('U34DA', 'ghi', 'Jimmy', 'Smith', 'test@gmail.com');
 
 INSERT INTO labels (input_data_id, label_task_id, user_id, in_progress) VALUES (1, 1, 1, true);
 INSERT INTO labels (input_data_id, label_task_id, user_id) VALUES (2, 1, 1);
 INSERT INTO labels (input_data_id, label_task_id, user_id) VALUES (3, 1, 1);
 
 INSERT INTO label_history (label_id, label_serialised) VALUES (2, '{{test: 123}}');
+
+--INSERT INTO priorities(input_data_id, label_task_id, priority) VALUES (1, 1, 1);
+--INSERT INTO priorities(input_data_id, label_task_id, priority) VALUES (2, 1, 5);
+--INSERT INTO priorities(input_data_id, label_task_id, priority) VALUES (3, 1, 3);
+--INSERT INTO priorities(input_data_id, label_task_id, priority) VALUES (4, 1, 3);
+--INSERT INTO priorities(input_data_id, label_task_id, priority) VALUES (5, 1, 3);
+--INSERT INTO priorities(input_data_id, label_task_id, priority) VALUES (6, 1, 3);
