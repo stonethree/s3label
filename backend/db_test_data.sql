@@ -2,18 +2,19 @@ INSERT INTO datasets(site, sensor, dataset_description) VALUES ('test_site_1', '
 INSERT INTO datasets(site, sensor, dataset_description) VALUES ('test_site_2', 'test_lynxx', 'This is a test. We want to segment rock images 2');
 INSERT INTO datasets(site, sensor, dataset_description) VALUES ('test_site_3', 'test_froth_sensor', 'This is a test. We want to segment rock images 3');
 
-INSERT INTO dataset_groups(group_name, group_description) VALUES ('Lynxx datasets', 'Some description of why we grouped them...');
-INSERT INTO dataset_groups(group_name, group_description) VALUES ('Subset of Lynxx datasets', 'Some description of why we grouped them...2');
-INSERT INTO dataset_groups(group_name, group_description) VALUES ('Froth datasets', 'Some description of why we grouped them...3');
+INSERT INTO dataset_groups(name, description) VALUES ('Lynxx datasets', 'Some description of why we grouped them...');
+INSERT INTO dataset_groups(name, description) VALUES ('Subset of Lynxx datasets', 'Some description of why we grouped them...2');
+INSERT INTO dataset_groups(name, description) VALUES ('Froth datasets', 'Some description of why we grouped them...3');
 
-INSERT INTO dataset_group_lists(group_id, dataset_id) VALUES (1, 1);
-INSERT INTO dataset_group_lists(group_id, dataset_id) VALUES (1, 2);
-INSERT INTO dataset_group_lists(group_id, dataset_id) VALUES (2, 1);
-INSERT INTO dataset_group_lists(group_id, dataset_id) VALUES (3, 3);
+INSERT INTO dataset_group_lists(dataset_group_id, dataset_id) VALUES (1, 1);
+INSERT INTO dataset_group_lists(dataset_group_id, dataset_id) VALUES (1, 2);
+INSERT INTO dataset_group_lists(dataset_group_id, dataset_id) VALUES (2, 1);
+INSERT INTO dataset_group_lists(dataset_group_id, dataset_id) VALUES (3, 3);
 
 INSERT INTO label_tasks(dataset_group_id, title, description) VALUES (1, 'Rock particle segmentation', 'Multi-instance segmentation for rock particles');
 INSERT INTO label_tasks(dataset_group_id, title, description) VALUES (2, 'Rock particle segmentation subset', 'Multi-instance segmentation for rock particles');
 INSERT INTO label_tasks(dataset_group_id, title, description) VALUES (3, 'Froth segmentation', 'Multi-instance segmentation for froth bubbles');
+INSERT INTO label_tasks(dataset_group_id, title, description) VALUES (3, 'Froth segmentation 2', 'Multi-instance segmentation for froth bubbles 2');
 
 INSERT INTO input_data(dataset_id, image_path) VALUES (1, 'test_images/image.jpg');
 INSERT INTO input_data(dataset_id, image_path) VALUES (1, 'test_images/image2.jpg');
@@ -29,12 +30,19 @@ INSERT INTO users (user_code, password, first_name, last_name, email) VALUES ('U
 INSERT INTO labels (input_data_id, label_task_id, user_id, in_progress) VALUES (1, 1, 1, true);
 INSERT INTO labels (input_data_id, label_task_id, user_id) VALUES (2, 1, 1);
 INSERT INTO labels (input_data_id, label_task_id, user_id) VALUES (3, 1, 1);
+INSERT INTO labels (input_data_id, label_task_id, user_id) VALUES (3, 2, 1);
+INSERT INTO labels (input_data_id, label_task_id, user_id) VALUES (3, 1, 2);
+INSERT INTO labels (input_data_id, label_task_id, user_id, in_progress) VALUES (4, 1, 3, true);
 
 INSERT INTO label_history (label_id, label_serialised) VALUES (2, '{{test: 123}}');
+INSERT INTO label_history (label_id, label_serialised) VALUES (2, '{{test: 1234}}');
+INSERT INTO label_history (label_id, label_serialised) VALUES (1, '{{test: 1}}');
 
---INSERT INTO priorities(input_data_id, label_task_id, priority) VALUES (1, 1, 1);
---INSERT INTO priorities(input_data_id, label_task_id, priority) VALUES (2, 1, 5);
---INSERT INTO priorities(input_data_id, label_task_id, priority) VALUES (3, 1, 3);
---INSERT INTO priorities(input_data_id, label_task_id, priority) VALUES (4, 1, 3);
---INSERT INTO priorities(input_data_id, label_task_id, priority) VALUES (5, 1, 3);
---INSERT INTO priorities(input_data_id, label_task_id, priority) VALUES (6, 1, 3);
+INSERT INTO priorities(input_data_id, label_task_id, priority) VALUES (1, 1, 1);
+INSERT INTO priorities(input_data_id, label_task_id, priority) VALUES (2, 1, 5);
+INSERT INTO priorities(input_data_id, label_task_id, priority) VALUES (3, 1, 3);
+INSERT INTO priorities(input_data_id, label_task_id, priority) VALUES (4, 1, 3);
+INSERT INTO priorities(input_data_id, label_task_id, priority) VALUES (5, 1, 3);
+INSERT INTO priorities(input_data_id, label_task_id, priority) VALUES (1, 2, 11);
+INSERT INTO priorities(input_data_id, label_task_id, priority) VALUES (2, 2, 15);
+INSERT INTO priorities(input_data_id, label_task_id, priority) VALUES (6, 3, 23);

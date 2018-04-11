@@ -21,18 +21,18 @@ create table datasets(
     dataset_description VARCHAR NOT NULL);
 
 create table dataset_groups(
-    group_id SERIAL PRIMARY KEY,
-    group_name VARCHAR UNIQUE NOT NULL,
-    group_description VARCHAR);
+    dataset_group_id SERIAL PRIMARY KEY,
+    name VARCHAR UNIQUE NOT NULL,
+    description VARCHAR);
 
 create table dataset_group_lists(
-    group_id INTEGER REFERENCES dataset_groups(group_id) ON DELETE CASCADE,
+    dataset_group_id INTEGER REFERENCES dataset_groups(dataset_group_id) ON DELETE CASCADE,
     dataset_id INTEGER REFERENCES datasets(dataset_id) ON DELETE CASCADE,
-    PRIMARY KEY (group_id, dataset_id));
+    PRIMARY KEY (dataset_group_id, dataset_id));
 
 create table label_tasks(
     label_task_id SERIAL PRIMARY KEY,
-    dataset_group_id INTEGER REFERENCES dataset_groups(group_id) ON DELETE CASCADE,
+    dataset_group_id INTEGER REFERENCES dataset_groups(dataset_group_id) ON DELETE CASCADE,
     title VARCHAR NOT NULL,
     description VARCHAR NOT NULL,
     example_labeling VARCHAR);
@@ -72,3 +72,37 @@ create table priorities(
     input_data_id INTEGER REFERENCES input_data(input_data_id) ON DELETE CASCADE,
     label_task_id INTEGER REFERENCES label_tasks(label_task_id) ON DELETE CASCADE,
     priority INTEGER DEFAULT 1 NOT NULL);
+
+
+-- views
+
+-- show label tasks associated with each input data item
+create view input_data_per_label_task as
+select * from
+(
+	select tmp_2.*, priority from
+	(
+	    select input_data_id, dataset_id, dataset_group_id, label_task_id from
+	    (
+	        select dataset_id, input_data_id, dataset_group_id from input_data
+	        inner join dataset_group_lists using (dataset_id)
+	    ) as tmp
+	    inner join label_tasks using (dataset_group_id)
+	) as tmp_2
+	inner join priorities using (input_data_id, label_task_id)
+) as tmp_3
+left outer join labels using (input_data_id, label_task_id);
+
+-- show most recent label history for each label
+create view latest_label_history as
+select distinct on (label_id) * from
+(
+	select * from labels
+	left outer join label_history using (label_id)
+) as tmp
+order by label_id, timestamp_edit desc;
+
+-- combine most recent label history with input data info
+create view latest_label_history_per_input_item as
+select i.*, llh.label_history_id, llh.timestamp_edit, llh.label_serialised  from input_data_per_label_task i
+left outer join latest_label_history llh using (input_data_id, label_task_id, label_id, user_id);
