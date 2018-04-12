@@ -35,7 +35,11 @@ create table label_tasks(
     dataset_group_id INTEGER REFERENCES dataset_groups(dataset_group_id) ON DELETE CASCADE,
     title VARCHAR NOT NULL,
     description VARCHAR NOT NULL,
-    example_labeling VARCHAR);
+    example_labeling VARCHAR,
+	default_tool VARCHAR DEFAULT 'freehand' NOT NULL
+	    CHECK (default_tool = 'freehand' or default_tool = 'polygon' or default_tool = 'select'),
+	permit_overlap BOOLEAN DEFAULT false NOT NULL,
+	label_classes VARCHAR DEFAULT '{"foreground_object": "(0,255,0)", "background": "(0,0,255)"}' NOT NULL);
 
 create table input_data(
     input_data_id SERIAL PRIMARY KEY,
@@ -57,7 +61,9 @@ create table labels(
     user_id INTEGER REFERENCES users(user_id),
     in_progress BOOLEAN DEFAULT FALSE NOT NULL,
     verified BOOLEAN DEFAULT FALSE NOT NULL,
-    paid BOOLEAN DEFAULT FALSE NOT NULL);
+    paid BOOLEAN DEFAULT FALSE NOT NULL,
+	user_comment VARCHAR,
+	UNIQUE (input_data_id, label_task_id, user_id));
 
 create table label_history(
     label_history_id SERIAL PRIMARY KEY,
