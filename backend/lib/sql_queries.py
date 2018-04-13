@@ -3,7 +3,6 @@ from sqlalchemy.sql import text
 
 
 # TODO: convert user_code to user_id on the backend, so that user does not need to know user_id
-# TODO: protect against SQL injection
 
 
 def get_all_input_data_items(engine, label_task_id):
@@ -18,10 +17,10 @@ def get_all_input_data_items(engine, label_task_id):
     sql_query = """select distinct on (input_data_id) * from
         (
             select input_data_id, dataset_group_id, dataset_id from input_data_per_label_task
-            where label_task_id = {label_task_id}
-        ) as all_input_data_items""".format(label_task_id=label_task_id)
+            where label_task_id = %(label_task_id)s
+        ) as all_input_data_items"""
 
-    df = pd.read_sql_query(sql_query, engine)
+    df = pd.read_sql_query(sql_query, engine, params={'label_task_id': label_task_id})
 
     return df
 
@@ -38,13 +37,13 @@ def get_next_unlabeled_input_data_item(engine, label_task_id):
 
     sql_query = """select * from latest_label_history_per_input_item
             where (not in_progress or in_progress isnull) and label_serialised isnull
-            and label_task_id = {label_task_id}
+            and label_task_id = %(label_task_id)s
             order by priority desc
-            limit 1""".format(label_task_id=label_task_id)
+            limit 1"""
 
     # TODO: should optionally shuffle label data, then sort by priority
 
-    df = pd.read_sql_query(sql_query, engine)
+    df = pd.read_sql_query(sql_query, engine, params={'label_task_id': label_task_id})
 
     if len(df) > 0:
         return df.values[0][0]
@@ -81,9 +80,9 @@ def get_recent_labeled_input_data(engine, user_id, label_task_id, input_data_id,
 
     sql_query = """
     WITH tmp_table AS (
-        SELECT *, (input_data_id={input_data_id})::int AS last_input_data_item FROM latest_label_history_per_input_item
+        SELECT *, (input_data_id=%(input_data_id)s)::int AS last_input_data_item FROM latest_label_history_per_input_item
         WHERE NOT in_progress AND NOT label_serialised ISNULL
-        AND user_id = {user_id} AND label_task_id = {label_task_id}
+        AND user_id = %(user_id)s AND label_task_id = %(label_task_id)s
     ),
     tmp_table_2 AS (
         SELECT *, SUM(last_input_data_item) OVER (order by label_id) AS summed FROM tmp_table
@@ -92,16 +91,15 @@ def get_recent_labeled_input_data(engine, user_id, label_task_id, input_data_id,
         SELECT *, SUM(summed) OVER (order by label_id) AS summed_2 FROM tmp_table_2
     ),
     tmp_table_4 AS (
-        SELECT * FROM tmp_table_3 WHERE summed_2 <= {include_mode} ORDER BY label_id DESC LIMIT {n}
+        SELECT * FROM tmp_table_3 WHERE summed_2 <= %(include_mode)s ORDER BY label_id DESC LIMIT %(n)s
     )
-    SELECT * FROM tmp_table_4 ORDER BY label_id ASC"""\
-        .format(input_data_id=input_data_id,
-                user_id=user_id,
-                label_task_id=label_task_id,
-                n=n,
-                include_mode=include_mode)
+    SELECT * FROM tmp_table_4 ORDER BY label_id ASC"""
 
-    df = pd.read_sql_query(sql_query, engine)
+    df = pd.read_sql_query(sql_query, engine, params={'input_data_id': input_data_id,
+                                                      'user_id': user_id,
+                                                      'label_task_id': label_task_id,
+                                                      'n': n,
+                                                      'include_mode': include_mode})
 
     return df
 
@@ -116,9 +114,9 @@ def get_input_data_path(engine, input_data_id):
     """
 
     sql_query = 'SELECT data_path FROM input_data ' \
-                'WHERE input_data_id={input_data_id}'.format(input_data_id=input_data_id)
+                'WHERE input_data_id=%(input_data_id)s'
 
-    df = pd.read_sql_query(sql_query, engine)
+    df = pd.read_sql_query(sql_query, engine, params={'input_data_id': input_data_id})
 
     if len(df) > 0:
         return df.values[0][0]
@@ -156,12 +154,11 @@ def get_latest_label(engine, user_id, label_task_id, input_data_id):
     """
 
     sql_query = """select * from latest_label_history
-        where user_id = {user_id} and label_task_id = {label_task_id} and input_data_id = {input_data_id}"""\
-            .format(user_id=user_id,
-                    label_task_id=label_task_id,
-                    input_data_id=input_data_id)
+        where user_id = %(user_id)s and label_task_id = %(label_task_id)s and input_data_id = %(input_data_id)s"""
 
-    df = pd.read_sql_query(sql_query, engine)
+    df = pd.read_sql_query(sql_query, engine, params={'user_id': user_id,
+                                                      'label_task_id': label_task_id,
+                                                      'input_data_id': input_data_id})
 
     return df
 
@@ -178,12 +175,11 @@ def get_label_id(engine, user_id, label_task_id, input_data_id):
     """
 
     sql_query = """select label_id from labels 
-        where user_id = {user_id} and label_task_id = {label_task_id} and input_data_id = {input_data_id}""" \
-            .format(user_id=user_id,
-                    label_task_id=label_task_id,
-                    input_data_id=input_data_id)
+        where user_id = %(user_id)s and %(label_task_id)s = %(label_task_id)s and input_data_id = %(input_data_id)s"""
 
-    df = pd.read_sql_query(sql_query, engine)
+    df = pd.read_sql_query(sql_query, engine, params={'user_id': user_id,
+                                                      'label_task_id': label_task_id,
+                                                      'input_data_id': input_data_id})
 
     if len(df) > 0:
         return df.values[0][0]
@@ -251,28 +247,39 @@ def create_new_label(engine, input_data_id, label_task_id, user_id):
 
         sql_query_2 = """
             WITH tmp_table AS (
-                UPDATE labels SET in_progress = false WHERE user_id = 4
+                UPDATE labels SET in_progress = false WHERE user_id = :user_id
             )
             INSERT INTO labels (input_data_id, label_task_id, user_id, in_progress) 
-            VALUES ({input_data_id}, {label_task_id}, {user_id}, true) RETURNING label_id;
-            """.format(input_data_id=input_data_id,
-                       label_task_id=label_task_id,
-                       user_id=user_id)
+            VALUES (:input_data_id, :label_task_id, :user_id, true) RETURNING label_id;
+            """
+
+        # execute the query
+
+        sql_query_3 = text(sql_query_2)
+
+        result = engine.execute(sql_query_3.execution_options(autocommit=True),
+                                input_data_id=int(input_data_id),
+                                label_task_id=int(label_task_id),
+                                user_id=int(user_id)
+                                )
     else:
         # update in_progress field of existing label
 
         sql_query_2 = """
             WITH tmp_table AS (
-                UPDATE labels SET in_progress = false WHERE user_id = 4
+                UPDATE labels SET in_progress = false WHERE user_id = :user_id
             )
-            UPDATE labels SET in_progress = true WHERE label_id = {label_id} RETURNING label_id;
-            """.format(user_id=user_id, label_id=label_id)
+            UPDATE labels SET in_progress = true WHERE label_id = :label_id RETURNING label_id;
+            """
 
-    # execute the query
+        # execute the query
 
-    sql_query_3 = text(sql_query_2)
+        sql_query_3 = text(sql_query_2)
 
-    result = engine.execute(sql_query_3.execution_options(autocommit=True))
+        result = engine.execute(sql_query_3.execution_options(autocommit=True),
+                                user_id=int(user_id),
+                                label_id=int(label_id)
+                                )
 
     # read the label ID from the returned result
 
@@ -291,14 +298,15 @@ def create_new_label_history(engine, label_id, serialised_label):
     :return:
     """
 
-    sql_query = """INSERT INTO label_history (label_id, label_serialised) VALUES ({label_id}, '{serialised_label}')  
-        RETURNING label_history_id""" \
-        .format(label_id=label_id,
-                serialised_label=serialised_label)
+    sql_query = """INSERT INTO label_history (label_id, label_serialised) VALUES (:label_id, :serialised_label)  
+        RETURNING label_history_id"""
 
     sql_query_2 = text(sql_query)
 
-    result = engine.execute(sql_query_2.execution_options(autocommit=True))
+    result = engine.execute(sql_query_2.execution_options(autocommit=True),
+                            label_id=int(label_id),
+                            serialised_label=serialised_label
+                            )
 
     label_history_pks = [r[0] for r in result]
 
