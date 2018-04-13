@@ -147,6 +147,9 @@ INSERT INTO labels (input_data_id, label_task_id, user_id, in_progress) VALUES (
 INSERT INTO label_history (label_id, label_serialised) VALUES (2, '{{test: 123}}');
 INSERT INTO label_history (label_id, label_serialised) VALUES (2, '{{test: 1234}}');
 INSERT INTO label_history (label_id, label_serialised) VALUES (1, '{{test: 1}}');
+INSERT INTO label_history (label_id, label_serialised) VALUES (3, '{{test: 4}}');
+INSERT INTO label_history (label_id, label_serialised) VALUES (4, '{{test: 5}}');
+INSERT INTO label_history (label_id, label_serialised) VALUES (5, '{{test: 6}}');
 
 INSERT INTO priorities(input_data_id, label_task_id, priority) VALUES (1, 1, 1);
 INSERT INTO priorities(input_data_id, label_task_id, priority) VALUES (2, 1, 5);

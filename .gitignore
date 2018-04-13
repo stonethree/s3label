@@ -3,3 +3,4 @@ backend/test_images
 frontend/node_modules
 frontend/package-lock.json
 __pycache__
+*cache*

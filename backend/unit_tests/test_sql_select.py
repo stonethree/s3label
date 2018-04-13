@@ -20,7 +20,7 @@ def test_get_next_unlabeled_input_data_item(refresh_db_once, db_connection_sqlal
     engine = db_connection_sqlalchemy
     input_data_id = sql_queries.get_next_unlabeled_input_data_item(engine, label_task_id=1)
 
-    assert input_data_id == 3
+    assert input_data_id == 5
 
 
 def test_get_all_input_data_items_if_input_data_id_does_not_exist(refresh_db_once, db_connection_sqlalchemy):
@@ -83,3 +83,82 @@ def test_get_label_id_if_label_does_not_exist(refresh_db_once, db_connection_sql
     label_id = sql_queries.get_label_id(engine, user_id=1, label_task_id=1, input_data_id=27)
 
     assert label_id is None
+
+
+def test_get_recent_labeled_input_data(refresh_db_once, db_connection_sqlalchemy):
+    df_test = pd.DataFrame()
+    df_test['input_data_id'] = [2, 3]
+    df_test['label_task_id'] = [1, 1]
+    df_test['label_id'] = [2, 3]
+    df_test['user_id'] = [1, 1]
+    df_test['in_progress'] = [False, False]
+    df_test['label_history_id'] = [1, 4]
+
+    engine = db_connection_sqlalchemy
+    df = sql_queries.get_recent_labeled_input_data(engine,
+                                                   user_id=1,
+                                                   label_task_id=1,
+                                                   input_data_id=2,
+                                                   n=4,
+                                                   include_current_input_data=True)
+
+    assert len(df) == 2
+    assert_series_equal(df['input_data_id'], df_test['input_data_id'])
+    assert_series_equal(df['label_task_id'], df_test['label_task_id'])
+    assert_series_equal(df['label_id'], df_test['label_id'])
+    assert_series_equal(df['user_id'], df_test['user_id'])
+    assert_series_equal(df['in_progress'], df_test['in_progress'])
+    assert_series_equal(df['label_history_id'], df_test['label_history_id'])
+
+
+def test_get_recent_labeled_input_data_if_only_one_item_requested(refresh_db_once, db_connection_sqlalchemy):
+    df_test = pd.DataFrame()
+    df_test['input_data_id'] = [3]
+    df_test['label_task_id'] = [1]
+    df_test['label_id'] = [3]
+    df_test['user_id'] = [1]
+    df_test['in_progress'] = [False]
+    df_test['label_history_id'] = [4]
+
+    engine = db_connection_sqlalchemy
+    df = sql_queries.get_recent_labeled_input_data(engine,
+                                                   user_id=1,
+                                                   label_task_id=1,
+                                                   input_data_id=2,
+                                                   n=1,
+                                                   include_current_input_data=True)
+
+    assert len(df) == 1
+    assert_series_equal(df['input_data_id'], df_test['input_data_id'])
+    assert_series_equal(df['label_task_id'], df_test['label_task_id'])
+    assert_series_equal(df['label_id'], df_test['label_id'])
+    assert_series_equal(df['user_id'], df_test['user_id'])
+    assert_series_equal(df['in_progress'], df_test['in_progress'])
+    assert_series_equal(df['label_history_id'], df_test['label_history_id'])
+
+
+def test_get_recent_labeled_input_data_if_not_including_specified_input_data_id(refresh_db_once,
+                                                                                db_connection_sqlalchemy):
+    df_test = pd.DataFrame()
+    df_test['input_data_id'] = [2]
+    df_test['label_task_id'] = [1]
+    df_test['label_id'] = [2]
+    df_test['user_id'] = [1]
+    df_test['in_progress'] = [False]
+    df_test['label_history_id'] = [1]
+
+    engine = db_connection_sqlalchemy
+    df = sql_queries.get_recent_labeled_input_data(engine,
+                                                   user_id=1,
+                                                   label_task_id=1,
+                                                   input_data_id=2,
+                                                   n=4,
+                                                   include_current_input_data=False)
+
+    assert len(df) == 1
+    assert_series_equal(df['input_data_id'], df_test['input_data_id'])
+    assert_series_equal(df['label_task_id'], df_test['label_task_id'])
+    assert_series_equal(df['label_id'], df_test['label_id'])
+    assert_series_equal(df['user_id'], df_test['user_id'])
+    assert_series_equal(df['in_progress'], df_test['in_progress'])
+    assert_series_equal(df['label_history_id'], df_test['label_history_id'])
