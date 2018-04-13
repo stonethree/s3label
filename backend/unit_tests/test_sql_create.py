@@ -10,11 +10,11 @@ def test_create_new_label_history(refresh_db_every_time, db_connection_sqlalchem
     df_test['dataset_id'] = [1, 1, 2, 2, 2]
 
     engine = db_connection_sqlalchemy
-    label_hist_pks = sql_queries.create_new_label_history(engine,
-                                                          label_id=1,
-                                                          serialised_label='{{unit_test_example: 1238}}')
+    label_hist_id = sql_queries.create_new_label_history(engine,
+                                                         label_id=1,
+                                                         serialised_label='{{unit_test_example: 1238}}')
 
-    assert len(label_hist_pks) == 1
+    assert label_hist_id == 7
 
 
 def test_create_new_label_when_label_already_exists(refresh_db_every_time, db_connection_sqlalchemy):

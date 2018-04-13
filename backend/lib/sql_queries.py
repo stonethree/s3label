@@ -77,6 +77,8 @@ def get_recent_labeled_input_data(engine, user_id, label_task_id, input_data_id,
 
     if n is None:
         n = 'ALL'
+    else:
+        n = int(n)
 
     sql_query = """
     WITH tmp_table AS (
@@ -91,14 +93,13 @@ def get_recent_labeled_input_data(engine, user_id, label_task_id, input_data_id,
         SELECT *, SUM(summed) OVER (order by label_id) AS summed_2 FROM tmp_table_2
     ),
     tmp_table_4 AS (
-        SELECT * FROM tmp_table_3 WHERE summed_2 <= %(include_mode)s ORDER BY label_id DESC LIMIT %(n)s
+        SELECT * FROM tmp_table_3 WHERE summed_2 <= %(include_mode)s ORDER BY label_id DESC LIMIT {n}
     )
-    SELECT * FROM tmp_table_4 ORDER BY label_id ASC"""
+    SELECT * FROM tmp_table_4 ORDER BY label_id ASC""".format(n=n)
 
     df = pd.read_sql_query(sql_query, engine, params={'input_data_id': input_data_id,
                                                       'user_id': user_id,
                                                       'label_task_id': label_task_id,
-                                                      'n': n,
                                                       'include_mode': include_mode})
 
     return df
@@ -182,7 +183,7 @@ def get_label_id(engine, user_id, label_task_id, input_data_id):
                                                       'input_data_id': input_data_id})
 
     if len(df) > 0:
-        return df.values[0][0]
+        return int(df.values[0][0])
     else:
         return None
 
@@ -308,9 +309,9 @@ def create_new_label_history(engine, label_id, serialised_label):
                             serialised_label=serialised_label
                             )
 
-    label_history_pks = [r[0] for r in result]
+    label_history_id = int([r[0] for r in result][0])
 
-    return label_history_pks
+    return label_history_id
 
 
 def delete_dataset_group(engine, dataset_group_id):
