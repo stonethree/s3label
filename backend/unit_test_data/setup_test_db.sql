@@ -26,6 +26,8 @@ create table label_tasks(
     dataset_group_id INTEGER REFERENCES dataset_groups(dataset_group_id) ON DELETE CASCADE,
     title VARCHAR NOT NULL,
     description VARCHAR NOT NULL,
+    type VARCHAR NOT NULL
+        CHECK (type = 'semantic_segmentation' or type = 'instance_segmentation'),
     example_labeling VARCHAR,
 	default_tool VARCHAR DEFAULT 'freehand' NOT NULL
 	    CHECK (default_tool = 'freehand' or default_tool = 'polygon' or default_tool = 'select'),
@@ -43,7 +45,9 @@ create table users(
     password VARCHAR NOT NULL,
     first_name VARCHAR NOT NULL,
     last_name VARCHAR NOT NULL,
-    email VARCHAR UNIQUE NOT NULL);
+    email VARCHAR UNIQUE NOT NULL,
+    organisation VARCHAR,
+    note VARCHAR);
 
 create table labels(
     label_id SERIAL PRIMARY KEY,
@@ -51,10 +55,18 @@ create table labels(
     label_task_id INTEGER REFERENCES label_tasks(label_task_id) ON DELETE CASCADE,
     user_id INTEGER REFERENCES users(user_id),
     in_progress BOOLEAN DEFAULT FALSE NOT NULL,
-    verified BOOLEAN DEFAULT FALSE NOT NULL,
+    user_complete BOOLEAN DEFAULT FALSE NOT NULL,
+    admin_complete BOOLEAN DEFAULT NULL,
     paid BOOLEAN DEFAULT FALSE NOT NULL,
 	user_comment VARCHAR,
+	admin_comment VARCHAR,
 	UNIQUE (input_data_id, label_task_id, user_id));
+	COMMENT ON COLUMN labels.in_progress is 'User is currently labeling this item, so multiple users dont label same item';
+	COMMENT ON COLUMN labels.user_complete is 'User has declared labeling of item complete';
+	COMMENT ON COLUMN labels.admin_complete is 'Admin user has declared the users labeling of item complete';
+	COMMENT ON COLUMN labels.paid is 'User has been paid for this label';
+	COMMENT ON COLUMN labels.user_comment is 'User can communicate to admins via this field, to indicate issues with data item';
+	COMMENT ON COLUMN labels.admin_comment is 'Admins can communicate to users via this field, to respond to user comments or their labeling quality';
 
 create table label_history(
     label_history_id SERIAL PRIMARY KEY,
@@ -120,10 +132,10 @@ INSERT INTO dataset_group_lists(dataset_group_id, dataset_id) VALUES (1, 2);
 INSERT INTO dataset_group_lists(dataset_group_id, dataset_id) VALUES (2, 1);
 INSERT INTO dataset_group_lists(dataset_group_id, dataset_id) VALUES (3, 3);
 
-INSERT INTO label_tasks(dataset_group_id, title, description) VALUES (1, 'Rock particle segmentation', 'Multi-instance segmentation for rock particles');
-INSERT INTO label_tasks(dataset_group_id, title, description) VALUES (2, 'Rock particle segmentation subset', 'Multi-instance segmentation for rock particles');
-INSERT INTO label_tasks(dataset_group_id, title, description) VALUES (3, 'Froth segmentation', 'Multi-instance segmentation for froth bubbles');
-INSERT INTO label_tasks(dataset_group_id, title, description) VALUES (3, 'Froth segmentation 2', 'Multi-instance segmentation for froth bubbles 2');
+INSERT INTO label_tasks(dataset_group_id, title, description, type) VALUES (1, 'Rock particle segmentation', 'Multi-instance segmentation for rock particles', 'instance_segmentation');
+INSERT INTO label_tasks(dataset_group_id, title, description, type) VALUES (2, 'Rock particle segmentation subset', 'Multi-instance segmentation for rock particles', 'instance_segmentation');
+INSERT INTO label_tasks(dataset_group_id, title, description, type) VALUES (3, 'Froth segmentation', 'Multi-instance segmentation for froth bubbles', 'instance_segmentation');
+INSERT INTO label_tasks(dataset_group_id, title, description, type) VALUES (3, 'Froth segmentation 2', 'Multi-instance segmentation for froth bubbles 2', 'instance_segmentation');
 
 INSERT INTO input_data(dataset_id, data_path) VALUES (1, 'test_images/image.jpg');
 INSERT INTO input_data(dataset_id, data_path) VALUES (1, 'test_images/image2.jpg');

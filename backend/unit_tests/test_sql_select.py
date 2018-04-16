@@ -62,6 +62,7 @@ def test_get_label_tasks(refresh_db_once, db_connection_sqlalchemy):
                      'dataset_group_id',
                      'title',
                      'description',
+                     'type',
                      'example_labeling',
                      'default_tool',
                      'permit_overlap',
