@@ -2,7 +2,28 @@ import pandas as pd
 from sqlalchemy.sql import text
 
 
-# TODO: convert user_code to user_id on the backend, so that user does not need to know user_id
+def get_user_id(engine, email, password):
+    """
+    Get user ID associated with the given user's email and password
+
+    :param engine: SQLAlchemy engine
+    :param email: email address of user
+    :param password: user's password
+    :return: info about user
+    """
+
+    sql_query = """select user_id from users where email = :email and password = :password limit 1"""
+
+    # execute the query
+
+    sql_query_2 = text(sql_query).bindparams(email=email, password=password)
+
+    df = pd.read_sql_query(sql_query_2, engine)
+
+    if len(df) > 0:
+        return df.values[0][0]
+    else:
+        return None
 
 
 def get_all_input_data_items(engine, label_task_id):

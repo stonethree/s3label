@@ -1,9 +1,10 @@
 from flask import Flask, jsonify, request, abort, send_file, make_response
 from flask_cors import CORS, cross_origin
+import flask_jwt_extended as fje
 import json
 from sqlalchemy import create_engine
 
-from backend.lib import sql_queries
+from backend.lib import sql_queries, user_authentication as ua
 
 # set the project root directory as the static folder, you can set others.
 app = Flask(__name__, static_url_path='')
@@ -23,7 +24,9 @@ engine = create_engine('postgresql://{}:{}@{}:5432/{}'.format(config['username']
                                                               config['database_name']))
 
 
-# TODO: use JSON web tokens to perform logging in
+# Setup the Flask-JWT-Extended extension
+app.config['JWT_SECRET_KEY'] = 's3label-completely-secret'  # this should be kept secret!
+jwt = fje.JWTManager(app)
 
 
 # ---------------  GET requests ---------------
@@ -35,6 +38,7 @@ def homepage():
 
 
 @app.route('/image_labeler/api/v1.0/label_tasks', methods=['GET'])
+@fje.jwt_required
 def get_label_tasks():
     df_label_tasks = sql_queries.get_label_tasks(engine)
 
@@ -49,6 +53,7 @@ def get_label_tasks():
 
 
 @app.route('/image_labeler/api/v1.0/input_images/<int:input_image_id>', methods=['GET'])
+@fje.jwt_required
 def get_image(input_image_id):
     im_path = sql_queries.get_input_data_path(engine, input_image_id)
 
@@ -60,8 +65,21 @@ def get_image(input_image_id):
         return resp
 
 
-@app.route('/image_labeler/api/v1.0/labeled_data/label_task/<int:label_task_id>/user/<int:user_id>', methods=['GET'])
+@app.route('/image_labeler/api/v1.0/labeled_data/label_tasks/<int:label_task_id>/users/<int:user_id>', methods=['GET'])
+@fje.jwt_required
 def get_labeled_data(label_task_id, user_id):
+    # check that the user has permission to get the requested data: admin users can get any user's data, but an
+    # ordinary user can only get their own data
+
+    user_identity = fje.get_jwt_identity()
+    user_id_from_auth = ua.get_user_id_from_token(user_identity)
+
+    # TODO: need to check if user is an admin user or not
+    if not ua.check_user_permitted(user_id_from_auth, user_id, admin_ids=[]):
+        resp = make_response(jsonify(error='Not permitted to view this content'), 403)
+        resp.mimetype = "application/javascript"
+        return resp
+
     # get the ID of the input data item to end the selection at
 
     input_data_id = request.args.get('input_image_id', None)
@@ -94,7 +112,35 @@ def get_labeled_data(label_task_id, user_id):
 # ---------------  POST requests ---------------
 
 
-@app.route('/image_labeler/api/v1.0/unlabeled_images/label_task/<int:label_task_id>', methods=['POST'])
+# Provide a method to create access tokens. The create_access_token()
+# function is used to actually generate the token, and you can return
+# it to the caller however you choose.
+@app.route('/image_labeler/api/v1.0/login', methods=['POST'])
+def login():
+    if not request.is_json:
+        return jsonify({"msg": "Missing JSON in request"}), 400
+
+    user_email = request.json.get('email', None)
+    user_password = request.json.get('password', None)
+
+    if not user_email:
+        return jsonify({"msg": "Missing username parameter"}), 400
+    if not user_password:
+        return jsonify({"msg": "Missing password parameter"}), 400
+
+    user_id = sql_queries.get_user_id(engine, user_email, user_password)
+
+    if user_id is None:
+        return jsonify({"msg": "Bad username or password"}), 401
+
+    # Identity can be any data that is json serializable
+    access_token = fje.create_access_token(identity='user_id={}'.format(user_id), expires_delta=False)
+
+    return jsonify(access_token=access_token), 200
+
+
+@app.route('/image_labeler/api/v1.0/unlabeled_images/label_tasks/<int:label_task_id>', methods=['PUT'])
+@fje.jwt_required
 def get_unlabeled_image_id(label_task_id):
     """
     Get ID of a new image for the given label task, that has not yet been labeled or being labeled by another user
@@ -115,10 +161,10 @@ def get_unlabeled_image_id(label_task_id):
         resp.mimetype = "application/javascript"
         return resp
 
-    user_id = request.json.get('user_id', None)
-    password = request.json.get('password', None)
+    # get ID of user
 
-    # TODO: verify that user ID and password are valid
+    user_identity = fje.get_jwt_identity()
+    user_id = ua.get_user_id_from_token(user_identity)
 
     try:
         input_data_id = sql_queries.get_next_unlabeled_input_data_item(engine, label_task_id)
@@ -148,8 +194,9 @@ def get_unlabeled_image_id(label_task_id):
         return resp
 
 
-@app.route('/image_labeler/api/v1.0/label_history/label_task/<int:label_task_id>/input_data/<int:input_data_id>',
+@app.route('/image_labeler/api/v1.0/label_history/label_tasks/<int:label_task_id>/input_data/<int:input_data_id>',
            methods=['POST'])
+@fje.jwt_required
 def store_label(label_task_id, input_data_id):
     """
     Store the label for a particular label task, user and input data item
@@ -159,13 +206,13 @@ def store_label(label_task_id, input_data_id):
     :return:
     """
 
+    # get ID of user
+
+    user_identity = fje.get_jwt_identity()
+    user_id = ua.get_user_id_from_token(user_identity)
+
     if not request.json:
         resp = make_response(jsonify(error='Must use JSON format'), 400)
-        resp.mimetype = "application/javascript"
-        return resp
-
-    if 'user_id' not in request.json or 'password' not in request.json:
-        resp = make_response(jsonify(error='Requires user ID and password to perform request'), 401)
         resp.mimetype = "application/javascript"
         return resp
 
@@ -174,11 +221,7 @@ def store_label(label_task_id, input_data_id):
         resp.mimetype = "application/javascript"
         return resp
 
-    user_id = request.json.get('user_id', None)
-    password = request.json.get('password', None)
     label_serialised = request.json.get('label_serialised', None)
-
-    # TODO: verify that user ID and password are valid
 
     try:
         # find the label that the serialised label corresponds to

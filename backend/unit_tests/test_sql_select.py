@@ -4,6 +4,41 @@ import pandas as pd
 from pandas.testing import assert_frame_equal, assert_series_equal
 
 
+def test_get_user_info_for_existing_user(refresh_db_once, db_connection_sqlalchemy):
+    engine = db_connection_sqlalchemy
+    user_id = sql_queries.get_user_id(engine, email='shaun.irwin@stonethree.com', password='abc')
+
+    assert user_id == 1
+
+
+def test_get_user_info_with_wrong_password_results_in_no_users_found(refresh_db_once, db_connection_sqlalchemy):
+    engine = db_connection_sqlalchemy
+    user_id = sql_queries.get_user_id(engine, email='shaun.irwin@stonethree.com', password='abcd')
+
+    assert user_id is None
+
+
+def test_get_user_info_with_wildcard_email_address_results_in_no_users_found(refresh_db_once, db_connection_sqlalchemy):
+    engine = db_connection_sqlalchemy
+    user_id = sql_queries.get_user_id(engine, email='*', password='abcd')
+
+    assert user_id is None
+
+
+def test_get_user_info_with_wildcard_password_results_in_no_users_found(refresh_db_once, db_connection_sqlalchemy):
+    engine = db_connection_sqlalchemy
+    user_id = sql_queries.get_user_id(engine, email='shaun.irwin@stonethree.com', password='*')
+
+    assert user_id is None
+
+
+def test_get_user_info_for_non_existant_user(refresh_db_once, db_connection_sqlalchemy):
+    engine = db_connection_sqlalchemy
+    user_id = sql_queries.get_user_id(engine, email='something@stonethree.com', password='abc')
+
+    assert user_id is None
+
+
 def test_get_all_input_data_items(refresh_db_once, db_connection_sqlalchemy):
     df_test = pd.DataFrame()
     df_test['input_data_id'] = [1, 2, 3, 4, 5]
