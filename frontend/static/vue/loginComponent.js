@@ -30,31 +30,35 @@ Vue.component('label-task-chooser', {
           console.log(error);
         });
     },
-    select_label_task: function (event) {
-      // get list of label tasks from the backend
-
-      // TODO: go to 
+    select_label_task: function (label_task_id) {
+      // go to other window to allow user to label images from this label task
+      console.log('select label task:', label_task_id);
+    },
+    view_labeled_data: function (label_task_id) {
+      // go to other window to allow user to view his/her images from this label task
+      console.log('view_labeled_data:', label_task_id);
     }
   },
   template: `
     <div>
       <button v-on:click="get_label_options">Get label tasks</button>
       <div  v-for="lt in label_tasks">
-        <input type="radio" :value="lt.title" v-model="picked"> {{ lt.title }} </input>
+
+        <div class="card" style="background-color:hsla(20, 100%, 64%, 0.7);">
+          <div class="card-body">
+            <h4 class="card-title"> {{ lt.label_task_id }} - {{ lt.title }} </h4>
+            <h6 class="card-subtitle mb-2 font-italic"> {{ lt.type }} </h6>
+            <p> {{ lt.description }} </p>
+            <button v-on:click="select_label_task(lt.label_task_id)"> Label data </button>
+            <button v-on:click="view_labeled_data(lt.label_task_id)"> View labeled data </button>
+          </div>
+        </div>
+
       </div>
+
       <br>
       <span>Picked: {{ picked }}</span>
       <button v-on:click="select_label_task">Choose this label task</button>
-
-      <div class="card" style="background-color:hsla(20, 100%, 64%, 0.7);">
-        <div class="card-body">
-          <h4 class="card-title">Card title</h4>
-          <h6 class="card-subtitle mb-2 font-italic">Card subtitle</h6>
-          <p>A set of ore images that we want to segment</p>
-          <button > Label images </button>
-          <button> View labeled images </button>
-        </div>
-      </div>
 
     </div>`
 })
