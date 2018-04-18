@@ -2,9 +2,9 @@ import Vue from 'vue'
 import App from './App'
 import VueRouter from 'vue-router'
 
-import About from './components/About'
 import Login from './components/Login'
 import LabelTaskChooser from './components/LabelTaskChooser'
+import ImageLabeler from './components/ImageLabeling'
 
 Vue.use(VueRouter)
 
@@ -12,9 +12,9 @@ Vue.config.productionTip = false
 
 const routes = [
   { path: '/', component: Login },
-  { path: '/about', component: About },
   { path: '/login', component: Login },
-  { path: '/label_tasks', component: LabelTaskChooser }
+  { path: '/label_tasks', component: LabelTaskChooser },
+  { path: '/image_labeler', component: ImageLabeler }
 ]
 
 const router = new VueRouter({

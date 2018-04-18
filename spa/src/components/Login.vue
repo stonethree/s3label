@@ -10,7 +10,7 @@
         <button type="submit" v-on:click="logUserIn">Login</button>
       </div>
       <div id="auth_error_msg" class="row">
-        <p v-if="authentication_error">Error authenticating user. Please re-enter log in details.</p>
+          <p v-if="authentication_error">Error authenticating user. Please re-enter log in details.</p>
       </div>
     </div>
 </template>
@@ -22,7 +22,7 @@ axios.defaults.baseURL = "http://127.0.0.1:5000/image_labeler/api/v1.0/";
 
 export default {
     
-  name: "about",
+  name: "login",
   data: function() {
     return {
       email: null,
@@ -67,12 +67,12 @@ export default {
 </script>
 
 <style>
-#about {
+/* #login {
   font-family: "Avenir", Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: #2c3e50;
   margin-top: 60px;
-}
+} */
 </style>

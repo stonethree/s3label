@@ -2,27 +2,24 @@
     <div>
         <button v-on:click="get_label_options">Get label tasks</button>
         <div class="row">
-        <div class="col"></div>
-        <div class="col">
-            <div  v-for="lt in label_tasks">
-                <div class="card" style="background-color:hsla(20, 100%, 64%, 0.7);">
-                    <div class="card-body">
-                        <h4 class="card-title"> {{ lt.label_task_id }} - {{ lt.title }} </h4>
-                        <h6 class="card-subtitle mb-2 font-italic"> {{ lt.type }} </h6>
-                        <p> {{ lt.description }} </p>
-                        <button v-on:click="select_label_task(lt.label_task_id)"> Label data </button>
-                        <button v-on:click="view_labeled_data(lt.label_task_id)"> View labeled data </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col"></div>
-      </div>
+          <div class="col"></div>
 
-      <!-- <br>
-      <span>Picked: {{ picked }}</span>
-      <button v-on:click="select_label_task">Choose this label task</button> -->
-        <!-- <about></about> -->
+          <div class="col">
+              <div  v-for="lt in label_tasks">
+                  <div class="card" style="background-color:hsla(20, 100%, 64%, 0.7);">
+                      <div class="card-body">
+                          <h4 class="card-title"> {{ lt.label_task_id }} - {{ lt.title }} </h4>
+                          <h6 class="card-subtitle mb-2 font-italic"> {{ lt.type }} </h6>
+                          <p> {{ lt.description }} </p>
+                          <button v-on:click="select_label_task(lt.label_task_id)"> Label data </button>
+                          <button v-on:click="view_labeled_data(lt.label_task_id)"> View labeled data </button>
+                      </div>
+                  </div>
+              </div>
+          </div>
+
+          <div class="col"></div>
+      </div>
     </div>
 </template>
 
@@ -30,8 +27,6 @@
 import axios from "axios";
 
 axios.defaults.baseURL = "http://127.0.0.1:5000/image_labeler/api/v1.0/";
-
-import About from "./About";
 
 export default {
   name: "label_task_chooser",
@@ -41,11 +36,8 @@ export default {
       label_tasks: []
     };
   },
-  components: {
-    About
-  },
   methods: {
-    get_label_options: function(event) {
+    get_label_options: function() {
       // get list of label tasks from the backend
 
       const vm = this;
@@ -80,12 +72,12 @@ export default {
 </script>
 
 <style>
-#about {
+/* #label_task_chooser {
   font-family: "Avenir", Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: #2c3e50;
   margin-top: 60px;
-}
+} */
 </style>

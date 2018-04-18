@@ -1,8 +1,8 @@
 <template>
   <div id="app">
-    <h1>S3 Label</h1>
-
-
+    <div class="row justify-content-center">
+      <h1>S3 Label</h1>
+    </div>
     <div class="row">
       <div class="col"></div>
       <div class="col">
@@ -12,6 +12,9 @@
           </li>
           <li class="nav-item">
             <router-link v-bind:to="'/label_tasks'">Label Task Chooser</router-link>
+          </li>
+          <li class="nav-item">
+            <router-link v-bind:to="'/image_labeler'">Labeler</router-link>
           </li>
         </ul>
       </div>
@@ -29,12 +32,13 @@ export default {
 </script>
 
 <style>
-#app {
+/* #app {
   font-family: "Avenir", Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: #2c3e50;
   margin-top: 60px;
-}
+  margin-bottom: 160px;
+} */
 </style>

@@ -33,28 +33,6 @@ window.addEventListener('keydown', this.keyHandler, false);
 window.addEventListener('keyup', this.keyHandlerUp, false);
 
 
-axios.defaults.baseURL = 'http://127.0.0.1:5000/image_labeler/api/v1.0/';
-
-const vm = new Vue({
-    el: '#app',
-    //Mock data for the value of BTC in USD
-    data: { testing_vue: 3759.91 }
-});
-
-// Make a request for a user with a given ID
-axios.get('label_tasks')
-    .then(function (response) {
-        // get one of the label tasks
-        var label_tasks = response.data;
-        var label_task = label_tasks[0];
-        console.log(label_task);
-    })
-    .catch(function (error) {
-        console.log(error);
-    });
-
-
-
 function keyHandler(e) {
     if (e.ctrlKey && e.code === "KeyZ") {
         console.log("Undo");
