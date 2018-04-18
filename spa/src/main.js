@@ -2,16 +2,19 @@ import Vue from 'vue'
 import App from './App'
 import VueRouter from 'vue-router'
 
-import Hello from './components/HelloWorld'
 import About from './components/About'
+import Login from './components/Login'
+import LabelTaskChooser from './components/LabelTaskChooser'
 
 Vue.use(VueRouter)
 
 Vue.config.productionTip = false
 
 const routes = [
-  { path: '/', component: Hello },
-  { path: '/about', component: About }
+  { path: '/', component: Login },
+  { path: '/about', component: About },
+  { path: '/login', component: Login },
+  { path: '/label_tasks', component: LabelTaskChooser }
 ]
 
 const router = new VueRouter({
