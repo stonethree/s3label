@@ -1,11 +1,13 @@
 <template>
     <div>
-        <button v-on:click="get_label_options">Get label tasks</button>
         <div class="row">
           <div class="col"></div>
 
           <div class="col">
-              <div  v-for="lt in label_tasks">
+              <div class="row justify-content-center">
+                <button v-on:click="get_label_options">Refresh label task list</button>
+              </div>
+              <div v-for="lt in label_tasks">
                   <div class="card" style="background-color:hsla(20, 100%, 64%, 0.7);">
                       <div class="card-body">
                           <h4 class="card-title"> {{ lt.label_task_id }} - {{ lt.title }} </h4>
@@ -35,6 +37,9 @@ export default {
       label_tasks: []
     };
   },
+  beforeMount() {
+        this.get_label_options();
+    },
   methods: {
     get_label_options: function() {
       // get list of label tasks from the backend
