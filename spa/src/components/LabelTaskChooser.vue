@@ -32,7 +32,6 @@ export default {
   name: "label_task_chooser",
   data: function() {
     return {
-      picked: -1,
       label_tasks: []
     };
   },
@@ -54,14 +53,23 @@ export default {
         .get("label_tasks", config)
         .then(function(response) {
           vm.label_tasks = response.data;
+
+          // store the list of label tasks in the global store so that it can be used by the image labeler component
+
+          console.log(vm.label_tasks);
+          vm.$store.commit('set_label_tasks', vm.label_tasks);
         })
         .catch(function(error) {
           console.log(error);
         });
     },
     select_label_task: function(label_task_id) {
+      // store the list of label tasks in the global store so that it can be used by the image labeler component
+
+      this.$store.commit('select_label_task', label_task_id);
+
       // go to other window to allow user to label images from this label task
-      console.log("select label task:", label_task_id);
+      this.$router.push('image_labeler');
     },
     view_labeled_data: function(label_task_id) {
       // go to other window to allow user to view his/her images from this label task

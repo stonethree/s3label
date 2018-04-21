@@ -24,15 +24,22 @@ const router = new VueRouter({
   mode: 'history'
 })
 
-// export default new Vuex.Store({
-
 const store = new Vuex.Store({
   state: {
-    count: 0
+    label_tasks: [],
+    selected_label_task_id: -1
   },
   mutations: {
-    increment (state) {
-      state.count++
+    set_label_tasks (state, label_tasks) {
+      state.label_tasks = label_tasks;
+    },
+    select_label_task (state, idx) {
+      state.selected_label_task_id = idx;
+    }
+  },
+  getters: {
+    get_selected_label_task: state => {
+      return state.label_tasks.find(label_task => label_task.label_task_id === state.selected_label_task_id)
     }
   }
 })
