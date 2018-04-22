@@ -1,5 +1,5 @@
 <template>
-    <div id="image_labeling" class="container" > <!-- @keydown="something_in_your_methods" tabindex="0"> -->
+    <div id="image_labeling" class="container" >
         <div id="drawingtools">
             <div class="row">
                 <div id="tools" class="col border-right">
@@ -64,6 +64,8 @@
 </template>
 
 <script>
+
+import { mapGetters } from 'vuex'
 
 // polygon operations
 
@@ -143,10 +145,7 @@ export default {
             active_overlap_mode: "no-overlap",
             previous_tool: undefined,
             previous_mode: undefined,
-            labels: [{"label_class": "Rock", "color": [255, 0, 0]}, 
-                     {"label_class": "Belt", "color": [0, 255, 0]}, 
-                     {"label_class": "Other", "color": [0, 0, 255]}],
-            active_label: undefined,
+            active_label: null,
             stroke_slider_value: "2",
             opacity_slider_value: "50",
             isDrawing: false,
@@ -156,8 +155,6 @@ export default {
             polygons_undo: [],
             padX: 80,
             padY: 80,
-            el: undefined,
-            el2: undefined,
             ctx: undefined,
             ctx_bg: undefined,
         };
@@ -172,36 +169,57 @@ export default {
         opacity: function() {
             return parseFloat(this.opacity_slider_value) / 100.;
         },
-        label_colours: function() {
-            var d = {};
-
-            for (var i = 0; i < this.labels.length; i++) {
-                d[this.labels[i]['label_class']] = this.labels[i]['color'];
+        // ...mapGetters([
+        //     'label_task',
+        // ]),
+        label_task: function() {
+            return this.$store.getters.label_task;
+        },
+        labels: function() {
+            if (this.label_task != undefined) {
+                return JSON.parse(this.label_task.label_classes);
             }
-            return d;
+            else {
+                return undefined;
+            }
+        },
+        label_colors: function() {
+            if (this.label_task != undefined) {
+                var d = {};
+
+                for (var i = 0; i < this.labels.length; i++) {
+                    d[this.labels[i].label_class] = this.extractColor(this.labels[i].color);
+                }
+                return d;
+            }
+            else {
+                return null
+            }
+
+            
         }
     },
     created: function () {
-        // initialise active label to the first label in the set
-        this.active_label = this.labels[0].label_class;
-        console.log(this.labels[0].label_class)
 
-        // console.log("console.log(store.state.count):", this.$store.state.count)
     },
     beforeMount() {
         window.addEventListener('keydown', this.keyDownHandler);
         window.addEventListener('keyup', this.keyUpHandler);
     },
     mounted() {
-        this.el = document.getElementById('canvas-fg');
-        this.el2 = document.getElementById('canvas-bg');
-        this.ctx = this.el.getContext('2d');
-        this.ctx_bg = this.el2.getContext('2d');
+        var el = document.getElementById('canvas-fg');
+        var el2 = document.getElementById('canvas-bg');
+        this.ctx = el.getContext('2d');
+        this.ctx_bg = el2.getContext('2d');
 
-        this.ctx.lineWidth = this.stroke_thickness;
-        this.ctx.fillStyle = this.setColour(this.label_colours[this.active_label], this.opacity);
+        // this.ctx.lineWidth = this.stroke_thickness;
+        // this.ctx.fillStyle = this.setColor(this.label_colors[this.active_label], this.opacity);
 
-        // console.log(this.el, this.el2, this.ctx, this.ctx_bg)
+        // initialise active label to the first label in the set
+        if (this.labels != undefined && this.labels.length > 0) {
+            this.active_label = this.labels[0].label_class;
+            console.log(this.labels[0].label_class)
+        }
     },
     beforeDestroy () {
         window.removeEventListener('keydown', this.keyDownHandler);
@@ -209,25 +227,21 @@ export default {
     },
     watch: {
         stroke_thickness: function () {
-            // this.ctx.lineWidth = this.stroke_thickness;
             this.drawAllPolygons(this.ctx, this.polygons);
         },
         use_stroke: function () {
-            // this.ctx.lineWidth = this.stroke_thickness;
             this.drawAllPolygons(this.ctx, this.polygons);
         },
         opacity: function () {
-            // this.ctx.lineWidth = this.stroke_thickness;
             this.drawAllPolygons(this.ctx, this.polygons);
-        }
+        },
+
         // active_tool: function (newActiveTool, oldActiveTool) {
         //     this.previous_tool = oldActiveTool;
         // },
         // active_mode: function (newActiveMode, oldActiveMode) {
         //     this.previous_mode = oldActiveMode;
         // }
-        // ctx.lineWidth: stroke_thickness_slider.value;
-        // this.ctx.fillStyle = setColour(colours[active_label], opacity);
     },
     methods: {
         keyDownHandler: function(e) {
@@ -418,6 +432,7 @@ export default {
         },
 
         processPolygon: function () {
+            console.log("this.active_label:", this.active_label)
             this.isDrawing = false;
 
             this.ctx.closePath();
@@ -540,12 +555,24 @@ export default {
             }
         },
 
-        formatColour: function (rgb, alpha) {
+        extractColor: function (rgb_string) {
+            // takes a string of format
+            var rgb = JSON.parse(rgb_string)
+
+            if (rgb.length == 3) {
+                return rgb;
+            }
+            else {
+                throw TypeError('Color string must have 3 RGB elements specified');
+            }
+        },
+
+        formatColor: function (rgb, alpha) {
             return 'rgba(' + rgb[0] + ',' + rgb[1] + ',' + rgb[2] + ',' + alpha + ')';
         },
 
-        setColour: function (rgb, alpha) {
-            this.ctx.fillStyle = this.formatColour(rgb, alpha);
+        setColor: function (rgb, alpha) {
+            this.ctx.fillStyle = this.formatColor(rgb, alpha);
         },
 
         clearCanvas: function() {
@@ -564,7 +591,7 @@ export default {
         },
 
         drawPolygon: function (context, polygon) {
-            this.setColour(this.label_colours[polygon.label], this.opacity);
+            this.setColor(this.label_colors[polygon.label], this.opacity);
             let paths_to_draw = convertPolygonToPaths(polygon.polygon);
 
             if (polygon.selected) {

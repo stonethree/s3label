@@ -32,7 +32,7 @@ create table label_tasks(
 	default_tool VARCHAR DEFAULT 'freehand' NOT NULL
 	    CHECK (default_tool = 'freehand' or default_tool = 'polygon' or default_tool = 'select'),
 	permit_overlap BOOLEAN DEFAULT false NOT NULL,
-	label_classes VARCHAR DEFAULT '[{"label_class": "foreground_object", "colour": "(0,255,0)"}, {"label_class": "background", "colour": "(0,0,255)"}]' NOT NULL);
+	label_classes VARCHAR DEFAULT '[{"label_class": "foreground_object", "color": "[0,255,0]"}, {"label_class": "background", "color": "[0,0,255]"}]' NOT NULL);
 
 create table input_data(
     input_data_id SERIAL PRIMARY KEY,

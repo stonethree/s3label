@@ -38,13 +38,11 @@ const store = new Vuex.Store({
     }
   },
   getters: {
-    get_selected_label_task: state => {
+    label_task: state => {
       return state.label_tasks.find(label_task => label_task.label_task_id === state.selected_label_task_id)
     }
   }
 })
-
-console.log("console.log(store.state.count):", store.state.count)
 
 /* eslint-disable no-new */
 new Vue({

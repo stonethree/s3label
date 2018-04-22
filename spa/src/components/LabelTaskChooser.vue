@@ -61,7 +61,6 @@ export default {
 
           // store the list of label tasks in the global store so that it can be used by the image labeler component
 
-          console.log(vm.label_tasks);
           vm.$store.commit('set_label_tasks', vm.label_tasks);
         })
         .catch(function(error) {
