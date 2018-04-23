@@ -140,6 +140,7 @@ function isPolygonLargeEnough(path) {
 
 export default {
     name: 'image_labeling',
+    props: ['input_data_id_start'],
     data: function() {
         return {
             // TODO: store selected label task here, compute list of labels and disable/set drawing modes as specified in the label task
@@ -228,6 +229,13 @@ export default {
         if (this.labels != undefined && this.labels.length > 0) {
             this.active_label = this.labels[0].label_class;
             console.log(this.labels[0].label_class)
+        }
+
+        // begin with specified image
+
+        if (this.input_data_id_start != undefined) {
+            this.fetchAndDisplayImage('http://127.0.0.1:5000/image_labeler/api/v1.0/input_images/' + this.input_data_id_start);
+            this.input_data_id = this.input_data_id_start;
         }
     },
     beforeDestroy () {

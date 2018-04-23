@@ -17,7 +17,8 @@ const routes = [
   { path: '/', component: Login },
   { path: '/login', component: Login },
   { path: '/label_tasks', component: LabelTaskChooser },
-  { path: '/image_labeler', component: ImageLabeler },
+  // { path: '/image_labeler', component: ImageLabeler },
+  { path: '/image_labeler', name: 'image_labeler', component: ImageLabeler, props: true },
   { path: '/image_grid', component: ImageGrid }
 ]
 

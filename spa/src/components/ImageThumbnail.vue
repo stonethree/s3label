@@ -52,7 +52,7 @@ export default {
     methods: {
         openImage: function () {
             console.log('open image for labeling', this.userLabeledData.input_data_id)
-            this.$router.push('image_labeler');
+            this.$router.push({name: 'image_labeler', params: {input_data_id_start: this.userLabeledData.input_data_id}});
         },
 
         // image displaying functions
