@@ -53,7 +53,7 @@ def get_label_tasks():
 
 
 @app.route('/image_labeler/api/v1.0/input_images/<int:input_image_id>', methods=['GET'])
-@fje.jwt_required
+# @fje.jwt_required
 def get_image(input_image_id):
     im_path = sql_queries.get_input_data_path(engine, input_image_id)
 
@@ -139,7 +139,7 @@ def login():
     return jsonify(access_token=access_token), 200
 
 
-@app.route('/image_labeler/api/v1.0/unlabeled_images/label_tasks/<int:label_task_id>', methods=['PUT'])
+@app.route('/image_labeler/api/v1.0/unlabeled_images/label_tasks/<int:label_task_id>', methods=['GET'])     # TODO: should be PUT request?
 @fje.jwt_required
 def get_unlabeled_image_id(label_task_id):
     """
@@ -150,16 +150,6 @@ def get_unlabeled_image_id(label_task_id):
     :param label_task_id: ID of the label task that we want to retrieve an image for
     :return:
     """
-
-    if not request.json:
-        resp = make_response(jsonify(error='Must use JSON format'), 400)
-        resp.mimetype = "application/javascript"
-        return resp
-
-    if 'user_id' not in request.json or 'password' not in request.json:
-        resp = make_response(jsonify(error='Requires user ID and password to perform request'), 401)
-        resp.mimetype = "application/javascript"
-        return resp
 
     # get ID of user
 
@@ -221,7 +211,11 @@ def store_label(label_task_id, input_data_id):
         resp.mimetype = "application/javascript"
         return resp
 
-    label_serialised = request.json.get('label_serialised', None)
+    label_json = request.json.get('label_serialised', None)
+
+    # convert the label from JSON format to a string, which can be stored in the database
+
+    label_json_serialised = json.dumps(label_json)
 
     try:
         # find the label that the serialised label corresponds to
@@ -240,7 +234,7 @@ def store_label(label_task_id, input_data_id):
 
             label_hist_id = sql_queries.create_new_label_history(engine,
                                                                  label_id=label_id,
-                                                                 serialised_label=label_serialised)
+                                                                 serialised_label=label_json_serialised)
 
             if label_hist_id is None:
                 resp = make_response(jsonify(error='Could not create label history record'), 500)
