@@ -244,13 +244,18 @@ export default {
         opacity: function () {
             this.drawAllPolygons(this.ctx, this.polygons);
         },
+        input_data_id: function (new_input_data_id, old_input_data_id) {
+            // save previous image's labels to database
+            if (old_input_data_id != undefined) {
+                console.log('Saving labels for this image', new_input_data_id, old_input_data_id)
+                this.uploadLabeledImage(old_input_data_id);
+            }
 
-        // active_tool: function (newActiveTool, oldActiveTool) {
-        //     this.previous_tool = oldActiveTool;
-        // },
-        // active_mode: function (newActiveMode, oldActiveMode) {
-        //     this.previous_mode = oldActiveMode;
-        // }
+            this.clearCanvas();
+            
+            // when input image ID changes (i.e. new image is loaded), load latest image label from database 
+            this.loadImageLabels(new_input_data_id);
+        }
     },
     methods: {
         keyDownHandler: function(e) {
@@ -286,7 +291,6 @@ export default {
                     })
                     .then(function(input_data_id) {
                         vm.fetchAndDisplayImage('http://127.0.0.1:5000/image_labeler/api/v1.0/input_images/' + input_data_id);
-                        vm.clearCanvas();
                         vm.input_data_id = input_data_id;
                     })
                     .catch(function(error) {
@@ -296,28 +300,25 @@ export default {
             else if (e.code === "KeyA") {
                 var input_data_id = 1;
                 this.fetchAndDisplayImage('http://127.0.0.1:5000/image_labeler/api/v1.0/input_images/' + input_data_id);
-                this.clearCanvas();
                 this.input_data_id = input_data_id;
             }
             else if (e.code === "KeyB") {
                 var input_data_id = 2;
                 this.fetchAndDisplayImage('http://127.0.0.1:5000/image_labeler/api/v1.0/input_images/' + input_data_id);
-                this.clearCanvas();
                 this.input_data_id = input_data_id;
             }
             else if (e.code === "KeyC") {
                 var input_data_id = 3;
                 this.fetchAndDisplayImage('http://127.0.0.1:5000/image_labeler/api/v1.0/input_images/' + input_data_id);
-                this.clearCanvas();
                 this.input_data_id = input_data_id;
             }
             else if (e.code == 'KeyS') {
                 console.log('Saving labels for this image')
-                this.uploadLabeledImage();
+                this.uploadLabeledImage(this.input_data_id);
             }
             else if (e.code == 'KeyL') {
                 console.log('Loading labels for this image')
-                this.loadImageLabels();
+                this.loadImageLabels(this.input_data_id);
             }
             else if (e.code === 'Delete') {
                 console.log('num orig polys:', this.polygons.length, 'num redo polys:', this.polygons_redo.length)
@@ -772,9 +773,9 @@ export default {
             //     .catch(this.logError);
         },
 
-        uploadLabeledImage: function () {
+        uploadLabeledImage: function (input_data_id) {
 
-            console.log('uploading label with label task ID', this.label_task.label_task_id, 'and input data ID', this.input_data_id)
+            console.log('uploading label with label task ID', this.label_task.label_task_id, 'and input data ID', input_data_id)
 
             var data = {label_serialised: this.polygons}
 
@@ -787,7 +788,7 @@ export default {
             };
 
             axios
-            .post("label_history/label_tasks/" + this.label_task.label_task_id + "/input_data/" + this.input_data_id, data, config)
+            .post("label_history/label_tasks/" + this.label_task.label_task_id + "/input_data/" + input_data_id, data, config)
             .then(function(response) {
                 console.log(response)
             })
@@ -796,9 +797,9 @@ export default {
             });
         },
 
-        loadImageLabels: function () {
+        loadImageLabels: function (input_data_id) {
 
-            console.log('getting image labels with label task ID', this.label_task.label_task_id, 'and input data ID', this.input_data_id)
+            console.log('getting image labels with label task ID', this.label_task.label_task_id, 'and input data ID', input_data_id)
 
             let access_token = localStorage.getItem("s3_access_token");
 
@@ -811,7 +812,7 @@ export default {
             var vm = this;
 
             axios
-            .get("labels/input_data/" + this.input_data_id + "/label_tasks/" + this.label_task.label_task_id, config)
+            .get("labels/input_data/" + input_data_id + "/label_tasks/" + this.label_task.label_task_id, config)
             .then(function(response) {
                 console.log(response.data)
 
