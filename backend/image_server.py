@@ -109,6 +109,32 @@ def get_labeled_data(label_task_id, user_id):
         return resp
 
 
+@app.route('/image_labeler/api/v1.0/labels/input_data/<int:input_data_id>/label_tasks/<int:label_task_id>', methods=['GET'])
+@fje.jwt_required
+def get_latest_label(input_data_id, label_task_id):
+    """
+    Get the latest label history item for a particular user/label task/input data item combination
+
+    :param input_data_id:
+    :param label_task_id:
+    :return:
+    """
+
+    user_identity = fje.get_jwt_identity()
+    user_id = ua.get_user_id_from_token(user_identity)
+
+    df_latest_label = sql_queries.get_latest_label(engine, user_id, label_task_id, input_data_id)
+
+    if df_latest_label is not None:
+        resp = make_response(df_latest_label.to_json(orient='records'), 200)
+        resp.mimetype = "application/javascript"
+        return resp
+    else:
+        resp = make_response(jsonify(error='No label found'), 404)
+        resp.mimetype = "application/javascript"
+        return resp
+
+
 # ---------------  POST requests ---------------
 
 

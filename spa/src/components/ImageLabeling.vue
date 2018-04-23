@@ -315,6 +315,10 @@ export default {
                 console.log('Saving labels for this image')
                 this.uploadLabeledImage();
             }
+            else if (e.code == 'KeyL') {
+                console.log('Loading labels for this image')
+                this.loadImageLabels();
+            }
             else if (e.code === 'Delete') {
                 console.log('num orig polys:', this.polygons.length, 'num redo polys:', this.polygons_redo.length)
                 this.polygons_undo.push(...this.polygons.filter(poly => poly.selected));
@@ -786,6 +790,56 @@ export default {
             .post("label_history/label_tasks/" + this.label_task.label_task_id + "/input_data/" + this.input_data_id, data, config)
             .then(function(response) {
                 console.log(response)
+            })
+            .catch(function(error) {
+            console.log(error);
+            });
+        },
+
+        loadImageLabels: function () {
+
+            console.log('getting image labels with label task ID', this.label_task.label_task_id, 'and input data ID', this.input_data_id)
+
+            let access_token = localStorage.getItem("s3_access_token");
+
+            let config = {
+                headers: {
+                Authorization: "Bearer " + access_token
+                }
+            };
+
+            var vm = this;
+
+            axios
+            .get("labels/input_data/" + this.input_data_id + "/label_tasks/" + this.label_task.label_task_id, config)
+            .then(function(response) {
+                console.log(response.data)
+
+                if (response.data.length == 1) {
+                    console.log("Label found for this image: attempting to apply it in the view")
+                    var label = response.data[0];
+
+                    // check label format is correct
+
+                    console.log(label)
+
+                    var polygons = JSON.parse(label.label_serialised);
+
+                    if (polygons.length > 0 && polygons[0].polygon != undefined) {
+                        console.log('Applied serialised label to image')
+                        vm.polygons = polygons;
+                        vm.drawAllPolygons(vm.ctx, vm.polygons);
+                    }
+                    else {
+                        console.log('Serialised label has wrong format:', polygons)
+                    }
+                }
+                else if (response.data.length == 0) {
+                    console.log("No label found for this image")
+                }
+                else {
+                    console.log("Error: expected at most one label for this image!")
+                }
             })
             .catch(function(error) {
             console.log(error);
