@@ -66,6 +66,9 @@
 <script>
 
 import { mapGetters } from 'vuex'
+import axios from "axios";
+
+axios.defaults.baseURL = "http://127.0.0.1:5000/image_labeler/api/v1.0/";
 
 // polygon operations
 
@@ -245,7 +248,7 @@ export default {
     },
     methods: {
         keyDownHandler: function(e) {
-            // console.log("key:", e.code)
+            console.log("key down:", e.code)
             if (e.ctrlKey && e.code === "KeyZ") {
                 console.log("Undo");
                 this.undo();
@@ -257,15 +260,16 @@ export default {
                 this.drawAllPolygons(this.ctx, this.polygons);
             }
             else if (e.code === "KeyA") {
-                // fetchAndDisplayImage('http://127.0.0.1:5000/image_labeler/api/v1.0/input_images/1');
+                console.log('adadadsa')
+                this.fetchAndDisplayImage('http://127.0.0.1:5000/image_labeler/api/v1.0/input_images/1');
                 this.clearCanvas();
             }
             else if (e.code === "KeyB") {
-                // fetchAndDisplayImage('http://127.0.0.1:5000/image_labeler/api/v1.0/input_images/2');
+                this.fetchAndDisplayImage('http://127.0.0.1:5000/image_labeler/api/v1.0/input_images/2');
                 this.clearCanvas();
             }
             else if (e.code === "KeyC") {
-                // fetchAndDisplayImage('http://127.0.0.1:5000/image_labeler/api/v1.0/input_images/3');
+                this.fetchAndDisplayImage('http://127.0.0.1:5000/image_labeler/api/v1.0/input_images/3');
                 this.clearCanvas();
             }
             else if (e.code === 'Delete') {
@@ -303,7 +307,7 @@ export default {
                 }
             }
             else {
-                console.log(e.code);
+                console.log('key not found (down):', e.code);
             }
 
             e.stopPropagation();
@@ -333,7 +337,7 @@ export default {
                 }
             }
             else {
-                console.log(e.code);
+                console.log('key not found (up):', e.code);
             }
 
             e.stopPropagation();
@@ -636,7 +640,92 @@ export default {
                 context.stroke();
             }
             context.fill();
-        }
+        },
+
+        // image displaying functions
+
+        logError: function (error) {
+            console.log('Looks like there was a problem: \n', error);
+        },
+
+        validateResponse: function (response) {
+            if (!response.ok) {
+                throw Error(response.statusText);
+            }
+            return response;
+        },
+
+        readResponseAsBlob: function (response) {
+            return response.blob();
+        },
+
+        setCanvasSize: function (c, width, height, padX, padY) {
+            c.width = width + padX * 2;
+            c.height = height + padX * 2;
+            c.style.width = width + padX * 2 + 'px';
+            c.style.height = height + padX * 2 + 'px';
+            console.log('c '+ c.width + ', ' + c.height, padX, padY);
+        },
+
+        showImage: function (responseAsBlob) {
+            let canvas_fg = document.getElementById("canvas-fg");
+            let canvas_bg = document.getElementById("canvas-bg");
+
+            // let ctx = canvas_fg.getContext("2d");
+            let ctx2 = canvas_bg.getContext("2d");    
+
+            let img = new Image();
+            console.log(responseAsBlob)
+            let imgUrl = URL.createObjectURL(responseAsBlob); //.data);
+            // let imgUrl = responseAsBlob;
+
+            var vm = this;
+
+            img.onload = function () {
+                vm.setCanvasSize(canvas_fg, img.width, img.height, vm.padX, vm.padY);
+                vm.setCanvasSize(canvas_bg, img.width, img.height, vm.padX, vm.padY);
+                ctx2.drawImage(img, vm.padX, vm.padY);
+            }
+            img.src = imgUrl;
+        },
+
+        fetchAndDisplayImage: function (pathToResource) {
+
+            console.log('fetching im')
+            
+            // let access_token = localStorage.getItem("s3_access_token");
+
+            fetch(pathToResource)
+                .then(this.validateResponse)
+                .then(this.readResponseAsBlob)
+                .then(this.showImage)
+                .catch(this.logError);
+            
+            // fetch(pathToResource, {
+            //       headers: new Headers({ 'Authorization': "Bearer " + access_token })
+            //       })
+            //     .then(this.validateResponse)
+            //     .then(this.readResponseAsBlob)
+            //     .then(this.showImage)
+            //     .catch(this.logError);
+
+            // let config = {
+            //     headers: {
+            //     Authorization: "Bearer " + access_token
+            //     },
+            //     responseType: 'arraybuffer'
+            // };
+
+            // axios
+            //     .get(pathToResource, config)
+            //     // .then(this.validateResponse)
+            //     // .then(this.readResponseAsBlob)
+            //     .then(response => new Buffer(response.data, 'binary').toString('base64'))
+            //     .then(this.showImage)
+            //     .catch(this.logError);
+        },
+
+        
     },
 
     directives: {

@@ -66,7 +66,7 @@ def get_image(input_image_id):
 
 
 @app.route('/image_labeler/api/v1.0/labeled_data/label_tasks/<int:label_task_id>/users/<int:user_id>', methods=['GET'])
-@fje.jwt_required
+# @fje.jwt_required
 def get_labeled_data(label_task_id, user_id):
     # check that the user has permission to get the requested data: admin users can get any user's data, but an
     # ordinary user can only get their own data
