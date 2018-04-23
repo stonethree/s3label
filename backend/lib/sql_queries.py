@@ -126,6 +126,37 @@ def get_recent_labeled_input_data(engine, user_id, label_task_id, input_data_id,
     return df
 
 
+def get_all_user_input_data(engine, user_id, label_task_id, n):
+    """
+    Get all input data that the user has viewed (whether they have actually labeled any of it or not)
+
+    :param engine:
+    :param user_id:
+    :param label_task_id:
+    :param n: number of items to return (set to None if no limit)
+    :return:
+    """
+
+    # choose whether to return some or all of the items
+
+    if n is None:
+        n = 'ALL'
+    else:
+        n = int(n)
+
+    fields = 'label_id, input_data_id, label_task_id, user_id, user_complete, admin_complete, paid, user_comment, ' \
+             'admin_comment'
+
+    sql_query = """
+    SELECT {fields} FROM latest_label_history WHERE user_id=%(user_id)s AND label_task_id=%(label_task_id)s 
+    ORDER BY label_id DESC LIMIT {n}""".format(fields=fields, n=n)
+
+    df = pd.read_sql_query(sql_query, engine, params={'user_id': user_id,
+                                                      'label_task_id': label_task_id})
+
+    return df
+
+
 def get_input_data_path(engine, input_data_id):
     """
     Get the path to the data item on disk

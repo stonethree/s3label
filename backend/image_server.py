@@ -66,7 +66,7 @@ def get_image(input_image_id):
 
 
 @app.route('/image_labeler/api/v1.0/labeled_data/label_tasks/<int:label_task_id>/users/<int:user_id>', methods=['GET'])
-# @fje.jwt_required
+@fje.jwt_required
 def get_labeled_data(label_task_id, user_id):
     # check that the user has permission to get the requested data: admin users can get any user's data, but an
     # ordinary user can only get their own data
@@ -105,6 +105,62 @@ def get_labeled_data(label_task_id, user_id):
         return resp
     except Exception:
         resp = make_response(jsonify(error='No labeled data found for this user and/or label task'), 404)
+        resp.mimetype = "application/javascript"
+        return resp
+
+
+@app.route('/image_labeler/api/v1.0/all_data/label_tasks/<int:label_task_id>/users/<user_id>', methods=['GET'])
+@fje.jwt_required
+def get_all_user_input_data(label_task_id, user_id):
+    """
+    Get all the IDs of the input data that the user has viewed (labeled or not)
+
+    :param label_task_id:
+    :param user_id:
+    :return:
+    """
+
+    # check that the user has permission to get the requested data: admin users can get any user's data, but an
+    # ordinary user can only get their own data
+
+    user_identity = fje.get_jwt_identity()
+    user_id_from_auth = ua.get_user_id_from_token(user_identity)
+
+    # get user ID specified
+
+    try:
+        user_id = int(user_id)
+    except ValueError:
+        if user_id == 'own':
+            user_id = user_id_from_auth
+        else:
+            resp = make_response(jsonify(error='Must either specify ".../user_id/own" or ".../user_id/<user_id>"'), 405)
+            resp.mimetype = "application/javascript"
+            return resp
+
+    # TODO: need to check if user is an admin user or not
+    if not ua.check_user_permitted(user_id_from_auth, user_id, admin_ids=[]):
+        resp = make_response(jsonify(error='Not permitted to view this content'), 403)
+        resp.mimetype = "application/javascript"
+        return resp
+
+    # choose how many images to request
+
+    num_labeled_images = request.args.get('num_labeled_images', None)
+
+    print('num_labeled_images:', num_labeled_images)
+
+    try:
+        df_input_data = sql_queries.get_all_user_input_data(engine,
+                                                            user_id=user_id,
+                                                            label_task_id=label_task_id,
+                                                            n=num_labeled_images)
+
+        resp = make_response(df_input_data.to_json(orient='records'), 200)
+        resp.mimetype = "application/javascript"
+        return resp
+    except Exception:
+        resp = make_response(jsonify(error='No input data found for this user and/or label task'), 404)
         resp.mimetype = "application/javascript"
         return resp
 

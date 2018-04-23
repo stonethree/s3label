@@ -16,6 +16,9 @@
           <li class="nav-item">
             <router-link v-bind:to="'/image_labeler'">Labeler</router-link>
           </li>
+          <li class="nav-item">
+            <router-link v-bind:to="'/image_grid'">Image Grid</router-link>
+          </li>
         </ul>
       </div>
       <div class="col"></div>

@@ -51,6 +51,22 @@ def test_get_all_input_data_items(refresh_db_once, db_connection_sqlalchemy):
     assert_frame_equal(df, df_test)
 
 
+def test_get_all_user_input_data(refresh_db_once, db_connection_sqlalchemy):
+    df_test = pd.DataFrame()
+    df_test['label_id'] = [3, 2, 1]
+    df_test['input_data_id'] = [3, 2, 1]
+    df_test['user_id'] = [1, 1, 1]
+    df_test['label_task_id'] = [1, 1, 1]
+
+    engine = db_connection_sqlalchemy
+    df = sql_queries.get_all_user_input_data(engine, user_id=1, label_task_id=1, n=None)
+
+    assert_series_equal(df['label_id'], df_test['label_id'])
+    assert_series_equal(df['input_data_id'], df_test['input_data_id'])
+    assert_series_equal(df['user_id'], df_test['user_id'])
+    assert_series_equal(df['label_task_id'], df_test['label_task_id'])
+
+
 def test_get_next_unlabeled_input_data_item(refresh_db_once, db_connection_sqlalchemy):
     engine = db_connection_sqlalchemy
     input_data_id = sql_queries.get_next_unlabeled_input_data_item(engine, label_task_id=1)

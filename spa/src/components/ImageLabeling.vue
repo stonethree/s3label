@@ -312,14 +312,14 @@ export default {
                 this.fetchAndDisplayImage('http://127.0.0.1:5000/image_labeler/api/v1.0/input_images/' + input_data_id);
                 this.input_data_id = input_data_id;
             }
-            else if (e.code == 'KeyS') {
-                console.log('Saving labels for this image')
-                this.uploadLabeledImage(this.input_data_id);
-            }
-            else if (e.code == 'KeyL') {
-                console.log('Loading labels for this image')
-                this.loadImageLabels(this.input_data_id);
-            }
+            // else if (e.code == 'KeyS') {
+            //     console.log('Saving labels for this image')
+            //     this.uploadLabeledImage(this.input_data_id);
+            // }
+            // else if (e.code == 'KeyL') {
+            //     console.log('Loading labels for this image')
+            //     this.loadImageLabels(this.input_data_id);
+            // }
             else if (e.code === 'Delete') {
                 console.log('num orig polys:', this.polygons.length, 'num redo polys:', this.polygons_redo.length)
                 this.polygons_undo.push(...this.polygons.filter(poly => poly.selected));

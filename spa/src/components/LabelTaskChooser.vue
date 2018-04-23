@@ -7,7 +7,7 @@
               <div class="row justify-content-center">
                 <button v-on:click="get_label_options">Refresh label task list</button>
               </div>
-              <div v-for="lt in label_tasks">
+              <div v-for="lt in label_tasks" :key="lt.label_task_id">
                   <div class="card" style="background-color:hsla(20, 100%, 64%, 0.7);">
                       <div class="card-body">
                           <h4 class="card-title"> {{ lt.label_task_id }} - {{ lt.title }} </h4>
@@ -77,7 +77,12 @@ export default {
     },
     view_labeled_data: function(label_task_id) {
       // go to other window to allow user to view his/her images from this label task
-      console.log("view_labeled_data:", label_task_id);
+
+      this.$store.commit('select_label_task', label_task_id);
+
+      // go to other window to allow user to label images from this label task
+      
+      this.$router.push('image_grid');
     }
   }
 };

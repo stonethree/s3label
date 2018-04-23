@@ -6,6 +6,7 @@ import VueRouter from 'vue-router'
 import Login from './components/Login'
 import LabelTaskChooser from './components/LabelTaskChooser'
 import ImageLabeler from './components/ImageLabeling'
+import ImageGrid from './components/ImageGrid'
 
 Vue.use(VueRouter)
 Vue.use(Vuex)
@@ -16,7 +17,8 @@ const routes = [
   { path: '/', component: Login },
   { path: '/login', component: Login },
   { path: '/label_tasks', component: LabelTaskChooser },
-  { path: '/image_labeler', component: ImageLabeler }
+  { path: '/image_labeler', component: ImageLabeler },
+  { path: '/image_grid', component: ImageGrid }
 ]
 
 const router = new VueRouter({
