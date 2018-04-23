@@ -4,6 +4,7 @@ import App from './App'
 import VueRouter from 'vue-router'
 
 import Login from './components/Login'
+import Logout from './components/Logout'
 import LabelTaskChooser from './components/LabelTaskChooser'
 import ImageLabeler from './components/ImageLabeling'
 import ImageGrid from './components/ImageGrid'
@@ -16,6 +17,7 @@ Vue.config.productionTip = false
 const routes = [
   { path: '/', component: Login },
   { path: '/login', component: Login },
+  { path: '/logout', component: Logout },
   { path: '/label_tasks', component: LabelTaskChooser },
   // { path: '/image_labeler', component: ImageLabeler },
   { path: '/image_labeler', name: 'image_labeler', component: ImageLabeler, props: true },
@@ -30,7 +32,8 @@ const router = new VueRouter({
 const store = new Vuex.Store({
   state: {
     label_tasks: [],
-    selected_label_task_id: -1
+    selected_label_task_id: -1,
+    is_logged_in: false
   },
   mutations: {
     set_label_tasks (state, label_tasks) {
@@ -38,11 +41,22 @@ const store = new Vuex.Store({
     },
     select_label_task (state, idx) {
       state.selected_label_task_id = idx;
-    }
+    },
+
+    login (state) {
+      state.is_logged_in = true;
+    },
+    logout (state) {
+      state.is_logged_in = false;
+    },
   },
   getters: {
     label_task: state => {
       return state.label_tasks.find(label_task => label_task.label_task_id === state.selected_label_task_id)
+    },
+
+    logged_in: state => {
+      return state.is_logged_in;
     }
   }
 })

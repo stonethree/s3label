@@ -52,6 +52,8 @@ export default {
           // store access token in localStorage
           localStorage.setItem("s3_access_token", access_token);
 
+          vm.$store.commit('login');
+
           console.log("User logged in successfully");
           vm.authentication_error = false;
 

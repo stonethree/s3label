@@ -6,20 +6,25 @@
     <div class="row">
       <div class="col"></div>
       <div class="col">
+        <nav class="navbar">
         <ul class="nav justify-content-center nav-justified">
-          <li class="nav-item">
-            <router-link v-bind:to="'/login'">Login</router-link>
+          <li v-if="!user_logged_in" class="nav-item ">
+            <router-link v-bind:to="'/login'" class="nav-link ">Login</router-link>
+          </li>
+          <li v-else class="nav-item ">
+            <router-link v-bind:to="'/logout'" class="nav-link ">Logout</router-link>
           </li>
           <li class="nav-item">
-            <router-link v-bind:to="'/label_tasks'">Label Task Chooser</router-link>
+            <router-link v-bind:to="'/label_tasks'" class="nav-link ">Label Tasks</router-link>
           </li>
           <li class="nav-item">
-            <router-link v-bind:to="'/image_labeler'">Labeler</router-link>
+            <router-link v-bind:to="'/image_labeler'" class="nav-link ">Labeler</router-link>
           </li>
           <li class="nav-item">
-            <router-link v-bind:to="'/image_grid'">Image Grid</router-link>
+            <router-link v-bind:to="'/image_grid'" class="nav-link ">Image Grid</router-link>
           </li>
         </ul>
+        </nav>
       </div>
       <div class="col"></div>
     </div>
@@ -30,7 +35,12 @@
 
 <script>
 export default {
-  name: "App"
+  name: "App",
+  computed: {
+        user_logged_in: function() {
+            return this.$store.getters.logged_in;
+        }
+    },
 };
 </script>
 
