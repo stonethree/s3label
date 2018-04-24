@@ -67,12 +67,12 @@ def get_image(input_image_id):
 
 @app.route('/image_labeler/api/v1.0/labeled_data/label_tasks/<int:label_task_id>', methods=['GET'])
 @fje.jwt_required
-def get_preceding_input_data_item(label_task_id):
+def get_next_or_preceding_input_data_item(label_task_id):
     """
-    Get preceding data item that the user has labeled or viewed (ordered by label ID, i.e. when the label was
+    Get next or preceding data item that the user has labeled or viewed (ordered by label ID, i.e. when the label was
     initially created).
 
-    The current input data ID is given, then the item preceding it (in order of label ID) is returned.
+    The current input data ID is given, then the item following or preceding it (in order of label ID) is returned.
 
     :param label_task_id:
     :return:
@@ -87,6 +87,13 @@ def get_preceding_input_data_item(label_task_id):
     # get the ID of the input data item to end the selection at
 
     current_input_data_id = request.args.get('current_input_data_id', None)
+    action = request.args.get('action', None)
+
+    if action is None or action not in ['next', 'previous']:
+        resp = make_response(jsonify(error='Must specify whether to return next data item (action="next") or previous '
+                                           'data item (action="previous")'), 400)
+        resp.mimetype = "application/javascript"
+        return resp
 
     try:
         current_input_data_id = int(current_input_data_id)
@@ -101,10 +108,16 @@ def get_preceding_input_data_item(label_task_id):
         return resp
 
     try:
-        df_input_data = sql_queries.get_preceding_user_data_item(engine,
-                                                                 user_id=user_id_from_auth,
-                                                                 label_task_id=label_task_id,
-                                                                 current_input_data_id=current_input_data_id)
+        if action == 'previous':
+            df_input_data = sql_queries.get_preceding_user_data_item(engine,
+                                                                     user_id=user_id_from_auth,
+                                                                     label_task_id=label_task_id,
+                                                                     current_input_data_id=current_input_data_id)
+        else:
+            df_input_data = sql_queries.get_next_user_data_item(engine,
+                                                                user_id=user_id_from_auth,
+                                                                label_task_id=label_task_id,
+                                                                current_input_data_id=current_input_data_id)
 
         resp = make_response(df_input_data.to_json(orient='records'), 200)
         resp.mimetype = "application/javascript"

@@ -113,6 +113,52 @@ def test_get_preceding_user_data_item_if_input_data_id_not_found(refresh_db_once
     assert len(df) == 0
 
 
+def test_get_next_user_data_item(refresh_db_once, db_connection_sqlalchemy):
+    df_test = pd.DataFrame()
+    df_test['label_id'] = [3]
+    df_test['input_data_id'] = [3]
+    df_test['user_id'] = [1]
+    df_test['label_task_id'] = [1]
+
+    engine = db_connection_sqlalchemy
+    df = sql_queries.get_next_user_data_item(engine, user_id=1, label_task_id=1, current_input_data_id=2)
+
+    assert df['label_id'].values == df_test['label_id'].values
+    assert df['input_data_id'].values == df_test['input_data_id'].values
+    assert df['user_id'].values == df_test['user_id'].values
+    assert df['label_task_id'].values == df_test['label_task_id'].values
+
+
+def test_get_next_user_data_item_for_another_input_data_id(refresh_db_once, db_connection_sqlalchemy):
+    df_test = pd.DataFrame()
+    df_test['label_id'] = [2]
+    df_test['input_data_id'] = [2]
+    df_test['user_id'] = [1]
+    df_test['label_task_id'] = [1]
+
+    engine = db_connection_sqlalchemy
+    df = sql_queries.get_next_user_data_item(engine, user_id=1, label_task_id=1, current_input_data_id=1)
+
+    assert df['label_id'].values == df_test['label_id'].values
+    assert df['input_data_id'].values == df_test['input_data_id'].values
+    assert df['user_id'].values == df_test['user_id'].values
+    assert df['label_task_id'].values == df_test['label_task_id'].values
+
+
+def test_get_next_user_data_item_if_first_item(refresh_db_once, db_connection_sqlalchemy):
+    engine = db_connection_sqlalchemy
+    df = sql_queries.get_next_user_data_item(engine, user_id=1, label_task_id=1, current_input_data_id=3)
+
+    assert len(df) == 0
+
+
+def test_get_next_user_data_item_if_input_data_id_not_found(refresh_db_once, db_connection_sqlalchemy):
+    engine = db_connection_sqlalchemy
+    df = sql_queries.get_next_user_data_item(engine, user_id=1, label_task_id=1, current_input_data_id=28)
+
+    assert len(df) == 0
+
+
 def test_get_next_unlabeled_input_data_item(refresh_db_once, db_connection_sqlalchemy):
     engine = db_connection_sqlalchemy
     input_data_id = sql_queries.get_next_unlabeled_input_data_item(engine, label_task_id=1)
