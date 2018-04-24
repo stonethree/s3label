@@ -242,6 +242,11 @@ export default {
         window.removeEventListener('keydown', this.keyDownHandler);
         window.removeEventListener('keyup', this.keyUpHandler);
     },
+    beforeRouteLeave (to, from, next) {
+        // save image labels before navigating away
+        this.uploadLabeledImage(this.input_data_id);
+        next()
+    },
     watch: {
         stroke_thickness: function () {
             this.drawAllPolygons(this.ctx, this.polygons);
