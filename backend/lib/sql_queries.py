@@ -79,60 +79,6 @@ def get_next_unlabeled_input_data_item(engine, label_task_id, shuffle=True):
         return None
 
 
-def get_recent_labeled_input_data(engine, user_id, label_task_id, input_data_id, n, include_current_input_data):
-    """
-    Get most recently labeled input data
-
-    This allows user to skip back through previously labeled data
-
-    :param engine:
-    :param user_id:
-    :param label_task_id:
-    :param input_data_id: ID of current input data item
-    :param n: number of items to return (set to None if no limit)
-    :param include_current_input_data: if True, includes the input data item whose ID is specified
-    :return:
-    """
-
-    # choose whether to include up to and including, or just up to, the specified input data ID
-
-    if include_current_input_data:
-        include_mode = 2
-    else:
-        include_mode = 1
-
-    # choose whether to return some or all of the items
-
-    if n is None:
-        n = 'ALL'
-    else:
-        n = int(n)
-
-    sql_query = """
-    WITH tmp_table AS (
-        SELECT *, (input_data_id=%(input_data_id)s)::int AS last_input_data_item FROM latest_label_history_per_input_item
-        WHERE NOT in_progress AND NOT label_serialised ISNULL
-        AND user_id = %(user_id)s AND label_task_id = %(label_task_id)s
-    ),
-    tmp_table_2 AS (
-        SELECT *, SUM(last_input_data_item) OVER (order by label_id) AS summed FROM tmp_table
-    ),
-    tmp_table_3 AS (
-        SELECT *, SUM(summed) OVER (order by label_id) AS summed_2 FROM tmp_table_2
-    ),
-    tmp_table_4 AS (
-        SELECT * FROM tmp_table_3 WHERE summed_2 <= %(include_mode)s ORDER BY label_id DESC LIMIT {n}
-    )
-    SELECT * FROM tmp_table_4 ORDER BY label_id ASC""".format(n=n)
-
-    df = pd.read_sql_query(sql_query, engine, params={'input_data_id': input_data_id,
-                                                      'user_id': user_id,
-                                                      'label_task_id': label_task_id,
-                                                      'include_mode': include_mode})
-
-    return df
-
-
 def get_all_user_input_data(engine, user_id, label_task_id, n):
     """
     Get all input data that the user has viewed (whether they have actually labeled any of it or not)
