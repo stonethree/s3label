@@ -244,7 +244,13 @@ export default {
     },
     beforeRouteLeave (to, from, next) {
         // save image labels before navigating away
-        this.uploadLabeledImage(this.input_data_id);
+        if (this.input_data_id != undefined) {
+            console.log('saving image labels before leaving page')
+            this.uploadLabeledImage(this.input_data_id);
+        }
+        else {
+            console.log("attempted to save image before leaving page, but input_data_id = undefined")
+        }
         next()
     },
     watch: {
@@ -258,6 +264,7 @@ export default {
             this.drawAllPolygons(this.ctx, this.polygons);
         },
         input_data_id: function (new_input_data_id, old_input_data_id) {
+            console.log('transitioning!!!!', new_input_data_id, old_input_data_id)
             // save previous image's labels to database
             if (old_input_data_id != undefined) {
                 console.log('Saving labels for this image', new_input_data_id, old_input_data_id)
@@ -267,7 +274,10 @@ export default {
             this.clearCanvas();
             
             // when input image ID changes (i.e. new image is loaded), load latest image label from database 
-            this.loadImageLabels(new_input_data_id);
+            if (new_input_data_id != undefined) {
+                console.log('loading labels')
+                this.loadImageLabels(new_input_data_id);
+            }
         }
     },
     methods: {
@@ -338,7 +348,7 @@ export default {
                             }
                         })
                         .catch(function(error) {
-                        console.log(error);
+                        console.log('error getting next image:', error);
                         });
                 }
 
@@ -367,6 +377,7 @@ export default {
 
                 if (!got_an_image) {
                     console.log("No more unlabeled images available!")
+                    vm.input_data_id = undefined
                 }
             }
             // else if (e.code === "KeyA") {
@@ -859,13 +870,15 @@ export default {
                 }
             };
 
+            var vm = this;
+
             axios
-            .post("label_history/label_tasks/" + this.label_task.label_task_id + "/input_data/" + input_data_id, data, config)
+            .post("label_history/label_tasks/" + vm.label_task.label_task_id + "/input_data/" + input_data_id, data, config)
             .then(function(response) {
-                console.log(response)
+                console.log('saving:', vm.label_task.label_task_id, input_data_id, response)
             })
             .catch(function(error) {
-            console.log(error);
+            console.log('error saving label:', error);
             });
         },
 

@@ -65,8 +65,6 @@ export default {
             axios
                 .get("all_data/label_tasks/" + this.label_task.label_task_id + "/users/own", config)
                 .then(function(response) {
-                    //   vm.label_tasks = response.data;
-
                     console.log(response.data)
 
                     vm.user_labeled_data = response.data;

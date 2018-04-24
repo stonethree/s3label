@@ -287,7 +287,7 @@ def get_label_id(engine, user_id, label_task_id, input_data_id):
     """
 
     sql_query = """select label_id from labels 
-        where user_id = %(user_id)s and %(label_task_id)s = %(label_task_id)s and input_data_id = %(input_data_id)s"""
+        where user_id = %(user_id)s and label_task_id = %(label_task_id)s and input_data_id = %(input_data_id)s"""
 
     df = pd.read_sql_query(sql_query, engine, params={'user_id': user_id,
                                                       'label_task_id': label_task_id,
