@@ -157,6 +157,32 @@ def get_all_user_input_data(engine, user_id, label_task_id, n):
     return df
 
 
+def get_preceding_user_data_item(engine, user_id, label_task_id, current_input_data_id):
+    """
+    Get preceding input data that the user has viewed (whether they have actually labeled any of it or not)
+
+    :param engine:
+    :param user_id:
+    :param label_task_id:
+    :param current_input_data_id: current input data ID (we want to find the item before this in the list)
+    :return:
+    """
+
+    # retrieve all data from database for that user and label task
+
+    df = get_all_user_input_data(engine, user_id, label_task_id, n=None)
+
+    # get the next input data item in the list (the list is in descending order of label ID, so we get the next item)
+
+    matching_indices = df.index[df['input_data_id'] == current_input_data_id].tolist()
+
+    if len(matching_indices) >= 1:
+        idx = matching_indices[0]
+        return df.iloc[idx + 1:idx + 2, :]
+    else:
+        return pd.DataFrame(columns=df.columns)
+
+
 def get_input_data_path(engine, input_data_id):
     """
     Get the path to the data item on disk

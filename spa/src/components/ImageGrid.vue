@@ -8,8 +8,8 @@
                 <!-- <button v-on:click="get_label_options">Refresh label task list</button> -->
 
                 <div class="col-md-12">
-                    <!-- <span class="col-md-4 col-xs-6 im" v-for="uld in user_labeled_data" :key="uld.input_data_id" ><p>{{ uld.input_data_id }}</p> </span> -->
-                    <ImageThumbnail class="col-md-4 col-xs-6 im" v-for="uld in user_labeled_data" :key="uld.input_data_id" v-bind:user-labeled-data="uld"> {{ uld.input_data_id }} </ImageThumbnail>
+                    <!-- <span class="col-md-4 col-xs-6 im" v-for="uld in user_labeled_data_reversed" :key="uld.input_data_id" ><p>{{ uld.input_data_id }}</p> </span> -->
+                    <ImageThumbnail class="col-md-4 col-xs-6 im" v-for="uld in user_labeled_data_reversed" :key="uld.input_data_id" v-bind:user-labeled-data="uld"> {{ uld.input_data_id }} </ImageThumbnail>
                 </div>
 
               </div>
@@ -37,7 +37,10 @@ export default {
     computed: {
         label_task: function() {
             return this.$store.getters.label_task;
-      },
+        },
+        user_labeled_data_reversed: function() {
+            return this.user_labeled_data.slice().reverse();
+        }
     },
     components: {
         ImageThumbnail,

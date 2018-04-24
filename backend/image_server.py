@@ -65,40 +65,46 @@ def get_image(input_image_id):
         return resp
 
 
-@app.route('/image_labeler/api/v1.0/labeled_data/label_tasks/<int:label_task_id>/users/<int:user_id>', methods=['GET'])
+@app.route('/image_labeler/api/v1.0/labeled_data/label_tasks/<int:label_task_id>', methods=['GET'])
 @fje.jwt_required
-def get_labeled_data(label_task_id, user_id):
+def get_preceding_input_data_item(label_task_id):
+    """
+    Get preceding data item that the user has labeled or viewed (ordered by label ID, i.e. when the label was
+    initially created).
+
+    The current input data ID is given, then the item preceding it (in order of label ID) is returned.
+
+    :param label_task_id:
+    :return:
+    """
+
     # check that the user has permission to get the requested data: admin users can get any user's data, but an
     # ordinary user can only get their own data
 
     user_identity = fje.get_jwt_identity()
     user_id_from_auth = ua.get_user_id_from_token(user_identity)
 
-    # TODO: need to check if user is an admin user or not
-    if not ua.check_user_permitted(user_id_from_auth, user_id, admin_ids=[]):
-        resp = make_response(jsonify(error='Not permitted to view this content'), 403)
-        resp.mimetype = "application/javascript"
-        return resp
-
     # get the ID of the input data item to end the selection at
 
-    input_data_id = request.args.get('input_image_id', None)
-    num_labeled_images = request.args.get('num_labeled_images', None)
+    current_input_data_id = request.args.get('current_input_data_id', None)
 
-    if input_data_id is None:
-        resp = make_response(jsonify(error='Need to specify input data ID'), 400)
+    try:
+        current_input_data_id = int(current_input_data_id)
+    except (ValueError, TypeError):
+        resp = make_response(jsonify(error='current_input_data_id must be an integer'), 400)
         resp.mimetype = "application/javascript"
         return resp
 
-    print('input_image_id:', input_data_id, 'num_labeled_images:', num_labeled_images)
+    if current_input_data_id is None:
+        resp = make_response(jsonify(error='Need to specify current input data ID'), 400)
+        resp.mimetype = "application/javascript"
+        return resp
 
     try:
-        df_input_data = sql_queries.get_recent_labeled_input_data(engine,
-                                                                  user_id=user_id,
-                                                                  label_task_id=label_task_id,
-                                                                  input_data_id=int(input_data_id),
-                                                                  n=num_labeled_images,
-                                                                  include_current_input_data=False)
+        df_input_data = sql_queries.get_preceding_user_data_item(engine,
+                                                                 user_id=user_id_from_auth,
+                                                                 label_task_id=label_task_id,
+                                                                 current_input_data_id=current_input_data_id)
 
         resp = make_response(df_input_data.to_json(orient='records'), 200)
         resp.mimetype = "application/javascript"

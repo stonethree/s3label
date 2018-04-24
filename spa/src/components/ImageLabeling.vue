@@ -283,6 +283,32 @@ export default {
                 this.redo();
                 this.drawAllPolygons(this.ctx, this.polygons);
             }
+            else if (e.code === "ArrowLeft") {
+                console.log('get preceding labeled image')
+
+                let access_token = localStorage.getItem("s3_access_token");
+
+                let config = {
+                    headers: {
+                    Authorization: "Bearer " + access_token
+                    }
+                };
+
+                var vm = this;
+
+                axios
+                    .get("labeled_data/label_tasks/" + this.label_task.label_task_id + "?current_input_data_id=" + this.input_data_id, config)
+                    .then(function(response) {
+                        if (response.data.length == 1) {
+                            var preceding_data_item = response.data[0];
+                            vm.fetchAndDisplayImage('http://127.0.0.1:5000/image_labeler/api/v1.0/input_images/' + preceding_data_item.input_data_id);
+                            vm.input_data_id = preceding_data_item.input_data_id;
+                        }
+                    })
+                    .catch(function(error) {
+                    console.log(error);
+                    });
+            }
             else if (e.code === "ArrowRight") {
                 console.log('get new unlabeled image')
 
