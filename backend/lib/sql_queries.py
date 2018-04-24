@@ -46,23 +46,30 @@ def get_all_input_data_items(engine, label_task_id):
     return df
 
 
-def get_next_unlabeled_input_data_item(engine, label_task_id):
+def get_next_unlabeled_input_data_item(engine, label_task_id, shuffle=True):
     """
     Get the highest priority input data item for the specified label task that has not yet been labeled and is not
     currently being labeled by another user
 
     :param engine:
     :param label_task_id:
+    :param shuffle: if True, shuffle the data before sorting by priority
     :return:
     """
 
-    sql_query = """select * from latest_label_history_per_input_item
+    if shuffle:
+        apply_shuffle = 'order by random()'
+    else:
+        apply_shuffle = ''
+
+    sql_query = """
+        WITH tmp_table AS (
+            select * from latest_label_history_per_input_item
             where (not in_progress or in_progress isnull) and label_serialised isnull
             and label_task_id = %(label_task_id)s
-            order by priority desc
-            limit 1"""
-
-    # TODO: should optionally shuffle label data, then sort by priority
+            {apply_shuffle}
+        )
+        select * from tmp_table order by priority desc limit 1""".format(apply_shuffle=apply_shuffle)
 
     df = pd.read_sql_query(sql_query, engine, params={'label_task_id': label_task_id})
 

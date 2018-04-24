@@ -247,6 +247,7 @@ def get_unlabeled_image_id(label_task_id):
     Get ID of a new image for the given label task, that has not yet been labeled or being labeled by another user
 
     Creates a label record to keep track of label history for this combination of user, input data item and label task.
+    Can optionally give shuffle=true to shuffle data before sorting by priority
 
     :param label_task_id: ID of the label task that we want to retrieve an image for
     :return:
@@ -257,8 +258,15 @@ def get_unlabeled_image_id(label_task_id):
     user_identity = fje.get_jwt_identity()
     user_id = ua.get_user_id_from_token(user_identity)
 
+    # check if data must be shuffled before sorting by priority
+
+    if request.is_json:
+        shuffle = request.json.get('shuffle', False)
+    else:
+        shuffle = False
+
     try:
-        input_data_id = sql_queries.get_next_unlabeled_input_data_item(engine, label_task_id)
+        input_data_id = sql_queries.get_next_unlabeled_input_data_item(engine, label_task_id, shuffle=shuffle)
 
         if input_data_id is None:
             resp = make_response(jsonify(error='No input data found for this label task'), 404)

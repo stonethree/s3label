@@ -323,19 +323,24 @@ export default {
                 var vm = this;
                 var got_an_image = false;
 
-                axios
-                    .get("labeled_data/label_tasks/" + this.label_task.label_task_id + "?action=next&current_input_data_id=" + this.input_data_id, config)
-                    .then(function(response) {
-                        if (response.data.length == 1) {
-                            var next_data_item = response.data[0];
-                            vm.fetchAndDisplayImage('http://127.0.0.1:5000/image_labeler/api/v1.0/input_images/' + next_data_item.input_data_id);
-                            vm.input_data_id = next_data_item.input_data_id;
-                            got_an_image = true;
-                        }
-                    })
-                    .catch(function(error) {
-                    console.log(error);
-                    });
+
+                // check if we have an input data ID first
+
+                if (this.input_data_id != undefined) {
+                    axios
+                        .get("labeled_data/label_tasks/" + this.label_task.label_task_id + "?action=next&current_input_data_id=" + this.input_data_id, config)
+                        .then(function(response) {
+                            if (response.data.length == 1) {
+                                var next_data_item = response.data[0];
+                                vm.fetchAndDisplayImage('http://127.0.0.1:5000/image_labeler/api/v1.0/input_images/' + next_data_item.input_data_id);
+                                vm.input_data_id = next_data_item.input_data_id;
+                                got_an_image = true;
+                            }
+                        })
+                        .catch(function(error) {
+                        console.log(error);
+                        });
+                }
 
                 // request a fresh unlabeled image if we have already scrolled to the most recent image
 
@@ -343,7 +348,7 @@ export default {
                     console.log('get new unlabeled image')
 
                     axios
-                        .get("unlabeled_images/label_tasks/" + this.label_task.label_task_id, config)
+                        .get("unlabeled_images/label_tasks/" + this.label_task.label_task_id + "?shuffle=true", config)
                         .then(function(response) {
                             console.log(response.data)
                             return response.data.input_data_id;
@@ -351,6 +356,7 @@ export default {
                         .then(function(input_data_id) {
                             vm.fetchAndDisplayImage('http://127.0.0.1:5000/image_labeler/api/v1.0/input_images/' + input_data_id);
                             vm.input_data_id = input_data_id;
+                            got_an_image = true;
                         })
                         .catch(function(error) {
                         console.log(error);
@@ -363,21 +369,21 @@ export default {
                     console.log("No more unlabeled images available!")
                 }
             }
-            else if (e.code === "KeyA") {
-                var input_data_id = 1;
-                this.fetchAndDisplayImage('http://127.0.0.1:5000/image_labeler/api/v1.0/input_images/' + input_data_id);
-                this.input_data_id = input_data_id;
-            }
-            else if (e.code === "KeyB") {
-                var input_data_id = 2;
-                this.fetchAndDisplayImage('http://127.0.0.1:5000/image_labeler/api/v1.0/input_images/' + input_data_id);
-                this.input_data_id = input_data_id;
-            }
-            else if (e.code === "KeyC") {
-                var input_data_id = 3;
-                this.fetchAndDisplayImage('http://127.0.0.1:5000/image_labeler/api/v1.0/input_images/' + input_data_id);
-                this.input_data_id = input_data_id;
-            }
+            // else if (e.code === "KeyA") {
+            //     var input_data_id = 1;
+            //     this.fetchAndDisplayImage('http://127.0.0.1:5000/image_labeler/api/v1.0/input_images/' + input_data_id);
+            //     this.input_data_id = input_data_id;
+            // }
+            // else if (e.code === "KeyB") {
+            //     var input_data_id = 2;
+            //     this.fetchAndDisplayImage('http://127.0.0.1:5000/image_labeler/api/v1.0/input_images/' + input_data_id);
+            //     this.input_data_id = input_data_id;
+            // }
+            // else if (e.code === "KeyC") {
+            //     var input_data_id = 3;
+            //     this.fetchAndDisplayImage('http://127.0.0.1:5000/image_labeler/api/v1.0/input_images/' + input_data_id);
+            //     this.input_data_id = input_data_id;
+            // }
             // else if (e.code == 'KeyS') {
             //     console.log('Saving labels for this image')
             //     this.uploadLabeledImage(this.input_data_id);
