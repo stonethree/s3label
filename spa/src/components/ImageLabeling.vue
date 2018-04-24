@@ -54,12 +54,18 @@
             </div>
         </div>
 
-        <div >
-        <div id="canvasesdiv" style="position:relative;" @mousedown="mouseDownHandler" @mouseup="mouseUpHandler" @mousemove="mouseMoveHandler">
-            <canvas id="canvas-fg" width="900" height="350" style="width:900px;height:350px; border: 1px solid #ccc; z-index: 2; position:absolute; left:0px; top:0px;" v-draw-on-canvas="polygons"></canvas>
-            <canvas id="canvas-bg" width="900" height="350" style="width:900px;height:350px; border: 1px solid #ccc; z-index: 1; position:absolute; left:0px; top:0px;"></canvas>
+        <div>
+            <div id="canvasesdiv" style="position:relative;" @mousedown="mouseDownHandler" @mouseup="mouseUpHandler" @mousemove="mouseMoveHandler">
+                <canvas id="canvas-fg" width="900" height="350" style="width:900px;height:350px; border: 1px solid #ccc; z-index: 2; position:absolute; left:0px; top:0px;" v-draw-on-canvas="polygons"></canvas>
+                <canvas id="canvas-bg" width="900" height="350" style="width:900px;height:350px; border: 1px solid #ccc; z-index: 1; position:absolute; left:0px; top:0px;"></canvas>
+            </div>
+            <!-- <div v-if="input_data_id==undefined">
+                <div class="row justify-content-center">
+                    <p>No image</p>
+                </div>
+            </div> -->
         </div>
-        </div>
+    
     </div>
 </template>
 
@@ -68,7 +74,8 @@
 import { mapGetters } from 'vuex'
 import axios from "axios";
 
-axios.defaults.baseURL = "http://127.0.0.1:5000/image_labeler/api/v1.0/";
+var baseUrl = "http://127.0.0.1:5000/image_labeler/api/v1.0/";
+axios.defaults.baseURL = baseUrl;
 
 // polygon operations
 
@@ -237,6 +244,11 @@ export default {
             this.fetchAndDisplayImage('http://127.0.0.1:5000/image_labeler/api/v1.0/input_images/' + this.input_data_id_start);
             this.input_data_id = this.input_data_id_start;
         }
+        else {
+            // request a new unlabeled image
+
+            this.loadNextImage();
+        }
     },
     beforeDestroy () {
         window.removeEventListener('keydown', this.keyDownHandler);
@@ -281,6 +293,23 @@ export default {
         }
     },
     methods: {
+        draw_image_unavailable_placeholder: function() {
+            let canvas_bg = document.getElementById("canvas-bg");
+            let canvas_fg = document.getElementById("canvas-fg");
+            let ctx2 = canvas_bg.getContext("2d");  
+
+            let w = 600;
+            let h = 400;
+
+            this.setCanvasSize(canvas_bg, w, h, this.padX, this.padY);
+            this.setCanvasSize(canvas_fg, w, h, this.padX, this.padY);
+
+            ctx2.fillStyle = "hsl(25, 80%, 80%)";
+            ctx2.fillRect(this.padX, this.padY, w, h);
+            ctx2.fillStyle = "hsl(25, 80%, 10%)";
+            ctx2.fillText("No unlabeled images available for this label task", 200, 200);
+        },
+        
         keyDownHandler: function(e) {
             console.log("key down:", e.code)
             if (e.ctrlKey && e.code === "KeyZ") {
@@ -294,91 +323,39 @@ export default {
                 this.drawAllPolygons(this.ctx, this.polygons);
             }
             else if (e.code === "ArrowLeft") {
-                console.log('get preceding labeled image')
+                if (this.input_data_id == undefined) {
+                    this.loadLatestLabeledImage();
+                }
+                else {
+                    console.log('get preceding labeled image')
 
-                let access_token = localStorage.getItem("s3_access_token");
+                    let access_token = localStorage.getItem("s3_access_token");
 
-                let config = {
-                    headers: {
-                    Authorization: "Bearer " + access_token
-                    }
-                };
-
-                var vm = this;
-
-                axios
-                    .get("labeled_data/label_tasks/" + this.label_task.label_task_id + "?action=previous&current_input_data_id=" + this.input_data_id, config)
-                    .then(function(response) {
-                        if (response.data.length == 1) {
-                            var preceding_data_item = response.data[0];
-                            vm.fetchAndDisplayImage('http://127.0.0.1:5000/image_labeler/api/v1.0/input_images/' + preceding_data_item.input_data_id);
-                            vm.input_data_id = preceding_data_item.input_data_id;
+                    let config = {
+                        headers: {
+                        Authorization: "Bearer " + access_token
                         }
-                    })
-                    .catch(function(error) {
-                    console.log(error);
-                    });
-            }
-            else if (e.code === "ArrowRight") {
-                // first try get next image that the user has already viewed/labeled, if one exists
+                    };
 
-                let access_token = localStorage.getItem("s3_access_token");
+                    var vm = this;
 
-                let config = {
-                    headers: {
-                    Authorization: "Bearer " + access_token
-                    }
-                };
-
-                var vm = this;
-                var got_an_image = false;
-
-
-                // check if we have an input data ID first
-
-                if (this.input_data_id != undefined) {
                     axios
-                        .get("labeled_data/label_tasks/" + this.label_task.label_task_id + "?action=next&current_input_data_id=" + this.input_data_id, config)
+                        .get("labeled_data/label_tasks/" + this.label_task.label_task_id + "?action=previous&current_input_data_id=" + this.input_data_id, config)
                         .then(function(response) {
                             if (response.data.length == 1) {
-                                var next_data_item = response.data[0];
-                                vm.fetchAndDisplayImage('http://127.0.0.1:5000/image_labeler/api/v1.0/input_images/' + next_data_item.input_data_id);
-                                vm.input_data_id = next_data_item.input_data_id;
-                                got_an_image = true;
+                                var preceding_data_item = response.data[0];
+                                vm.fetchAndDisplayImage('http://127.0.0.1:5000/image_labeler/api/v1.0/input_images/' + preceding_data_item.input_data_id);
+                                vm.input_data_id = preceding_data_item.input_data_id;
                             }
-                        })
-                        .catch(function(error) {
-                        console.log('error getting next image:', error);
-                        });
-                }
-
-                // request a fresh unlabeled image if we have already scrolled to the most recent image
-
-                if (!got_an_image) {
-                    console.log('get new unlabeled image')
-
-                    axios
-                        .get("unlabeled_images/label_tasks/" + this.label_task.label_task_id + "?shuffle=true", config)
-                        .then(function(response) {
-                            console.log(response.data)
-                            return response.data.input_data_id;
-                        })
-                        .then(function(input_data_id) {
-                            vm.fetchAndDisplayImage('http://127.0.0.1:5000/image_labeler/api/v1.0/input_images/' + input_data_id);
-                            vm.input_data_id = input_data_id;
-                            got_an_image = true;
                         })
                         .catch(function(error) {
                         console.log(error);
                         });
                 }
-
-                // if we have scrolled to the most recent image and no unlabeled images are available, display a message to the user
-
-                if (!got_an_image) {
-                    console.log("No more unlabeled images available!")
-                    vm.input_data_id = undefined
-                }
+                
+            }
+            else if (e.code === "ArrowRight") {
+                this.loadNextImage();
             }
             // else if (e.code === "KeyA") {
             //     var input_data_id = 1;
@@ -930,7 +907,105 @@ export default {
             .catch(function(error) {
             console.log(error);
             });
-        }
+        },
+
+        loadLatestLabeledImage: function() {
+            // get the input_data_id of the latest image that the user has labeled
+
+            const vm = this;
+
+            let access_token = localStorage.getItem("s3_access_token");
+
+            let config = {
+                headers: {
+                Authorization: "Bearer " + access_token
+                }
+            };
+
+            axios
+                .get("all_data/label_tasks/" + this.label_task.label_task_id + "/users/own?num_labeled_images=1", config)
+                .then(function(response) {
+                    console.log('latest im::', response.data)
+
+                    if (response.data.length == 1) {
+                        var input_data_id_latest = response.data[0].input_data_id;
+
+                        vm.fetchAndDisplayImage('http://127.0.0.1:5000/image_labeler/api/v1.0/input_images/' + input_data_id_latest);
+                        vm.input_data_id = input_data_id_latest;
+                    }
+                })
+                .catch(function(error) {
+                console.log(error);
+                });
+        },
+
+        loadNextImage: async function () {
+            // first try get next image that the user has already viewed/labeled, if one exists
+
+            let access_token = localStorage.getItem("s3_access_token");
+
+            let config = {
+                headers: {
+                Authorization: "Bearer " + access_token
+                }
+            };
+
+            var vm = this;
+            var got_an_image = false;
+
+
+            // check if we have an input data ID first
+
+            if (this.input_data_id != undefined) {
+                got_an_image = await axios
+                    .get("labeled_data/label_tasks/" + this.label_task.label_task_id + "?action=next&current_input_data_id=" + this.input_data_id, config)
+                    .then(function(response) {
+                        if (response.data.length == 1) {
+                            var next_data_item = response.data[0];
+                            vm.fetchAndDisplayImage('http://127.0.0.1:5000/image_labeler/api/v1.0/input_images/' + next_data_item.input_data_id);
+                            vm.input_data_id = next_data_item.input_data_id;
+                            return true;
+                        }
+                        else {
+                            return false;
+                        }
+                    })
+                    .catch(function(error) {
+                        console.log('error getting next image:', error);
+                        return false;
+                    });
+            }
+
+            // request a fresh unlabeled image if we have already scrolled to the most recent image
+
+            if (!got_an_image) {
+                console.log('get new unlabeled image')
+
+                got_an_image = await axios
+                    .get("unlabeled_images/label_tasks/" + this.label_task.label_task_id + "?shuffle=true", config)
+                    .then(function(response) {
+                        console.log(response.data)
+                        return response.data.input_data_id;
+                    })
+                    .then(function(input_data_id) {
+                        vm.fetchAndDisplayImage('http://127.0.0.1:5000/image_labeler/api/v1.0/input_images/' + input_data_id);
+                        vm.input_data_id = input_data_id;
+                        return true;
+                    })
+                    .catch(function(error) {
+                        console.log(error);
+                        return false;
+                    });
+            }
+
+            // if we have scrolled to the most recent image and no unlabeled images are available, display a message to the user
+
+            if (!got_an_image) {
+                console.log("No more unlabeled images available!")
+                vm.input_data_id = undefined;
+                this.draw_image_unavailable_placeholder();
+            }
+        },
     },
 
     directives: {
