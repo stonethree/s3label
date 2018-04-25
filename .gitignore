@@ -1,6 +1,4 @@
 backend/test_images
 .idea
-frontend/node_modules
-frontend/package-lock.json
 __pycache__
 *cache*
