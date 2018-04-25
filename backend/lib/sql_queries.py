@@ -245,45 +245,6 @@ def get_label_id(engine, user_id, label_task_id, input_data_id):
         return None
 
 
-def create_new_dataset(engine, site, sensor, description):
-    """
-    Create a new dataset
-
-    :param engine:
-    :param site:
-    :param sensor:
-    :param description:
-    :return:
-    """
-
-    pass
-
-
-def create_new_input_data_item(engine, input_data_path, dataset_id):
-    """
-
-    :param engine:
-    :param input_data_path:
-    :param dataset_id:
-    :return:
-    """
-
-    pass
-
-
-def create_new_dataset_group(engine, dataset_ids, description):
-    """
-    Group the specified datasets together
-
-    :param engine:
-    :param dataset_ids:
-    :param description:
-    :return:
-    """
-
-    pass
-
-
 def create_new_label(engine, input_data_id, label_task_id, user_id):
     """
     Get the highest priority input data item for the specified label task that has not yet been labeled and is not
@@ -369,27 +330,3 @@ def create_new_label_history(engine, label_id, serialised_label):
     label_history_id = int([r[0] for r in result][0])
 
     return label_history_id
-
-
-def delete_dataset_group(engine, dataset_group_id):
-    """
-    Delete the specified dataset group
-
-    :param engine:
-    :param dataset_group_id:
-    :return:
-    """
-
-    pass
-
-
-def delete_label_task(engine, label_task_id):
-    """
-    Delete the specified label task
-
-    :param engine:
-    :param label_task_id:
-    :return:
-    """
-
-    pass

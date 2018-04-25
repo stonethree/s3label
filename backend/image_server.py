@@ -4,7 +4,7 @@ import flask_jwt_extended as fje
 import json
 from sqlalchemy import create_engine
 
-from backend.lib import sql_queries, user_authentication as ua
+from backend.lib import sql_queries, sql_queries_admin, user_authentication as ua
 
 # set the project root directory as the static folder, you can set others.
 app = Flask(__name__, static_url_path='')
@@ -206,6 +206,80 @@ def get_latest_label(input_data_id, label_task_id):
         return resp
     else:
         resp = make_response(jsonify(error='No label found'), 404)
+        resp.mimetype = "application/javascript"
+        return resp
+
+
+# ------------- ADMIN get requests ---------------
+
+
+@app.route('/image_labeler/api/v1.0/users', methods=['GET'])
+@fje.jwt_required
+def get_all_users():
+    """
+    Get list of users and their details
+
+    Requires admin privileges
+
+    :return:
+    """
+
+    user_identity = fje.get_jwt_identity()
+    user_id_from_auth = ua.get_user_id_from_token(user_identity)
+
+    # check if user is an admin user
+
+    is_admin = sql_queries_admin.is_user_an_admin(engine, user_id_from_auth)
+
+    if is_admin is None or not is_admin:
+        resp = make_response(jsonify(error='Not permitted to view this content. Must be an admin user.'), 403)
+        resp.mimetype = "application/javascript"
+        return resp
+
+    df_users = sql_queries_admin.get_users(engine)
+
+    if df_users is not None:
+        resp = make_response(df_users.to_json(orient='records'), 200)
+        resp.mimetype = "application/javascript"
+        return resp
+    else:
+        resp = make_response(jsonify(error='No users found'), 404)
+        resp.mimetype = "application/javascript"
+        return resp
+
+
+@app.route('/image_labeler/api/v1.0/label_tasks/users/<int:user_id>', methods=['GET'])
+@fje.jwt_required
+def get_label_tasks_for_user(user_id):
+    """
+    Get list of label tasks that the user has already labeled data for
+
+    Requires admin privileges
+
+    :param user_id: user ID of the user to get the tasks for
+    :return:
+    """
+
+    user_identity = fje.get_jwt_identity()
+    user_id_from_auth = ua.get_user_id_from_token(user_identity)
+
+    # check if user is an admin user
+
+    is_admin = sql_queries_admin.is_user_an_admin(engine, user_id_from_auth)
+
+    if is_admin is None or not is_admin:
+        resp = make_response(jsonify(error='Not permitted to view this content. Must be an admin user.'), 403)
+        resp.mimetype = "application/javascript"
+        return resp
+
+    df_label_tasks = sql_queries_admin.get_label_tasks_for_a_user(engine, user_id)
+
+    if df_label_tasks is not None:
+        resp = make_response(df_label_tasks.to_json(orient='records'), 200)
+        resp.mimetype = "application/javascript"
+        return resp
+    else:
+        resp = make_response(jsonify(error='No users found'), 404)
         resp.mimetype = "application/javascript"
         return resp
 

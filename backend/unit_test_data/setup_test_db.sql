@@ -47,7 +47,8 @@ create table users(
     last_name VARCHAR NOT NULL,
     email VARCHAR UNIQUE NOT NULL,
     organisation VARCHAR,
-    note VARCHAR);
+    note VARCHAR,
+    is_admin BOOLEAN DEFAULT FALSE NOT NULL);
 
 create table labels(
     label_id SERIAL PRIMARY KEY,
@@ -144,10 +145,10 @@ INSERT INTO input_data(dataset_id, data_path) VALUES (2, 'test_images/image4.jpg
 INSERT INTO input_data(dataset_id, data_path) VALUES (2, 'test_images/image_test.jpg');
 INSERT INTO input_data(dataset_id, data_path) VALUES (3, 'test_images/froth_image.jpg');
 
-INSERT INTO users (user_code, password, first_name, last_name, email) VALUES ('3Hx45', 'abc', 'Shaun', 'Irwin', 'shaun.irwin@stonethree.com');
-INSERT INTO users (user_code, password, first_name, last_name, email) VALUES ('79ACF', 'def', 'Kristo', 'Botha', 'kristo.botha@stonethree.com');
-INSERT INTO users (user_code, password, first_name, last_name, email) VALUES ('U34DA', 'ghi', 'Jimmy', 'Smith', 'test@gmail.com');
-INSERT INTO users (user_code, password, first_name, last_name, email) VALUES ('E23ZG', 'jkl', 'Marcus', 'Octavius', 'test2@gmail.com');
+INSERT INTO users (user_code, password, first_name, last_name, email, is_admin) VALUES ('3Hx45', 'abc', 'Shaun', 'Irwin', 'shaun.irwin@stonethree.com', true);
+INSERT INTO users (user_code, password, first_name, last_name, email, is_admin) VALUES ('79ACF', 'def', 'Kristo', 'Botha', 'kristo.botha@stonethree.com', true);
+INSERT INTO users (user_code, password, first_name, last_name, email, is_admin) VALUES ('U34DA', 'ghi', 'Jimmy', 'Smith', 'test@gmail.com', false);
+INSERT INTO users (user_code, password, first_name, last_name, email, is_admin) VALUES ('E23ZG', 'jkl', 'Marcus', 'Octavius', 'test2@gmail.com', false);
 
 INSERT INTO labels (input_data_id, label_task_id, user_id, in_progress) VALUES (1, 1, 1, true);
 INSERT INTO labels (input_data_id, label_task_id, user_id) VALUES (2, 1, 1);
