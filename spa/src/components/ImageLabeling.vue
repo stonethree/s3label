@@ -59,11 +59,6 @@
                 <canvas id="canvas-fg" width="900" height="350" style="width:900px;height:350px; border: 1px solid #ccc; z-index: 2; position:absolute; left:0px; top:0px;" v-draw-on-canvas="polygons"></canvas>
                 <canvas id="canvas-bg" width="900" height="350" style="width:900px;height:350px; border: 1px solid #ccc; z-index: 1; position:absolute; left:0px; top:0px;"></canvas>
             </div>
-            <!-- <div v-if="input_data_id==undefined">
-                <div class="row justify-content-center">
-                    <p>No image</p>
-                </div>
-            </div> -->
         </div>
     
     </div>
@@ -74,7 +69,7 @@
 import { mapGetters } from 'vuex'
 import axios from "axios";
 
-var baseUrl = "http://127.0.0.1:5000/image_labeler/api/v1.0/";
+var baseUrl = "http://127.0.0.1:5000/image_labeler/api/v1.0";
 axios.defaults.baseURL = baseUrl;
 
 // polygon operations
@@ -150,7 +145,6 @@ export default {
     props: ['input_data_id_start'],
     data: function() {
         return {
-            // TODO: store selected label task here, compute list of labels and disable/set drawing modes as specified in the label task
             active_tool: "freehand",
             active_mode: "new",
             active_overlap_mode: "no-overlap",
@@ -181,9 +175,6 @@ export default {
         opacity: function() {
             return parseFloat(this.opacity_slider_value) / 100.;
         },
-        // ...mapGetters([
-        //     'label_task',
-        // ]),
         label_task: function() {
             return this.$store.getters.label_task;
         },
@@ -229,24 +220,21 @@ export default {
         this.ctx = el.getContext('2d');
         this.ctx_bg = el2.getContext('2d');
 
-        // this.ctx.lineWidth = this.stroke_thickness;
-        // this.ctx.fillStyle = this.setColor(this.label_colors[this.active_label], this.opacity);
-
         // initialise active label to the first label in the set
+
         if (this.labels != undefined && this.labels.length > 0) {
             this.active_label = this.labels[0].label_class;
             console.log(this.labels[0].label_class)
         }
 
-        // begin with specified image
+        // if an image ID is specified, load that image
 
         if (this.input_data_id_start != undefined) {
-            this.fetchAndDisplayImage('http://127.0.0.1:5000/image_labeler/api/v1.0/input_images/' + this.input_data_id_start);
+            this.fetchAndDisplayImage(baseUrl + '/input_images/' + this.input_data_id_start);
             this.input_data_id = this.input_data_id_start;
         }
         else {
             // request a new unlabeled image
-
             this.loadNextImage();
         }
     },
@@ -257,7 +245,6 @@ export default {
     beforeRouteLeave (to, from, next) {
         // save image labels before navigating away
         if (this.input_data_id != undefined) {
-            console.log('saving image labels before leaving page')
             this.uploadLabeledImage(this.input_data_id);
         }
         else {
@@ -276,10 +263,8 @@ export default {
             this.drawAllPolygons(this.ctx, this.polygons);
         },
         input_data_id: function (new_input_data_id, old_input_data_id) {
-            console.log('transitioning!!!!', new_input_data_id, old_input_data_id)
             // save previous image's labels to database
             if (old_input_data_id != undefined) {
-                console.log('Saving labels for this image', new_input_data_id, old_input_data_id)
                 this.uploadLabeledImage(old_input_data_id);
             }
 
@@ -287,13 +272,14 @@ export default {
             
             // when input image ID changes (i.e. new image is loaded), load latest image label from database 
             if (new_input_data_id != undefined) {
-                console.log('loading labels')
                 this.loadImageLabels(new_input_data_id);
             }
         }
     },
     methods: {
         draw_image_unavailable_placeholder: function() {
+            // draw a placeholder image to the canvas and state to the user that no unlabeled images found
+
             let canvas_bg = document.getElementById("canvas-bg");
             let canvas_fg = document.getElementById("canvas-fg");
             let ctx2 = canvas_bg.getContext("2d");  
@@ -309,9 +295,8 @@ export default {
             ctx2.fillStyle = "hsl(25, 80%, 10%)";
             ctx2.fillText("No unlabeled images available for this label task", 200, 200);
         },
-        
+
         keyDownHandler: function(e) {
-            console.log("key down:", e.code)
             if (e.ctrlKey && e.code === "KeyZ") {
                 console.log("Undo");
                 this.undo();
@@ -327,7 +312,7 @@ export default {
                     this.loadLatestLabeledImage();
                 }
                 else {
-                    console.log('get preceding labeled image')
+                    // get preceding labeled image
 
                     let access_token = localStorage.getItem("s3_access_token");
 
@@ -344,7 +329,7 @@ export default {
                         .then(function(response) {
                             if (response.data.length == 1) {
                                 var preceding_data_item = response.data[0];
-                                vm.fetchAndDisplayImage('http://127.0.0.1:5000/image_labeler/api/v1.0/input_images/' + preceding_data_item.input_data_id);
+                                vm.fetchAndDisplayImage(baseUrl + '/input_images/' + preceding_data_item.input_data_id);
                                 vm.input_data_id = preceding_data_item.input_data_id;
                             }
                         })
@@ -357,29 +342,6 @@ export default {
             else if (e.code === "ArrowRight") {
                 this.loadNextImage();
             }
-            // else if (e.code === "KeyA") {
-            //     var input_data_id = 1;
-            //     this.fetchAndDisplayImage('http://127.0.0.1:5000/image_labeler/api/v1.0/input_images/' + input_data_id);
-            //     this.input_data_id = input_data_id;
-            // }
-            // else if (e.code === "KeyB") {
-            //     var input_data_id = 2;
-            //     this.fetchAndDisplayImage('http://127.0.0.1:5000/image_labeler/api/v1.0/input_images/' + input_data_id);
-            //     this.input_data_id = input_data_id;
-            // }
-            // else if (e.code === "KeyC") {
-            //     var input_data_id = 3;
-            //     this.fetchAndDisplayImage('http://127.0.0.1:5000/image_labeler/api/v1.0/input_images/' + input_data_id);
-            //     this.input_data_id = input_data_id;
-            // }
-            // else if (e.code == 'KeyS') {
-            //     console.log('Saving labels for this image')
-            //     this.uploadLabeledImage(this.input_data_id);
-            // }
-            // else if (e.code == 'KeyL') {
-            //     console.log('Loading labels for this image')
-            //     this.loadImageLabels(this.input_data_id);
-            // }
             else if (e.code === 'Delete') {
                 console.log('num orig polys:', this.polygons.length, 'num redo polys:', this.polygons_redo.length)
                 this.polygons_undo.push(...this.polygons.filter(poly => poly.selected));
@@ -397,29 +359,26 @@ export default {
                 if (this.previous_tool === undefined && !this.isDrawing) {
                     this.previous_tool = this.active_tool;
                     this.active_tool = 'select';
-                    console.log('temp selecting (down)')
                 }
             }
             else if (e.code.startsWith('Shift')) {
                 if (this.previous_mode === undefined && !this.isDrawing) {
                     this.previous_mode = this.active_mode;
                     this.active_mode = 'append';
-                    console.log('temp mode append (down)')
                 }
             }
             else if (e.code.startsWith('Alt')) {
                 if (this.previous_mode === undefined && !this.isDrawing) {
                     this.previous_mode = this.active_mode;
                     this.active_mode = 'erase';
-                    console.log('temp mode erase (down)')
                 }
             }
             else {
-                console.log('key not found (down):', e.code);
+                // console.log('key not found (down):', e.code);
             }
 
-            // e.stopPropagation();
-            // e.preventDefault();
+            e.stopPropagation();
+            e.preventDefault();
         },
 
         keyUpHandler: function (e) {
@@ -427,29 +386,26 @@ export default {
                 if (this.previous_tool) {
                     this.active_tool = this.previous_tool;
                     this.previous_tool = undefined;
-                    console.log('temp selecting (up)')
                 }
             }
             else if (e.code.startsWith('Shift')) {
                 if (this.previous_mode) {
                     this.active_mode = this.previous_mode;
                     this.previous_mode = undefined;
-                    console.log('temp mode append (up)')
                 }
             }
             else if (e.code.startsWith('Alt')) {
                 if (this.previous_mode) {
                     this.active_mode = this.previous_mode;
                     this.previous_mode = undefined;
-                    console.log('temp mode erase (up)')
                 }
             }
             else {
-                console.log('key not found (up):', e.code);
+                // console.log('key not found (up):', e.code);
             }
 
-            // e.stopPropagation();
-            // e.preventDefault();
+            e.stopPropagation();
+            e.preventDefault();
         },
 
         getMousePos: function (canvas, event) {
@@ -752,10 +708,6 @@ export default {
 
         // image displaying functions
 
-        logError: function (error) {
-            console.log('Looks like there was a problem: \n', error);
-        },
-
         validateResponse: function (response) {
             if (!response.ok) {
                 throw Error(response.statusText);
@@ -772,20 +724,15 @@ export default {
             c.height = height + padX * 2;
             c.style.width = width + padX * 2 + 'px';
             c.style.height = height + padX * 2 + 'px';
-            console.log('c '+ c.width + ', ' + c.height, padX, padY);
         },
 
         showImage: function (responseAsBlob) {
             let canvas_fg = document.getElementById("canvas-fg");
             let canvas_bg = document.getElementById("canvas-bg");
-
-            // let ctx = canvas_fg.getContext("2d");
             let ctx2 = canvas_bg.getContext("2d");    
 
             let img = new Image();
-            console.log(responseAsBlob)
-            let imgUrl = URL.createObjectURL(responseAsBlob); //.data);
-            // let imgUrl = responseAsBlob;
+            let imgUrl = URL.createObjectURL(responseAsBlob);
 
             var vm = this;
 
@@ -807,30 +754,9 @@ export default {
                 .then(this.validateResponse)
                 .then(this.readResponseAsBlob)
                 .then(this.showImage)
-                .catch(this.logError);
-            
-            // fetch(pathToResource, {
-            //       headers: new Headers({ 'Authorization': "Bearer " + access_token })
-            //       })
-            //     .then(this.validateResponse)
-            //     .then(this.readResponseAsBlob)
-            //     .then(this.showImage)
-            //     .catch(this.logError);
-
-            // let config = {
-            //     headers: {
-            //     Authorization: "Bearer " + access_token
-            //     },
-            //     responseType: 'arraybuffer'
-            // };
-
-            // axios
-            //     .get(pathToResource, config)
-            //     // .then(this.validateResponse)
-            //     // .then(this.readResponseAsBlob)
-            //     .then(response => new Buffer(response.data, 'binary').toString('base64'))
-            //     .then(this.showImage)
-            //     .catch(this.logError);
+                .catch(function(error) {
+                    console.log('error fetching and displaying image:', error);
+                });
         },
 
         uploadLabeledImage: function (input_data_id) {
@@ -850,13 +776,13 @@ export default {
             var vm = this;
 
             axios
-            .post("label_history/label_tasks/" + vm.label_task.label_task_id + "/input_data/" + input_data_id, data, config)
-            .then(function(response) {
-                console.log('saving:', vm.label_task.label_task_id, input_data_id, response)
-            })
-            .catch(function(error) {
-            console.log('error saving label:', error);
-            });
+                .post("label_history/label_tasks/" + vm.label_task.label_task_id + "/input_data/" + input_data_id, data, config)
+                .then(function(response) {
+                    console.log('saving:', vm.label_task.label_task_id, input_data_id, response)
+                })
+                .catch(function(error) {
+                    console.log('error saving label:', error);
+                });
         },
 
         loadImageLabels: function (input_data_id) {
@@ -874,39 +800,35 @@ export default {
             var vm = this;
 
             axios
-            .get("labels/input_data/" + input_data_id + "/label_tasks/" + this.label_task.label_task_id, config)
-            .then(function(response) {
-                console.log(response.data)
+                .get("labels/input_data/" + input_data_id + "/label_tasks/" + this.label_task.label_task_id, config)
+                .then(function(response) {
+                    if (response.data.length == 1) {
+                        console.log("Label found for this image: attempting to apply it in the view")
+                        var label = response.data[0];
 
-                if (response.data.length == 1) {
-                    console.log("Label found for this image: attempting to apply it in the view")
-                    var label = response.data[0];
+                        // check label format is correct
 
-                    // check label format is correct
+                        var polygons = JSON.parse(label.label_serialised);
 
-                    console.log(label)
-
-                    var polygons = JSON.parse(label.label_serialised);
-
-                    if (polygons.length > 0 && polygons[0].polygon != undefined) {
-                        console.log('Applied serialised label to image')
-                        vm.polygons = polygons;
-                        vm.drawAllPolygons(vm.ctx, vm.polygons);
+                        if (polygons.length > 0 && polygons[0].polygon != undefined) {
+                            console.log('Applied serialised label to image')
+                            vm.polygons = polygons;
+                            vm.drawAllPolygons(vm.ctx, vm.polygons);
+                        }
+                        else {
+                            console.log('Serialised label has wrong format:', polygons)
+                        }
+                    }
+                    else if (response.data.length == 0) {
+                        console.log("No label found for this image")
                     }
                     else {
-                        console.log('Serialised label has wrong format:', polygons)
+                        console.log("Error: expected at most one label for this image!")
                     }
-                }
-                else if (response.data.length == 0) {
-                    console.log("No label found for this image")
-                }
-                else {
-                    console.log("Error: expected at most one label for this image!")
-                }
-            })
-            .catch(function(error) {
-            console.log(error);
-            });
+                })
+                .catch(function(error) {
+                    console.log(error);
+                });
         },
 
         loadLatestLabeledImage: function() {
@@ -925,17 +847,15 @@ export default {
             axios
                 .get("all_data/label_tasks/" + this.label_task.label_task_id + "/users/own?num_labeled_images=1", config)
                 .then(function(response) {
-                    console.log('latest im::', response.data)
-
                     if (response.data.length == 1) {
-                        var input_data_id_latest = response.data[0].input_data_id;
+                        let input_data_id_latest = response.data[0].input_data_id;
 
-                        vm.fetchAndDisplayImage('http://127.0.0.1:5000/image_labeler/api/v1.0/input_images/' + input_data_id_latest);
+                        vm.fetchAndDisplayImage(baseUrl + '/input_images/' + input_data_id_latest);
                         vm.input_data_id = input_data_id_latest;
                     }
                 })
                 .catch(function(error) {
-                console.log(error);
+                    console.log(error);
                 });
         },
 
@@ -962,7 +882,7 @@ export default {
                     .then(function(response) {
                         if (response.data.length == 1) {
                             var next_data_item = response.data[0];
-                            vm.fetchAndDisplayImage('http://127.0.0.1:5000/image_labeler/api/v1.0/input_images/' + next_data_item.input_data_id);
+                            vm.fetchAndDisplayImage(baseUrl + '/input_images/' + next_data_item.input_data_id);
                             vm.input_data_id = next_data_item.input_data_id;
                             return true;
                         }
@@ -984,11 +904,10 @@ export default {
                 got_an_image = await axios
                     .get("unlabeled_images/label_tasks/" + this.label_task.label_task_id + "?shuffle=true", config)
                     .then(function(response) {
-                        console.log(response.data)
                         return response.data.input_data_id;
                     })
                     .then(function(input_data_id) {
-                        vm.fetchAndDisplayImage('http://127.0.0.1:5000/image_labeler/api/v1.0/input_images/' + input_data_id);
+                        vm.fetchAndDisplayImage(baseUrl + '/input_images/' + input_data_id);
                         vm.input_data_id = input_data_id;
                         return true;
                     })

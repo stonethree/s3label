@@ -5,10 +5,8 @@
 
           <div class="col">
               <div class="row justify-content-center">
-                <!-- <button v-on:click="get_label_options">Refresh label task list</button> -->
 
                 <div class="col-md-12">
-                    <!-- <span class="col-md-4 col-xs-6 im" v-for="uld in user_labeled_data_reversed" :key="uld.input_data_id" ><p>{{ uld.input_data_id }}</p> </span> -->
                     <ImageThumbnail class="col-md-4 col-xs-6 im" v-for="uld in user_labeled_data_reversed" :key="uld.input_data_id" v-bind:user-labeled-data="uld"> {{ uld.input_data_id }} </ImageThumbnail>
                 </div>
 
@@ -73,20 +71,6 @@ export default {
                 console.log(error);
                 });
         },
-
-        // select_label_task: function(label_task_id) {
-        //     // store the list of label tasks in the global store so that it can be used by the image labeler component
-
-        //     this.$store.commit('select_label_task', label_task_id);
-
-        //     // go to other window to allow user to label images from this label task
-        //     this.$router.push('image_labeler');
-        // },
-
-        // view_labeled_data: function(label_task_id) {
-        //     // go to other window to allow user to view his/her images from this label task
-        //     console.log("view_labeled_data:", label_task_id);
-        // }
     }
 };
 </script>
