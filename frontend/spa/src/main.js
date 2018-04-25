@@ -2,15 +2,22 @@ import Vue from 'vue'
 import Vuex from "vuex";
 import App from './App'
 import VueRouter from 'vue-router'
+import BootstrapVue from 'bootstrap-vue'
+
+import 'bootstrap/dist/css/bootstrap.min.css'
+import 'bootstrap-vue/dist/bootstrap-vue.css'
 
 import Login from './components/Login'
 import Logout from './components/Logout'
 import LabelTaskChooser from './components/LabelTaskChooser'
 import ImageLabeler from './components/ImageLabeling'
 import ImageGrid from './components/ImageGrid'
+import Admin from './components/Admin'
+
 
 Vue.use(VueRouter)
 Vue.use(Vuex)
+Vue.use(BootstrapVue)
 
 Vue.config.productionTip = false
 
@@ -20,7 +27,8 @@ const routes = [
   { path: '/logout', component: Logout },
   { path: '/label_tasks', component: LabelTaskChooser },
   { path: '/image_labeler', name: 'image_labeler', component: ImageLabeler, props: true },
-  { path: '/image_grid', component: ImageGrid }
+  { path: '/image_grid', component: ImageGrid },
+  { path: '/admin', component: Admin }
 ]
 
 const router = new VueRouter({

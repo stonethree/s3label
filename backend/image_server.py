@@ -157,11 +157,13 @@ def get_all_user_input_data(label_task_id, user_id):
             resp.mimetype = "application/javascript"
             return resp
 
-    # TODO: need to check if user is an admin user or not
-    if not ua.check_user_permitted(user_id_from_auth, user_id, admin_ids=[]):
-        resp = make_response(jsonify(error='Not permitted to view this content'), 403)
-        resp.mimetype = "application/javascript"
-        return resp
+    if user_id != user_id_from_auth:
+        is_admin = sql_queries_admin.is_user_an_admin(engine, user_id_from_auth)
+
+        if is_admin is None or not is_admin:
+            resp = make_response(jsonify(error='Not permitted to view this content. Must be an admin user.'), 403)
+            resp.mimetype = "application/javascript"
+            return resp
 
     # choose how many images to request
 

@@ -1,10 +1,10 @@
 <template>
-  <div id="app">
+  <div id="app" class="container">
     <div class="row justify-content-center">
       <h1>S3 Label</h1>
     </div>
     <div class="row">
-      <div class="col"></div>
+      <!-- <div class="col"></div> -->
       <div class="col">
         <nav class="navbar">
         <ul class="nav justify-content-center nav-justified">
@@ -23,10 +23,13 @@
           <li class="nav-item">
             <router-link v-bind:to="'/image_grid'" class="nav-link ">Image Grid</router-link>
           </li>
+          <li class="nav-item">
+            <router-link v-bind:to="'/admin'" class="nav-link ">Admin</router-link>
+          </li>
         </ul>
         </nav>
       </div>
-      <div class="col"></div>
+      <!-- <div class="col"></div> -->
     </div>
     <!-- the router outlet, where all matched components will be viewed -->
     <router-view></router-view>
