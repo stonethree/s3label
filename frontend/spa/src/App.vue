@@ -1,11 +1,11 @@
 <template>
-  <div id="app" class="container">
+  <div id="app" class="container-fluid">
     <div class="row justify-content-center">
       <h1>S3 Label</h1>
     </div>
-    <div class="row">
+    <div class="row justify-content-center">
       <!-- <div class="col"></div> -->
-      <div class="col">
+      <!-- <div class="col"> -->
         <nav class="navbar">
         <ul class="nav justify-content-center nav-justified">
           <li v-if="!user_logged_in" class="nav-item ">
@@ -30,7 +30,7 @@
         </nav>
       </div>
       <!-- <div class="col"></div> -->
-    </div>
+    <!-- </div> -->
     <!-- the router outlet, where all matched components will be viewed -->
     <router-view></router-view>
   </div>

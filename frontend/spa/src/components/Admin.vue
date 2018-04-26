@@ -1,18 +1,18 @@
 <template>
-    <div class="container">
+    <div class="container-fluid">
         <div class="row">
-            <div class="col">
+            <div class="col small not-inlined">
                 <div class="row">
                     <h3>Users</h3>
-                    <b-table striped hover :items="users" small @row-clicked="select_user"></b-table>
+                    <b-table class="tables" responsive="md" striped hover :items="users" small @row-clicked="select_user"></b-table>
                 </div>
                 <div class="row">
                     <h3>Label tasks for user</h3>
-                    <b-table striped hover :items="label_tasks" small @row-clicked="select_label_task"></b-table>
+                    <b-table class="tables" responsive="md" striped hover :items="label_tasks" small @row-clicked="select_label_task"></b-table>
                 </div>
                 <div class="row">
                     <h3>Labeled data</h3>
-                    <b-table striped hover :items="labeled_input_data" small @row-clicked="select_label"></b-table>
+                    <b-table class="tables" responsive="md" striped hover :items="labeled_input_data" small @row-clicked="select_label"></b-table>
                 </div>
             </div>
 
@@ -393,7 +393,8 @@ export default {
 </script>
 
 <style>
-/* .im { display: inline } */
+.not-inlined div { display: block }
+.tables { cursor: pointer }
 /* #label_task_chooser {
   font-family: "Avenir", Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
