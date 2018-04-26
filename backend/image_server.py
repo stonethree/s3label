@@ -52,6 +52,21 @@ def get_label_tasks():
         return resp
 
 
+@app.route('/image_labeler/api/v1.0/label_tasks/<int:label_task_id>', methods=['GET'])
+@fje.jwt_required
+def get_label_task(label_task_id):
+    df_label_task = sql_queries.get_label_task(engine, label_task_id)
+
+    if df_label_task is not None:
+        resp = make_response(df_label_task.to_json(orient='records'), 200)
+        resp.mimetype = "application/javascript"
+        return resp
+    else:
+        resp = make_response(jsonify(error='No label task found'), 404)
+        resp.mimetype = "application/javascript"
+        return resp
+
+
 @app.route('/image_labeler/api/v1.0/input_images/<int:input_image_id>', methods=['GET'])
 # @fje.jwt_required
 def get_image(input_image_id):
@@ -274,7 +289,7 @@ def get_label_tasks_for_user(user_id):
         resp.mimetype = "application/javascript"
         return resp
 
-    df_label_tasks = sql_queries_admin.get_label_tasks_for_a_user(engine, user_id)
+    df_label_tasks = sql_queries.get_label_tasks(engine, user_id)
 
     if df_label_tasks is not None:
         resp = make_response(df_label_tasks.to_json(orient='records'), 200)

@@ -117,6 +117,14 @@ create view latest_label_history_per_input_item as
 select i.*, llh.label_history_id, llh.timestamp_edit, llh.label_serialised  from input_data_per_label_task i
 left outer join latest_label_history llh using (input_data_id, label_task_id, label_id, user_id);
 
+-- show label tasks per user (the label tasks that the user has labeled or viewed images for)
+create view user_label_tasks as
+with user_label_task_ids as (
+	select distinct label_task_id, user_id from labels
+)
+select * from user_label_task_ids
+inner join label_tasks using (label_task_id);
+
 
 -- add data
 

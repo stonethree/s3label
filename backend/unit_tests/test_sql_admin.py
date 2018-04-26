@@ -39,12 +39,12 @@ def test_get_users(refresh_db_once, db_connection_sqlalchemy):
     assert_frame_equal(df, df_test)
 
 
-def test_get_label_tasks_for_a_user(refresh_db_once, db_connection_sqlalchemy):
+def test_get_label_task_ids_for_a_user(refresh_db_once, db_connection_sqlalchemy):
     df_test = pd.DataFrame()
     df_test['label_task_id'] = [1, 2]
 
     engine = db_connection_sqlalchemy
-    df = sql_queries_admin.get_label_tasks_for_a_user(engine, user_id=1)
+    df = sql_queries_admin.get_label_task_ids_for_a_user(engine, user_id=1)
 
     assert_frame_equal(df, df_test)
 

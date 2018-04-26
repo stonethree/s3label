@@ -182,17 +182,50 @@ def get_input_data_path(engine, input_data_id):
         return None
 
 
-def get_label_tasks(engine):
+def get_label_tasks(engine, user_id=None):
     """
     Get list of available label tasks
 
     :param engine: SQLAlchemy engine
+    :param user_id: (optional) filter label tasks by the specified user ID: only show label tasks that have been
+    labeled by that user
     :return: DataFrame containing label tasks
     """
 
-    sql_query = 'SELECT * FROM label_tasks'
+    if user_id is None:
+        sql_query = 'SELECT * FROM label_tasks'
 
-    df = pd.read_sql_query(sql_query, engine)
+        df = pd.read_sql_query(sql_query, engine)
+    else:
+        sql_query = 'SELECT * FROM user_label_tasks WHERE user_id = :user_id ORDER BY label_task_id'
+
+        sql_query_2 = text(sql_query).bindparams(user_id=user_id)
+
+        df = pd.read_sql_query(sql_query_2, engine)
+
+        # drop the "user_id" column
+        df.drop(labels=['user_id'], axis=1, inplace=True)
+
+    if len(df) > 0:
+        return df
+    else:
+        return None
+
+
+def get_label_task(engine, label_task_id):
+    """
+    Get a particular label tasks
+
+    :param engine: SQLAlchemy engine
+    :param label_task_id:
+    :return: DataFrame containing label tasks
+    """
+
+    sql_query = 'SELECT * FROM label_tasks WHERE label_task_id = :label_task_id'
+
+    sql_query_2 = text(sql_query).bindparams(label_task_id=label_task_id)
+
+    df = pd.read_sql_query(sql_query_2, engine)
 
     if len(df) > 0:
         return df

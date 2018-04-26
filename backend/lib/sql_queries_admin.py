@@ -38,7 +38,7 @@ def get_users(engine):
     return df
 
 
-def get_label_tasks_for_a_user(engine, user_id):
+def get_label_task_ids_for_a_user(engine, user_id):
     """
     Get list of all label tasks that a user has labeled images for
 

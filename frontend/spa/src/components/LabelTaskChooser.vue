@@ -5,7 +5,7 @@
 
           <div class="col">
               <div class="row justify-content-center">
-                <button v-on:click="get_label_options">Refresh label task list</button>
+                <button v-on:click="get_label_task_list">Refresh label task list</button>
               </div>
               <div v-for="lt in label_tasks" :key="lt.label_task_id">
                   <div class="card" style="background-color:hsla(20, 100%, 64%, 0.7);">
@@ -38,10 +38,10 @@ export default {
     };
   },
   beforeMount() {
-        this.get_label_options();
+        this.get_label_task_list();
     },
   methods: {
-    get_label_options: function() {
+    get_label_task_list: function() {
       // get list of label tasks from the backend
 
       const vm = this;

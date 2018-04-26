@@ -215,6 +215,50 @@ def test_get_label_tasks(refresh_db_once, db_connection_sqlalchemy):
     assert_series_equal(df['label_task_id'], df_test['label_task_id'])
 
 
+def test_get_label_tasks_for_specific_user(refresh_db_once, db_connection_sqlalchemy):
+    df_test = pd.DataFrame()
+    df_test['label_task_id'] = [1, 2]
+    df_test['dataset_group_id'] = [1, 2]
+
+    engine = db_connection_sqlalchemy
+    df = sql_queries.get_label_tasks(engine, user_id=1)
+
+    expected_cols = ['label_task_id',
+                     'dataset_group_id',
+                     'title',
+                     'description',
+                     'type',
+                     'example_labeling',
+                     'default_tool',
+                     'permit_overlap',
+                     'label_classes']
+
+    assert df.columns.tolist() == expected_cols
+    assert_series_equal(df['label_task_id'], df_test['label_task_id'])
+
+
+def test_get_label_task(refresh_db_once, db_connection_sqlalchemy):
+    df_test = pd.DataFrame()
+    df_test['label_task_id'] = [1]
+    df_test['dataset_group_id'] = [1]
+
+    engine = db_connection_sqlalchemy
+    df = sql_queries.get_label_task(engine, label_task_id=1)
+
+    expected_cols = ['label_task_id',
+                     'dataset_group_id',
+                     'title',
+                     'description',
+                     'type',
+                     'example_labeling',
+                     'default_tool',
+                     'permit_overlap',
+                     'label_classes']
+
+    assert df.columns.tolist() == expected_cols
+    assert_series_equal(df['label_task_id'], df_test['label_task_id'])
+
+
 def test_get_label_id(refresh_db_once, db_connection_sqlalchemy):
     engine = db_connection_sqlalchemy
     label_id = sql_queries.get_label_id(engine, user_id=1, label_task_id=1, input_data_id=1)

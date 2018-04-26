@@ -12,7 +12,7 @@
                 </div>
                 <div class="row">
                     <h3>Labeled data</h3>
-                    <b-table striped hover :items="labels" small @row-clicked="select_label"></b-table>
+                    <b-table striped hover :items="labeled_input_data" small @row-clicked="select_label"></b-table>
                 </div>
             </div>
 
@@ -34,6 +34,10 @@ import axios from "axios";
 var baseUrl = "http://127.0.0.1:5000/image_labeler/api/v1.0";
 axios.defaults.baseURL = baseUrl;
 
+function convertPolygonToPaths(polygon) {
+    return polygon.regions;
+}
+
 export default {
     name: "admin_view",
     data: function() {
@@ -43,15 +47,74 @@ export default {
             label_id: undefined,
             users: undefined,
             label_tasks: undefined,
-            labels: undefined,
+            labeled_input_data: undefined,
             input_data_id: undefined,
-            padX: 20,
-            padY: 20
+            padX: 80,
+            padY: 80,
+            polygons: [],
+            lineWidth: 2,
+            opacity: 0.3,
+            stroke_thickness: 2,
+            use_stroke: true,
         };
     },
+
     beforeMount() {
         this.get_users();
     },
+
+    computed: {
+        ctx: function() {
+            let canvas_fg = document.getElementById("canvas-fg");
+            return canvas_fg.getContext("2d");
+        },
+        label_task: function() {
+            if (this.label_task_id != undefined) {
+                return this.label_tasks[this.label_task_id];
+            }
+            else {
+                return undefined;
+            }
+        },
+        labels: function() {
+            if (this.label_task != undefined) {
+                return JSON.parse(this.label_task.label_classes);
+            }
+            else {
+                return undefined;
+            }
+        },
+        label_colors: function() {
+            if (this.label_task != undefined) {
+                var d = {};
+
+                for (var i = 0; i < this.labels.length; i++) {
+                    d[this.labels[i].label_class] = this.extractColor(this.labels[i].color);
+                }
+                return d;
+            }
+            else {
+                return null
+            }
+        }
+    },
+
+    watch: {
+        user_id: function () {
+            this.get_label_tasks_for_user(this.user_id);
+            this.get_labeled_input_data(this.label_task_id, this.user_id);
+        },
+
+        label_task_id: function () {
+            this.get_labeled_input_data(this.label_task_id, this.user_id);
+        },
+
+        input_data_id: function () {
+            this.fetchAndDisplayImage(baseUrl + '/input_images/' + this.input_data_id);
+            this.loadImageLabels(this.input_data_id);
+        }
+    },
+
     methods: {
         get_users: function() {
             // get list of users
@@ -78,7 +141,7 @@ export default {
                 });
         },
 
-        get_label_tasks: function (user_id) {
+        get_label_tasks_for_user: function (user_id) {
             // get list of label tasks for this user
 
             const vm = this;
@@ -103,29 +166,34 @@ export default {
                 });
         },
 
-        get_labels: function (label_task_id, user_id) {
-            // get list of label tasks for this user
+        get_labeled_input_data: function (label_task_id, user_id) {
+            if (label_task_id == undefined) {
+                this.labeled_input_data = undefined;
+            }
+            else {
+                // get list of label tasks for this user
 
-            const vm = this;
+                const vm = this;
 
-            let access_token = localStorage.getItem("s3_access_token");
+                let access_token = localStorage.getItem("s3_access_token");
 
-            let config = {
-                headers: {
-                Authorization: "Bearer " + access_token
-                }
-            };
+                let config = {
+                    headers: {
+                    Authorization: "Bearer " + access_token
+                    }
+                };
 
-            axios
-                .get("/all_data/label_tasks/" + label_task_id + "/users/" + user_id, config)
-                .then(function(response) {
-                    console.log(response.data)
+                axios
+                    .get("/all_data/label_tasks/" + label_task_id + "/users/" + user_id, config)
+                    .then(function(response) {
+                        console.log(response.data)
 
-                    vm.labels = response.data;
-                })
-                .catch(function(error) {
-                    console.log(error);
-                });
+                        vm.labeled_input_data = response.data;
+                    })
+                    .catch(function(error) {
+                        console.log(error);
+                    });
+            }
         },
 
         select_user: function(item, index, event) {
@@ -195,21 +263,131 @@ export default {
                     console.log('error fetching and displaying image:', error);
                 });
         },
-    },
 
-    watch: {
-        user_id: function () {
-            this.get_label_tasks(this.user_id);
-            this.get_labels(this.label_task_id, this.user_id);
+        // polygon drawing functions
+
+        drawAllPolygons: function (context, polygon_list) {
+            context.lineWidth = this.stroke_thickness;
+            context.clearRect(0, 0, context.canvas.width, context.canvas.height);
+
+            for (let i = 0; i < polygon_list.length; i++) {
+                this.drawPolygon(context, polygon_list[i]);
+            }
         },
 
-        label_task_id: function () {
-            this.get_labels(this.label_task_id, this.user_id);
+        drawPolygon: function (context, polygon) {
+            this.setColor(this.label_colors[polygon.label], this.opacity);
+            let paths_to_draw = convertPolygonToPaths(polygon.polygon);
+
+            if (polygon.selected) {
+                // draw selected polygon
+
+                var currentStrokeStyle = context.strokeStyle;
+                context.strokeStyle = "#FF0000";
+                context.setLineDash([4, 4]);
+
+                for (let j = 0; j < paths_to_draw.length; j++) {
+                    this.drawPath(context, paths_to_draw[j]);
+                }
+
+                context.strokeStyle = currentStrokeStyle;
+                context.setLineDash([]);
+            }
+            else {
+                // draw unselected polygon
+
+                for (let j = 0; j < paths_to_draw.length; j++) {
+                    this.drawPath(context, paths_to_draw[j]);
+                }
+            }
         },
 
-        input_data_id: function () {
-            this.fetchAndDisplayImage(baseUrl + '/input_images/' + this.input_data_id);
-        }
+        drawPath: function (context, path) {
+
+            let w = context.canvas.width;
+            let h = context.canvas.height;
+
+            context.beginPath();
+            context.moveTo(Math.max(this.padX, Math.min(path[0][0], w - this.padX)),
+                Math.max(this.padY, Math.min(path[0][1], h - this.padY)));
+
+            for (let i = 1; i < path.length; i++) {
+                context.lineTo(Math.max(this.padX, Math.min(path[i][0], w - this.padX)),
+                    Math.max(this.padY, Math.min(path[i][1], h - this.padY)));
+            }
+
+            context.closePath();
+            if (this.use_stroke) {
+                context.stroke();
+            }
+            context.fill();
+        },
+
+        extractColor: function (rgb_string) {
+            // takes a string of format
+            var rgb = JSON.parse(rgb_string)
+
+            if (rgb.length == 3) {
+                return rgb;
+            }
+            else {
+                throw TypeError('Color string must have 3 RGB elements specified');
+            }
+        },
+
+        formatColor: function (rgb, alpha) {
+            return 'rgba(' + rgb[0] + ',' + rgb[1] + ',' + rgb[2] + ',' + alpha + ')';
+        },
+
+        setColor: function (rgb, alpha) {
+            this.ctx.fillStyle = this.formatColor(rgb, alpha);
+        },
+
+        loadImageLabels: function (input_data_id) {
+
+            console.log('getting image labels with label task ID', this.label_task_id, 'and input data ID', input_data_id)
+
+            let access_token = localStorage.getItem("s3_access_token");
+
+            let config = {
+                headers: {
+                Authorization: "Bearer " + access_token
+                }
+            };
+
+            var vm = this;
+
+            axios
+                .get("labels/input_data/" + input_data_id + "/label_tasks/" + this.label_task_id, config)
+                .then(function(response) {
+                    if (response.data.length == 1) {
+                        console.log("Label found for this image: attempting to apply it in the view")
+                        let label = response.data[0];
+
+                        // check label format is correct
+
+                        var polygons = JSON.parse(label.label_serialised);
+
+                        if (polygons.length > 0 && polygons[0].polygon != undefined) {
+                            console.log('Applied serialised label to image')
+                            vm.polygons = polygons;
+                            vm.drawAllPolygons(vm.ctx, vm.polygons);
+                        }
+                        else {
+                            console.log('Serialised label has wrong format:', polygons)
+                        }
+                    }
+                    else if (response.data.length == 0) {
+                        console.log("No label found for this image")
+                    }
+                    else {
+                        console.log("Error: expected at most one label for this image!")
+                    }
+                })
+                .catch(function(error) {
+                    console.log(error);
+                });
+        },
     }
 };
 </script>

@@ -198,8 +198,6 @@ export default {
             else {
                 return null
             }
-
-            
         }
     },
     created: function () {
