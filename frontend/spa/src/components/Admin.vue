@@ -4,15 +4,15 @@
             <div class="col small not-inlined">
                 <div class="row">
                     <h3>Users</h3>
-                    <b-table class="tables" responsive="md" hover :items="users" small @row-clicked="select_user"></b-table>
+                    <b-table class="tables" responsive="md" hover :items="users" :fields="fields_users" small @row-clicked="select_user"></b-table>
                 </div>
                 <div class="row">
                     <h3>Label tasks for user</h3>
-                    <b-table class="tables" responsive="md" hover :items="label_tasks" small @row-clicked="select_label_task"></b-table>
+                    <b-table class="tables" responsive="md" hover :items="label_tasks" :fields="fields_label_tasks" small @row-clicked="select_label_task"></b-table>
                 </div>
                 <div class="row">
                     <h3>Labeled data</h3>
-                    <b-table class="tables" responsive="md" hover :items="labeled_input_data" small @row-clicked="select_label"></b-table>
+                    <b-table class="tables" responsive="md" hover :items="labeled_input_data" :fields="fields_labeled_input_data" small @row-clicked="select_label"></b-table>
                 </div>
             </div>
 
@@ -96,6 +96,15 @@ export default {
             else {
                 return null
             }
+        },
+        fields_users: function() {
+            return this.create_sortable_column_fields(this.users)
+        },
+        fields_label_tasks: function() {
+            return this.create_sortable_column_fields(this.label_tasks)
+        },
+        fields_labeled_input_data: function() {
+            return this.create_sortable_column_fields(this.labeled_input_data)
         }
     },
 
@@ -116,6 +125,16 @@ export default {
     },
 
     methods: {
+        create_sortable_column_fields: function(arr) {
+            if (arr != undefined && arr.length >= 1) {
+                let keys = Object.keys(arr[0]);
+                keys = keys.filter(key => !key.startsWith('_'));
+                return keys.map(key => {return {'key': key, 'sortable': true}});
+            }
+            else {
+                return undefined;
+            }
+        },
         get_users: function() {
             // get list of users
 
