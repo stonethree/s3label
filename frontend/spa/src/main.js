@@ -21,20 +21,6 @@ Vue.use(BootstrapVue)
 
 Vue.config.productionTip = false
 
-const routes = [
-  { path: '/', component: Login },
-  { path: '/login', component: Login },
-  { path: '/logout', component: Logout },
-  { path: '/label_tasks', component: LabelTaskChooser },
-  { path: '/image_labeler', name: 'image_labeler', component: ImageLabeler, props: true },
-  { path: '/image_grid', component: ImageGrid },
-  { path: '/admin', component: Admin }
-]
-
-const router = new VueRouter({
-  routes, // short for routes: routes
-  mode: 'history'
-})
 
 const store = new Vuex.Store({
   state: {
@@ -65,6 +51,53 @@ const store = new Vuex.Store({
     logged_in: state => {
       return state.is_logged_in;
     }
+  }
+})
+
+const routes = [
+  { path: '/', component: Login },
+  { path: '/login', component: Login },
+  { path: '/logout', component: Logout },
+  { path: '/label_tasks', component: LabelTaskChooser },
+  { path: '/image_labeler', name: 'image_labeler', component: ImageLabeler, props: true, 
+    beforeEnter: (to, from, next) => {
+      // redirect to label task chooser if no label task yet specified
+      if (store.getters.label_task == undefined) {
+        next('/label_tasks')
+      }
+      else {
+        next()
+      }
+    }
+  },
+  { path: '/image_grid', component: ImageGrid, 
+    beforeEnter: (to, from, next) => {
+      // redirect to label task chooser if no label task yet specified
+      if (store.getters.label_task == undefined) {
+        next('/label_tasks')
+      }
+      else {
+        next()
+      }
+    } 
+  },
+  { path: '/admin', component: Admin }
+]
+
+const router = new VueRouter({
+  routes, // short for routes: routes
+  mode: 'history'
+})
+
+
+// reroute user to login page if not currently logged in
+
+router.beforeEach((to, from, next) => {
+  if (store.getters.logged_in || to.path == '/login') {
+    next()
+  }
+  else {
+    next('/login')
   }
 })
 
