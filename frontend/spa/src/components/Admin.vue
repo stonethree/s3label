@@ -4,15 +4,15 @@
             <div class="col small not-inlined">
                 <div class="row">
                     <h3>Users</h3>
-                    <b-table class="tables" responsive="md" striped hover :items="users" small @row-clicked="select_user"></b-table>
+                    <b-table class="tables" responsive="md" hover :items="users" small @row-clicked="select_user"></b-table>
                 </div>
                 <div class="row">
                     <h3>Label tasks for user</h3>
-                    <b-table class="tables" responsive="md" striped hover :items="label_tasks" small @row-clicked="select_label_task"></b-table>
+                    <b-table class="tables" responsive="md" hover :items="label_tasks" small @row-clicked="select_label_task"></b-table>
                 </div>
                 <div class="row">
                     <h3>Labeled data</h3>
-                    <b-table class="tables" responsive="md" striped hover :items="labeled_input_data" small @row-clicked="select_label"></b-table>
+                    <b-table class="tables" responsive="md" hover :items="labeled_input_data" small @row-clicked="select_label"></b-table>
                 </div>
             </div>
 
@@ -38,13 +38,13 @@ function convertPolygonToPaths(polygon) {
     return polygon.regions;
 }
 
+
 export default {
     name: "admin_view",
     data: function() {
         return {
             user_id: undefined,
             label_task_id: undefined,
-            label_id: undefined,
             users: undefined,
             label_tasks: undefined,
             labeled_input_data: undefined,
@@ -157,7 +157,7 @@ export default {
             axios
                 .get("/label_tasks/users/" + user_id, config)
                 .then(function(response) {
-                    console.log(response.data)
+                    console.log('vm.label_tasks:', response.data)
 
                     vm.label_tasks = response.data;
                 })
@@ -197,18 +197,48 @@ export default {
         },
 
         select_user: function(item, index, event) {
-            console.log(item, index, event)
             this.user_id = item.user_id;
+
+            // highlight selected row
+
+            for (var i = 0; i < this.users.length; i++) {
+                if (this.users[i].user_id == this.user_id) {
+                    this.$set(this.users[i], '_rowVariant', 'active');
+                }
+                else {
+                    this.$set(this.users[i], '_rowVariant', undefined);
+                }
+            }
         },
 
         select_label_task: function(item, index, event) {
-            console.log(item, index, event)
             this.label_task_id = item.label_task_id;
+
+            // highlight selected row
+
+            for (var i = 0; i < this.label_tasks.length; i++) {
+                if (this.label_tasks[i].label_task_id == this.label_task_id) {
+                    this.$set(this.label_tasks[i], '_rowVariant', 'active');
+                }
+                else {
+                    this.$set(this.label_tasks[i], '_rowVariant', undefined);
+                }
+            }
         },
 
         select_label: function(item, index, event) {
-            console.log(item, index, event)
             this.input_data_id = item.input_data_id;
+
+            // highlight selected row
+
+            for (var i = 0; i < this.labeled_input_data.length; i++) {
+                if (this.labeled_input_data[i].input_data_id == this.input_data_id) {
+                    this.$set(this.labeled_input_data[i], '_rowVariant', 'active');
+                }
+                else {
+                    this.$set(this.labeled_input_data[i], '_rowVariant', undefined);
+                }
+            }
         },
 
         // image displaying functions
