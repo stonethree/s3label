@@ -57,6 +57,7 @@ create table labels(
     user_id INTEGER REFERENCES users(user_id),
     in_progress BOOLEAN DEFAULT FALSE NOT NULL,
     user_complete BOOLEAN DEFAULT FALSE NOT NULL,
+    needs_improvement BOOLEAN DEFAULT FALSE NOT NULL,
     admin_complete BOOLEAN DEFAULT NULL,
     paid BOOLEAN DEFAULT FALSE NOT NULL,
 	user_comment VARCHAR,
@@ -64,6 +65,7 @@ create table labels(
 	UNIQUE (input_data_id, label_task_id, user_id));
 	COMMENT ON COLUMN labels.in_progress is 'User is currently labeling this item, so multiple users dont label same item';
 	COMMENT ON COLUMN labels.user_complete is 'User has declared labeling of item complete';
+	COMMENT ON COLUMN labels.needs_improvement is 'Admin user has declared labeling of item needs more work';
 	COMMENT ON COLUMN labels.admin_complete is 'Admin user has declared the users labeling of item complete';
 	COMMENT ON COLUMN labels.paid is 'User has been paid for this label';
 	COMMENT ON COLUMN labels.user_comment is 'User can communicate to admins via this field, to indicate issues with data item';

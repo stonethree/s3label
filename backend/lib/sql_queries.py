@@ -278,6 +278,49 @@ def get_label_id(engine, user_id, label_task_id, input_data_id):
         return None
 
 
+def get_label(engine, user_id, label_task_id, input_data_id):
+    """
+    Get label for this input data item and label task
+
+    :param engine:
+    :param user_id:
+    :param label_task_id:
+    :param input_data_id:
+    :return:
+    """
+
+    sql_query = """select * from labels 
+        where user_id = %(user_id)s and label_task_id = %(label_task_id)s and input_data_id = %(input_data_id)s"""
+
+    df = pd.read_sql_query(sql_query, engine, params={'user_id': user_id,
+                                                      'label_task_id': label_task_id,
+                                                      'input_data_id': input_data_id})
+
+    if len(df) > 0:
+        return df
+    else:
+        return None
+
+
+def get_label_by_id(engine, label_id):
+    """
+    Get label corresponding to this label_id
+
+    :param engine:
+    :param label_id:
+    :return:
+    """
+
+    sql_query = """select * from labels where label_id = %(label_id)s"""
+
+    df = pd.read_sql_query(sql_query, engine, params={'label_id': label_id})
+
+    if len(df) > 0:
+        return df
+    else:
+        return None
+
+
 def create_new_label(engine, input_data_id, label_task_id, user_id):
     """
     Get the highest priority input data item for the specified label task that has not yet been labeled and is not
@@ -363,3 +406,75 @@ def create_new_label_history(engine, label_id, serialised_label):
     label_history_id = int([r[0] for r in result][0])
 
     return label_history_id
+
+
+def update_label_status(engine, label_id, user_complete=None, needs_improvement=None, admin_complete=None, paid=None,
+                        user_comment=None, admin_comment=None):
+    """
+    Update particular status fields of a label
+
+    :param engine:
+    :param label_id: ID of label to be modified
+    :param user_complete:
+    :param needs_improvement:
+    :param admin_complete:
+    :param paid:
+    :param user_comment:
+    :param admin_comment:
+    :return:
+    """
+
+    update_fields = []
+
+    if user_complete is not None:
+        if user_complete:
+            update_fields.append('user_complete=true')
+        else:
+            update_fields.append('user_complete=false')
+
+    if needs_improvement is not None:
+        if needs_improvement:
+            update_fields.append('needs_improvement=true')
+        else:
+            update_fields.append('needs_improvement=false')
+
+    if admin_complete is not None:
+        if admin_complete:
+            update_fields.append('admin_complete=true')
+        else:
+            update_fields.append('admin_complete=false')
+
+    if paid is not None:
+        if paid:
+            update_fields.append('paid=true')
+        else:
+            update_fields.append('paid=false')
+
+    if user_comment is not None:
+        update_fields.append('user_comment=:user_comment')
+
+    if admin_comment is not None:
+        update_fields.append('admin_comment=:admin_comment')
+
+    if len(update_fields) > 0:
+        sql_query_2 = """
+            UPDATE labels SET {update_fields} WHERE label_id = :label_id RETURNING label_id
+            """.format(update_fields=','.join(update_fields))
+
+        # execute the query
+
+        sql_query_3 = text(sql_query_2)
+
+        result = engine.execute(sql_query_3.execution_options(autocommit=True),
+                                label_id=int(label_id),
+                                user_comment=user_comment,
+                                admin_comment=admin_comment
+                                )
+
+        # read the label ID from the returned result
+
+        label_id_returned = [r for r in result][0][0]
+
+        return label_id_returned
+    else:
+        return None

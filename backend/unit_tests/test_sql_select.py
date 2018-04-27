@@ -271,3 +271,55 @@ def test_get_label_id_if_label_does_not_exist(refresh_db_once, db_connection_sql
     label_id = sql_queries.get_label_id(engine, user_id=1, label_task_id=1, input_data_id=27)
 
     assert label_id is None
+
+
+def test_get_label(refresh_db_once, db_connection_sqlalchemy):
+    df_test = pd.DataFrame()
+    df_test['label_id'] = [3]
+    df_test['input_data_id'] = [3]
+    df_test['in_progress'] = [False]
+    df_test['user_complete'] = [False]
+    df_test['needs_improvement'] = [False]
+    df_test['admin_complete'] = [None]
+    df_test['paid'] = [False]
+    df_test['user_comment'] = [None]
+    df_test['admin_comment'] = [None]
+
+    engine = db_connection_sqlalchemy
+    df = sql_queries.get_label(engine, user_id=1, label_task_id=1, input_data_id=3)
+
+    assert_series_equal(df['label_id'], df_test['label_id'])
+    assert_series_equal(df['input_data_id'], df_test['input_data_id'])
+    assert_series_equal(df['in_progress'], df_test['in_progress'])
+    assert_series_equal(df['user_complete'], df_test['user_complete'])
+    assert_series_equal(df['needs_improvement'], df_test['needs_improvement'])
+    assert_series_equal(df['admin_complete'], df_test['admin_complete'])
+    assert_series_equal(df['paid'], df_test['paid'])
+    assert_series_equal(df['user_comment'], df_test['user_comment'])
+    assert_series_equal(df['admin_comment'], df_test['admin_comment'])
+
+
+def test_get_label_by_id(refresh_db_once, db_connection_sqlalchemy):
+    df_test = pd.DataFrame()
+    df_test['label_id'] = [3]
+    df_test['input_data_id'] = [3]
+    df_test['in_progress'] = [False]
+    df_test['user_complete'] = [False]
+    df_test['needs_improvement'] = [False]
+    df_test['admin_complete'] = [None]
+    df_test['paid'] = [False]
+    df_test['user_comment'] = [None]
+    df_test['admin_comment'] = [None]
+
+    engine = db_connection_sqlalchemy
+    df = sql_queries.get_label_by_id(engine, label_id=3)
+
+    assert_series_equal(df['label_id'], df_test['label_id'])
+    assert_series_equal(df['input_data_id'], df_test['input_data_id'])
+    assert_series_equal(df['in_progress'], df_test['in_progress'])
+    assert_series_equal(df['user_complete'], df_test['user_complete'])
+    assert_series_equal(df['needs_improvement'], df_test['needs_improvement'])
+    assert_series_equal(df['admin_complete'], df_test['admin_complete'])
+    assert_series_equal(df['paid'], df_test['paid'])
+    assert_series_equal(df['user_comment'], df_test['user_comment'])
+    assert_series_equal(df['admin_comment'], df_test['admin_comment'])

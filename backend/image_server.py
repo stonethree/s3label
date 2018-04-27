@@ -450,5 +450,76 @@ def store_label(label_task_id, input_data_id):
         return resp
 
 
+# ---------------  PATCH requests ---------------
+
+
+@app.route('/image_labeler/api/v1.0/labels/<int:label_id>', methods=['PATCH'])
+@fje.jwt_required
+def update_label_fields(label_id):
+    """
+    Update status fields of a specific label
+
+    :param label_id:
+    :return:
+    """
+
+    user_identity = fje.get_jwt_identity()
+    user_id_from_auth = ua.get_user_id_from_token(user_identity)
+
+    # only the user who created the label or an admin user may update the label fields
+
+    df_label = sql_queries.get_label_by_id(engine, label_id)
+
+    if df_label is None:
+        resp = make_response(jsonify(error='Label does not exist'), 400)
+        resp.mimetype = "application/javascript"
+        return resp
+
+    if df_label['user_id'][0] != user_id_from_auth:
+        is_admin = sql_queries_admin.is_user_an_admin(engine, user_id_from_auth)
+
+        if is_admin is None or not is_admin:
+            resp = make_response(jsonify(error='Not permitted to perform this update. Must be an admin user or the '
+                                               'owner of the label.'), 403)
+            resp.mimetype = "application/javascript"
+            return resp
+
+    if not request.json:
+        resp = make_response(jsonify(error='Must use JSON format'), 400)
+        resp.mimetype = "application/javascript"
+        return resp
+
+    fields = {'user_complete': {'value': None, 'type': bool},
+              'needs_improvement': {'value': None, 'type': bool},
+              'admin_complete': {'value': None, 'type': bool},
+              'paid': {'value': None, 'type': bool},
+              'user_comment': {'value': None, 'type': str},
+              'admin_comment': {'value': None, 'type': str}}
+
+    for field, params in fields.items():
+        val = request.json.get(field, None)
+        if field in request.json:
+            if isinstance(val, params['type']):
+                fields[field]['value'] = request.json.get(field, None)
+            else:
+                if not request.json:
+                    resp = make_response(jsonify(error='Parameter {} is of the wrong format'.format(field)), 400)
+                    resp.mimetype = "application/javascript"
+                    return resp
+
+    fields_to_update = {field: v['value'] for field, v in fields.items() if v['value'] is not None}
+
+    if len(fields_to_update) > 0:
+        label_id_returned = sql_queries.update_label_status(engine, label_id=label_id, **fields_to_update)
+
+        if label_id_returned is None:
+            return jsonify({"msg": "Could not update label field(s)"}), 400
+        else:
+            return jsonify({"msg": "Updated label fields(s) successfully"}), 200
+    else:
+        return jsonify({"msg": "No field(s) to update. Check that you have specified valid field names and value "
+                               "types"}), 400
+
+
 if __name__ == '__main__':
     app.run(debug=True)
