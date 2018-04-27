@@ -6,6 +6,7 @@ import BootstrapVue from 'bootstrap-vue'
 
 import 'bootstrap/dist/css/bootstrap.min.css'
 import 'bootstrap-vue/dist/bootstrap-vue.css'
+import 'font-awesome/css/font-awesome.css'
 
 import Login from './components/Login'
 import Logout from './components/Logout'

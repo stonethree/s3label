@@ -54,7 +54,29 @@
             </div>
         </div>
 
-        <div>
+        <!-- <div class="image-status row">
+            <b-form-checkbox id="checkbox_user_complete"
+                            v-model="user_complete"
+                            value="accepted"
+                            unchecked-value="not_accepted">
+            User Complete
+            </b-form-checkbox>
+            <b-form-checkbox id="checkbox_admin_complete"
+                            v-model="admin_complete"
+                            value="accepted"
+                            unchecked-value="not_accepted">
+            Admin Complete
+            </b-form-checkbox>
+            <b-form-checkbox id="checkbox_paid"
+                            v-model="paid"
+                            value="accepted"
+                            unchecked-value="not_accepted">
+            Paid
+            </b-form-checkbox>
+        </div> -->
+
+        <div class="canvas-section">
+            <label-status v-bind:user-completed-toggle="label_status_toggler.user_complete"></label-status>
             <div id="canvasesdiv" style="position:relative;" @mousedown="mouseDownHandler" @mouseup="mouseUpHandler" @mousemove="mouseMoveHandler">
                 <canvas id="canvas-fg" width="900" height="350" style="width:900px;height:350px; border: 1px solid #ccc; z-index: 2; position:absolute; left:0px; top:0px;" v-draw-on-canvas="polygons"></canvas>
                 <canvas id="canvas-bg" width="900" height="350" style="width:900px;height:350px; border: 1px solid #ccc; z-index: 1; position:absolute; left:0px; top:0px;"></canvas>
@@ -65,6 +87,8 @@
 </template>
 
 <script>
+
+import LabelStatus from './LabelStatus'
 
 import { mapGetters } from 'vuex'
 import axios from "axios";
@@ -162,8 +186,12 @@ export default {
             padY: 80,
             ctx: undefined,
             ctx_bg: undefined,
-            input_data_id: undefined
+            input_data_id: undefined,
+            label_status_toggler: {user_complete: false}
         };
+    },
+    components: {
+        LabelStatus,
     },
     computed: {
         stroke_thickness: function() {
@@ -304,6 +332,9 @@ export default {
                 console.log("Redo");
                 this.redo();
                 this.drawAllPolygons(this.ctx, this.polygons);
+            }
+            else if (e.ctrlKey && e.code === "Enter") {
+                this.label_status_toggler.user_complete = !this.label_status_toggler.user_complete;
             }
             else if (e.code === "ArrowLeft") {
                 if (this.input_data_id == undefined) {
@@ -942,6 +973,7 @@ export default {
 </script>
 
 <style>
+.canvas-section div { padding-top: 2em }
 /* #image_labeling {
   font-family: 'Avenir', Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;

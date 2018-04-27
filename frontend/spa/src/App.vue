@@ -26,6 +26,85 @@
           <li class="nav-item">
             <router-link v-bind:to="'/admin'" class="nav-link ">Admin</router-link>
           </li>
+          <!-- <i class="fa fa-camera"></i>
+          <i class="fa fa-circle"></i>
+          <i class="fa fa-circle-thin"></i>
+          <i class="fa fa-address-book"></i>
+          <i class="fa fa-check"></i>
+          <i class="fa fa-check-circle"></i>
+          <i class="fa fa-check-square"></i>
+          <i class="fa fa-check-square-o"></i>
+          <i class="fa fa-caret-down"></i>
+          <i class="fa fa-caret-up"></i>
+          <i class="fa fa-angle-up"></i>
+          <i class="fa fa-angle-down"></i>
+          <i class="fa fa-angle-left"></i>
+          <i class="fa fa-angle-right"></i>
+          <i class="fa fa-at"></i>
+          <i class="fa fa-comment"></i>
+          <i class="fa fa-commenting"></i>
+          <i class="fa fa-commenting-o"></i>
+          <i class="fa fa-comments"></i>
+          <i class="fa fa-comments-o"></i>
+          <i class="fa fa-credit-card"></i>
+          <i class="fa fa-dollar-sign"></i>
+          <i class="fa fa-dollar"></i>
+          <i class="fa fa-edit"></i>
+          <i class="fa fa-envelope"></i>
+          <i class="fa fa-envelope-o"></i>
+          <i class="fa fa-envelope-open"></i>
+          <i class="fa fa-envelope-open-o"></i>
+          <i class="fa fa-flag"></i>
+          <i class="fa fa-flag-o"></i>
+          <i class="fa fa-folder"></i>
+          <i class="fa fa-home"></i>
+          <i class="fa fa-info"></i>
+          <i class="fa fa-info-circle"></i>
+          <i class="fa fa-keyboard"></i>
+          <i class="fa fa-keyboard-o"></i>
+          <i class="fa fa-lightbulb"></i>
+          <i class="fa fa-lock"></i>
+          <i class="fa fa-unlock"></i>
+          <i class="fa fa-pencil"></i>
+          <i class="fa fa-pen-square"></i>
+          <i class="fa fa-pen-square-o"></i>
+          <i class="fa fa-phone"></i>
+          <i class="fa fa-phone-square"></i>
+          <i class="fa fa-question"></i>
+          <i class="fa fa-question-circle"></i>
+          <i class="fa fa-search"></i>
+          <i class="fa fa-search-minus"></i>
+          <i class="fa fa-search-plus"></i>
+          <i class="fa fa-spinner"></i>
+          <div>
+          <i class="fa fa-spinner fa-spin"></i>
+          </div>
+          <div>
+          <i class="fa fa-spinner fa-pulse"></i>
+          </div>
+          <i class="fa fa-square"></i>
+          <i class="fa fa-square-o"></i>
+          <i class="fa fa-tasks"></i>
+          <i class="fa fa-th"></i>
+          <i class="fa fa-th-list"></i>
+          <i class="fa fa-tag"></i>
+          <i class="fa fa-tags"></i>
+          <i class="fa fa-thumbs-up"></i>
+          <i class="fa fa-thumbs-o-up"></i>
+          <i class="fa fa-thumbs-down"></i>
+          <i class="fa fa-thumbs-o-down"></i>
+          <i class="fa fa-toggle-off"></i>
+          <i class="fa fa-toggle-on"></i>
+          <i class="fa fa-trash"></i>
+          <i class="fa fa-trash-o"></i>
+          <i class="fa fa-trash-alt"></i>
+          <i class="fa fa-user"></i>
+          <i class="fa fa-user-o"></i>
+          <i class="fa fa-user-circle"></i>
+          <i class="fa fa-users"></i>
+          <i class="fa fa-user-secret"></i>
+          <i class="fa fa-wrench"></i> -->
+          <!-- <i class="fa fa-dollars"></i> -->
         </ul>
         </nav>
       </div>
