@@ -90,6 +90,10 @@ const tooltips_all = {
 export default {
     name: "label_status",
     props: {
+        labelId: {
+            type: Number,
+            required: true
+        }, 
         userCompletedToggle: {
             type: Boolean,
             default: false
@@ -150,16 +154,49 @@ export default {
     methods: {
         toggle_user_complete: function() {
             this.status.user_complete = !this.status.user_complete;
+            this.update_label_field(this.labelId, 'user_complete', this.status.user_complete)
         },
         toggle_needs_improvement: function() {
             this.status.needs_improvement = !this.status.needs_improvement;
+            this.update_label_field(this.labelId, 'needs_improvement', this.status.needs_improvement)
         },
         toggle_admin_complete: function() {
             this.status.admin_complete = !this.status.admin_complete;
+            this.update_label_field(this.labelId, 'admin_complete', this.status.admin_complete)
         },
         toggle_paid: function() {
             this.status.paid = !this.status.paid;
+            this.update_label_field(this.labelId, 'paid', this.status.paid)
         },
+        update_label_field: function(label_id, field_name, value) {
+            // update the label field
+
+            const vm = this;
+
+            let access_token = localStorage.getItem("s3_access_token");
+
+            let data = {
+                field_name: value
+            }
+
+            let config = {
+                headers: {
+                Authorization: "Bearer " + access_token
+                }
+            };
+
+            axios
+                .patch("/labels/" + label_id, config)
+                .then(function(response) {
+                    console.log(response.data)
+
+                    // vm.users = response.data;
+                    // TODO: should get fields from update SQL query and update the values in this component, to prevent possibly going out of sync
+                })
+                .catch(function(error) {
+                    console.log(error);
+                });
+        }
     }
 };
 </script>

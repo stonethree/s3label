@@ -227,6 +227,54 @@ def get_latest_label(input_data_id, label_task_id):
         return resp
 
 
+@app.route('/image_labeler/api/v1.0/label_ids/label_tasks/<int:label_task_id>/input_data/<int:input_data_id>/user/<int:user_id>',
+           methods=['GET'])
+@fje.jwt_required
+def get_label_id(user_id, label_task_id, input_data_id):
+    """
+    Store the label for a particular label task, user and input data item
+
+    :param user_id: ID of user
+    :param label_task_id: ID of the label task that we want to retrieve an image for
+    :param input_data_id: ID of the input data item that has been labeled
+    :return:
+    """
+
+    # get ID of user
+
+    user_identity = fje.get_jwt_identity()
+    user_id_from_auth = ua.get_user_id_from_token(user_identity)
+
+    if user_id != user_id_from_auth:
+        is_admin = sql_queries_admin.is_user_an_admin(engine, user_id_from_auth)
+
+        if is_admin is None or not is_admin:
+            resp = make_response(jsonify(error='Not permitted to view this content. Must be an admin user.'), 403)
+            resp.mimetype = "application/javascript"
+            return resp
+
+    try:
+        # find the label that the serialised label corresponds to
+
+        label_id = sql_queries.get_label_id(engine,
+                                            user_id=user_id,
+                                            label_task_id=label_task_id,
+                                            input_data_id=input_data_id)
+
+        if label_id is None:
+            resp = make_response(jsonify(error='Could not find label ID'), 404)
+            resp.mimetype = "application/javascript"
+            return resp
+        else:
+            resp = make_response(jsonify(label_id=label_id), 200)
+            resp.mimetype = "application/javascript"
+            return resp
+    except Exception:
+        resp = make_response(jsonify(error='Bad request'), 400)
+        resp.mimetype = "application/javascript"
+        return resp
+
+
 # ------------- ADMIN get requests ---------------
 
 
@@ -329,6 +377,25 @@ def login():
     access_token = fje.create_access_token(identity='user_id={}'.format(user_id), expires_delta=False)
 
     return jsonify(access_token=access_token), 200
+
+
+@app.route('/image_labeler/api/v1.0/user_id', methods=['GET'])
+@fje.jwt_required
+def get_user_id_from_access_token():
+    """
+    Get user's ID from their access token
+
+    :return: user ID
+    """
+
+    # get ID of user
+
+    user_identity = fje.get_jwt_identity()
+    user_id = ua.get_user_id_from_token(user_identity)
+
+    resp = make_response(jsonify(user_id=user_id), 200)
+    resp.mimetype = "application/javascript"
+    return resp
 
 
 @app.route('/image_labeler/api/v1.0/unlabeled_images/label_tasks/<int:label_task_id>', methods=['GET'])     # TODO: should be PUT request?

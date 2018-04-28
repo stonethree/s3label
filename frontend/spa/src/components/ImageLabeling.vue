@@ -54,28 +54,9 @@
             </div>
         </div>
 
-        <!-- <div class="image-status row">
-            <b-form-checkbox id="checkbox_user_complete"
-                            v-model="user_complete"
-                            value="accepted"
-                            unchecked-value="not_accepted">
-            User Complete
-            </b-form-checkbox>
-            <b-form-checkbox id="checkbox_admin_complete"
-                            v-model="admin_complete"
-                            value="accepted"
-                            unchecked-value="not_accepted">
-            Admin Complete
-            </b-form-checkbox>
-            <b-form-checkbox id="checkbox_paid"
-                            v-model="paid"
-                            value="accepted"
-                            unchecked-value="not_accepted">
-            Paid
-            </b-form-checkbox>
-        </div> -->
-
+<!-- TODO need to dynamically set Label ID!!! -->
         <div class="canvas-section">
+            <!-- <label-status v-bind:label-id="1" v-bind:user-completed-toggle="label_status_toggler.user_complete"></label-status> -->
             <label-status v-bind:user-completed-toggle="label_status_toggler.user_complete"></label-status>
             <div id="canvasesdiv" style="position:relative;" @mousedown="mouseDownHandler" @mouseup="mouseUpHandler" @mousemove="mouseMoveHandler">
                 <canvas id="canvas-fg" width="900" height="350" style="width:900px;height:350px; border: 1px solid #ccc; z-index: 2; position:absolute; left:0px; top:0px;" v-draw-on-canvas="polygons"></canvas>
@@ -187,7 +168,9 @@ export default {
             ctx: undefined,
             ctx_bg: undefined,
             input_data_id: undefined,
-            label_status_toggler: {user_complete: false}
+            label_status_toggler: {user_complete: false},
+            user_id: undefined,
+            label_id: undefined
         };
     },
     components: {
@@ -226,15 +209,17 @@ export default {
             else {
                 return null
             }
-        }
+        },
     },
     created: function () {
 
         // go to label task chooser page if user has not selected a label task
 
-        if (this.label_task == undefined) {
-            this.$router.push('label_tasks');
-        }
+        // if (this.label_task == undefined) {
+        //     this.$router.push('label_tasks');
+        // }
+
+        this.get_user_id();
     },
     beforeMount() {
         window.addEventListener('keydown', this.keyDownHandler);
@@ -300,7 +285,11 @@ export default {
             if (new_input_data_id != undefined) {
                 this.loadImageLabels(new_input_data_id);
             }
-        }
+
+            // get the label ID corresponding to this input data item, user and label task
+
+            this.get_label_id(this.label_task.label_task_id, new_input_data_id, this.user_id)
+        },
     },
     methods: {
         draw_image_unavailable_placeholder: function() {
@@ -406,8 +395,8 @@ export default {
                 // console.log('key not found (down):', e.code);
             }
 
-            e.stopPropagation();
-            e.preventDefault();
+            // e.stopPropagation();
+            // e.preventDefault();
         },
 
         keyUpHandler: function (e) {
@@ -433,8 +422,8 @@ export default {
                 // console.log('key not found (up):', e.code);
             }
 
-            e.stopPropagation();
-            e.preventDefault();
+            // e.stopPropagation();
+            // e.preventDefault();
         },
 
         getMousePos: function (canvas, event) {
@@ -954,6 +943,62 @@ export default {
                 this.draw_image_unavailable_placeholder();
             }
         },
+
+        get_user_id: function () {
+            // get the label ID, given user ID, label task ID and input data ID
+
+            let access_token = localStorage.getItem("s3_access_token");
+
+            let config = {
+                headers: {
+                Authorization: "Bearer " + access_token
+                }
+            };
+
+            var vm = this;
+
+            axios
+                .get("user_id", config)
+                .then(function(response) {
+                    console.log('dsdsadasda', response)
+                    vm.user_id = response.data.user_id;
+                })
+                .catch(function(error) {
+                    console.log(error);
+                    vm.user_id = undefined;
+                });
+        },
+
+        get_label_id: function (label_task_id, input_data_id, user_id) {
+            // get the label ID, given user ID, label task ID and input data ID
+
+            if (label_task_id == undefined || input_data_id == undefined || user_id == undefined) {
+                console.log("Input fields must all be defined in order to get the label ID")
+                this.label_id = undefined;
+            }
+            else {
+                let access_token = localStorage.getItem("s3_access_token");
+
+                let config = {
+                    headers: {
+                    Authorization: "Bearer " + access_token
+                    }
+                };
+
+                var vm = this;
+
+                axios
+                    .get("label_ids/label_tasks/" + label_task_id + "/input_data/" + input_data_id + "/user/" + user_id, config)
+                    .then(function(response) {
+                        console.log('dfdgff', response.data, 'user_id:', user_id, 'input_data_id:', input_data_id, 'label_task_id:', label_task_id, 'label_id:', response.data.label_id)
+                        vm.label_id = response.data.label_id;
+                    })
+                    .catch(function(error) {
+                        console.log('error getting label id:', error);
+                        vm.label_id = undefined;
+                    });
+            }
+        }
     },
 
     directives: {
