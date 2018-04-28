@@ -8,7 +8,7 @@
       <!-- <div class="col"> -->
         <nav class="navbar">
         <ul class="nav justify-content-center nav-justified">
-          <li v-if="!user_logged_in" class="nav-item ">
+          <li v-if="!is_logged_in" class="nav-item ">
             <router-link v-bind:to="'/login'" class="nav-link ">Login</router-link>
           </li>
           <li v-else class="nav-item ">
@@ -116,12 +116,15 @@
 </template>
 
 <script>
+
+import {  mapGetters } from "vuex";
+
 export default {
-  name: "App",
-  computed: {
-        user_logged_in: function() {
-            return this.$store.getters.logged_in;
-        }
+    name: "App",
+    computed: {
+        ...mapGetters([
+            'is_logged_in'
+        ])
     },
 };
 </script>
