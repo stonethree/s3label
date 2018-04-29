@@ -122,7 +122,7 @@ import {  mapGetters } from "vuex";
 export default {
     name: "App",
     computed: {
-        ...mapGetters([
+        ...mapGetters('user_login', [
             'is_logged_in'
         ])
     },

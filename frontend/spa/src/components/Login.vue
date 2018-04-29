@@ -16,13 +16,8 @@
 </template>
 
 <script>
-// import axios from "axios";
-
-// axios.defaults.baseURL = "http://127.0.0.1:5000/image_labeler/api/v1.0/";
-
 import {  mapGetters } from "vuex";
-
-
+import {  mapActions } from "vuex";
 
 export default {
     name: "login",
@@ -33,20 +28,23 @@ export default {
         };
     },
     computed: {
-        ...mapGetters([
+        ...mapGetters('user_login', [
             'authentication_error'
         ])
     },
     methods: {
+        ...mapActions('user_login', [
+            'login',
+            'get_user_id'
+        ]),
         logUserIn: function() {
             // get access token from server to permit user to make requests to the backend
 
             var vm = this;
 
-            this.$store
-                .dispatch("login", { email: this.email, password: this.password })
+            this.login({ email: this.email, password: this.password })
                 .then(function(response) {
-                    vm.$store.dispatch("get_user_id");
+                    vm.get_user_id()
                 })
                 .then(function(response) {
                     vm.$router.push('label_tasks');

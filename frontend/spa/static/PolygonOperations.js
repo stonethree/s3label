@@ -1,24 +1,16 @@
-module.exports = {
-    convertPolygonToPaths: convertPolygonToPaths,
-    convertPathToPolygon: convertPathToPolygon,
-    isPointInPolygon: isPointInPolygon,
-    getSelectedPolygonIndex: getSelectedPolygonIndex,
-    isPolygonLargeEnough: isPolygonLargeEnough,
-  }
 
-
-function convertPolygonToPaths(polygon) {
+export function convertPolygonToPaths(polygon) {
     return polygon.regions;
 }
 
-function convertPathToPolygon(path) {
+export function convertPathToPolygon(path) {
     return {
         regions: [path],
         inverted: false
     };
 }
 
-function isPointInPolygon(x, y, cornersX, cornersY) {
+export function isPointInPolygon(x, y, cornersX, cornersY) {
 
     var i, j = cornersX.length - 1;
     var oddNodes = false;
@@ -41,7 +33,7 @@ function isPointInPolygon(x, y, cornersX, cornersY) {
     }
 }
 
-function getSelectedPolygonIndex(polygons) {
+export function getSelectedPolygonIndex(polygons) {
     // get the index of the last selected polygon in the list
 
     var index = -1;
@@ -55,7 +47,7 @@ function getSelectedPolygonIndex(polygons) {
     return index;
 }
 
-function isPolygonLargeEnough(path) {
+export function isPolygonLargeEnough(path) {
     // check if path has non-negligible area
 
     var x_min = Math.min(...currentPath.map(p => p[0]));

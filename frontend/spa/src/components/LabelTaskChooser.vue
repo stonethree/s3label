@@ -13,7 +13,7 @@
                           <h4 class="card-title"> {{ lt.label_task_id }} - {{ lt.title }} </h4>
                           <h6 class="card-subtitle mb-2 font-italic"> {{ lt.type }} </h6>
                           <p> {{ lt.description }} </p>
-                          <button v-on:click="select_label_task(lt.label_task_id)"> Label data </button>
+                          <button v-on:click="choose_label_task(lt.label_task_id)"> Label data </button>
                           <button v-on:click="view_labeled_data(lt.label_task_id)"> View labeled data </button>
                       </div>
                   </div>
@@ -27,6 +27,7 @@
 
 <script>
 import axios from "axios";
+import { mapMutations, mapGetters } from 'vuex';
 
 axios.defaults.baseURL = "http://127.0.0.1:5000/image_labeler/api/v1.0/";
 
@@ -34,13 +35,21 @@ export default {
   name: "label_task_chooser",
   data: function() {
     return {
-      label_tasks: []
     };
+  },
+  computed: {
+      ...mapGetters('label_task_store', [
+        'label_tasks'
+    ]),
   },
   beforeMount() {
         this.get_label_task_list();
     },
   methods: {
+    ...mapMutations('label_task_store', [
+        'set_label_tasks',
+        'select_label_task'
+    ]),
     get_label_task_list: function() {
       // get list of label tasks from the backend
 
@@ -57,20 +66,19 @@ export default {
       axios
         .get("label_tasks", config)
         .then(function(response) {
-          vm.label_tasks = response.data;
+          var label_tasks = response.data;
 
           // store the list of label tasks in the global store so that it can be used by the image labeler component
 
-          vm.$store.commit('set_label_tasks', vm.label_tasks);
+          vm.set_label_tasks(label_tasks);
         })
         .catch(function(error) {
           console.log(error);
         });
     },
-    select_label_task: function(label_task_id) {
+    choose_label_task: function(label_task_id) {
       // store the list of label tasks in the global store so that it can be used by the image labeler component
-
-      this.$store.commit('select_label_task', label_task_id);
+      this.select_label_task(label_task_id);
 
       // go to other window to allow user to label images from this label task
       this.$router.push('image_labeler');
@@ -78,7 +86,7 @@ export default {
     view_labeled_data: function(label_task_id) {
       // go to other window to allow user to view his/her images from this label task
 
-      this.$store.commit('select_label_task', label_task_id);
+      this.select_label_task(label_task_id);
 
       // go to other window to allow user to label images from this label task
       

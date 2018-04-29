@@ -22,6 +22,7 @@
 import ImageThumbnail from './ImageThumbnail'
 
 import axios from "axios";
+import { mapGetters } from 'vuex';
 
 axios.defaults.baseURL = "http://127.0.0.1:5000/image_labeler/api/v1.0/";
 
@@ -33,9 +34,9 @@ export default {
         };
     },
     computed: {
-        label_task: function() {
-            return this.$store.getters.label_task;
-        },
+        ...mapGetters('label_task_store', [
+            'label_task'
+        ]),
         user_labeled_data_reversed: function() {
             return this.user_labeled_data.slice().reverse();
         }

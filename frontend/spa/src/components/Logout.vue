@@ -5,6 +5,8 @@
 
 <script>
 
+import {  mapActions } from "vuex";
+
 export default {
     
   name: "logout",
@@ -12,8 +14,11 @@ export default {
       this.logUserOut();
   },
   methods: {
+      ...mapActions('user_login', [
+            'logout'
+        ]),
     logUserOut: function() {
-        this.$store.dispatch("logout")
+        this.logout()
 
         // go to login page
 
