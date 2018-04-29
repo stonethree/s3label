@@ -1,3 +1,5 @@
+import { extractColor } from '../../static/color_utilities'
+
 export const StoreLabelTask = {
     namespaced: true,
     state: {
@@ -40,19 +42,5 @@ export const StoreLabelTask = {
                 return undefined
             }
         }
-    }
-}
-
-// helper functions
-
-function extractColor(rgb_string) {
-    // takes a string of format
-    var rgb = JSON.parse(rgb_string)
-
-    if (rgb.length == 3) {
-        return rgb;
-    }
-    else {
-        throw TypeError('Color string must have 3 RGB elements specified');
     }
 }

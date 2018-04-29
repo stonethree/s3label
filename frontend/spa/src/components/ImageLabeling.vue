@@ -54,13 +54,13 @@
             </div>
         </div>
     
-        <!-- <drawing-canvas></drawing-canvas> -->
+        <drawing-canvas></drawing-canvas>
     </div>
 </template>
 
 <script>
 
-// import DrawingCanvas from './DrawingCanvas'
+import DrawingCanvas from './DrawingCanvas'
 
 import { mapGetters } from 'vuex'
 import axios from "axios";
@@ -84,27 +84,26 @@ export default {
             stroke_slider_value: "2",
             opacity_slider_value: "50",
             // isDrawing: false,
-            polygons: [],
-            currentPath: [],
+            polygons: [],                   // TODO: polygons must be stored in vuex. Dispatch actions to perform canvas clear, delete, undo, etc
+            // currentPath: [],
             polygons_redo: [],
             polygons_undo: [],
-            // padX: 80,
-            // padY: 80,
-            // ctx: undefined,
-            // ctx_bg: undefined,
-            // input_data_id: undefined,
-            label_status_toggler: {user_complete: false},
-            // label_id: undefined,
-            labels: []  // TEMP
+            // label_status_toggler: {user_complete: false},
         };
     },
     components: {
-        // LabelStatus,
+        DrawingCanvas,
     },
     computed: {
-        ...mapGetters([
+        ...mapGetters('label_task_store', [
             'label_task',
+            'labels'
+        ]),
+        ...mapGetters('user_login', [
             'user_id'
+        ]),
+        ...mapGetters('image_labeling', [
+            'input_data_id'
         ]),
         stroke_thickness: function() {
             return Math.max(1, parseInt(this.stroke_slider_value));
@@ -118,20 +117,9 @@ export default {
 
     },
     created: function () {
-
-        // go to label task chooser page if user has not selected a label task
-
-        // if (this.label_task == undefined) {
-        //     this.$router.push('label_tasks');
-        // }
-
-        
         // dynamically add vuex store for storing local state of this component (useful for reusability of the component)
         // this.$store.registerModule('image_labeling', image_labeling_store)
         // console.log('registered store module dynamically')
-
-        // performing a mutation forces this dynamically registered module to show up in the Vuex devtools window
-        // this.$store.commit('set_input_data_id', undefined)
     },
     beforeMount() {
         window.addEventListener('keydown', this.keyDownHandler);
@@ -140,23 +128,19 @@ export default {
     mounted() {
         // initialise active label to the first label in the set
 
-        // if (this.labels != undefined && this.labels.length > 0) {
-        //     this.active_label = this.labels[0].label_class;
-        //     console.log(this.labels[0].label_class)
-        // }
+        if (this.labels != undefined && this.labels.length > 0) {
+            this.active_label = this.labels[0].label_class;
+            console.log(this.labels[0].label_class)
+        }
 
         // commit starting input data ID, whether defined or not
 
-        this.$store.dispatch('image_labeling/set_new_image', this.input_data_id_start)
+        this.$store.dispatch('image_labeling/set_input_data_id_of_existing_image', this.input_data_id_start)
 
         // if an image ID is specified, load that image
 
-        if (this.input_data_id_start != undefined) {
-            // this.fetchAndDisplayImage(baseUrl + '/input_images/' + this.input_data_id_start);       // TODO: fetching images should always be done in drawingCanvas
-        }
-        else {
-            // request a new unlabeled image
-            // this.loadNextImage();
+        if (this.input_data_id_start == undefined) {
+            // this.loadNextImage();                // ************************************ get input_data_id and corresponding label_id of a new image (do this in vuex action)
         }
     },
     beforeDestroy () {
@@ -170,6 +154,7 @@ export default {
     beforeRouteLeave (to, from, next) {
         // save image labels before navigating away
         if (this.input_data_id != undefined) {
+            // this.uploadLabeledImage(this.input_data_id);
         }
         else {
             console.log("attempted to save image before leaving page, but input_data_id = undefined")
@@ -213,38 +198,15 @@ export default {
             }
             else if (e.code === "ArrowLeft") {
                 if (this.input_data_id == undefined) {
-                    // this.loadLatestLabeledImage();
+                    this.$store.dispatch('image_labeling/get_input_data_id_of_unlabeled_image', this.label_task.label_task_id)
                 }
                 else {
-                    // get preceding labeled image
-
-                    let access_token = localStorage.getItem("s3_access_token");
-
-                    let config = {
-                        headers: {
-                        Authorization: "Bearer " + access_token
-                        }
-                    };
-
-                    var vm = this;
-
-                    axios
-                        .get("labeled_data/label_tasks/" + this.label_task.label_task_id + "?action=previous&current_input_data_id=" + this.input_data_id, config)
-                        .then(function(response) {
-                            if (response.data.length == 1) {
-                                var preceding_data_item = response.data[0];
-                                // vm.fetchAndDisplayImage(baseUrl + '/input_images/' + preceding_data_item.input_data_id);
-                                vm.input_data_id = preceding_data_item.input_data_id;
-                            }
-                        })
-                        .catch(function(error) {
-                        console.log(error);
-                        });
+                    this.$store.dispatch('image_labeling/get_input_data_id_of_previous_labeled_image', this.label_task.label_task_id)
                 }
                 
             }
             else if (e.code === "ArrowRight") {
-                this.loadNextImage();
+                // this.loadNextImage();
             }
             else if (e.code === 'Delete') {
                 console.log('num orig polys:', this.polygons.length, 'num redo polys:', this.polygons_redo.length)
@@ -326,26 +288,6 @@ export default {
                 this.polygons.push(this.polygons_redo.pop());
             }
         },
-
-        // extractColor: function (rgb_string) {
-        //     // takes a string of format
-        //     var rgb = JSON.parse(rgb_string)
-
-        //     if (rgb.length == 3) {
-        //         return rgb;
-        //     }
-        //     else {
-        //         throw TypeError('Color string must have 3 RGB elements specified');
-        //     }
-        // },
-
-        formatColor: function (rgb, alpha) {
-            return 'rgba(' + rgb[0] + ',' + rgb[1] + ',' + rgb[2] + ',' + alpha + ')';
-        },
-
-        // setColor: function (rgb, alpha) {
-        //     this.ctx.fillStyle = this.formatColor(rgb, alpha);
-        // },
 
         clearCanvas: function() {
             // this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);

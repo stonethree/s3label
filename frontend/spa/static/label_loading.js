@@ -70,34 +70,6 @@
 //         });
 // },
 
-// loadLatestLabeledImage: function() {
-//     // get the input_data_id of the latest image that the user has labeled
-
-//     const vm = this;
-
-//     let access_token = localStorage.getItem("s3_access_token");
-
-//     let config = {
-//         headers: {
-//         Authorization: "Bearer " + access_token
-//         }
-//     };
-
-//     axios
-//         .get("all_data/label_tasks/" + this.label_task.label_task_id + "/users/own?num_labeled_images=1", config)
-//         .then(function(response) {
-//             if (response.data.length == 1) {
-//                 let input_data_id_latest = response.data[0].input_data_id;
-
-//                 // vm.fetchAndDisplayImage(baseUrl + '/input_images/' + input_data_id_latest);
-//                 vm.input_data_id = input_data_id_latest;
-//             }
-//         })
-//         .catch(function(error) {
-//             console.log(error);
-//         });
-// },
-
 // loadNextImage: async function () {
 //     // first try get next image that the user has already viewed/labeled, if one exists
 

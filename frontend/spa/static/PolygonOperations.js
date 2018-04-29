@@ -50,10 +50,10 @@ export function getSelectedPolygonIndex(polygons) {
 export function isPolygonLargeEnough(path) {
     // check if path has non-negligible area
 
-    var x_min = Math.min(...currentPath.map(p => p[0]));
-    var x_max = Math.max(...currentPath.map(p => p[0]));
-    var y_min = Math.min(...currentPath.map(p => p[1]));
-    var y_max = Math.max(...currentPath.map(p => p[1]));
+    var x_min = Math.min(...path.map(p => p[0]));
+    var x_max = Math.max(...path.map(p => p[0]));
+    var y_min = Math.min(...path.map(p => p[1]));
+    var y_max = Math.max(...path.map(p => p[1]));
 
     if (Math.abs(x_min - x_max) < 5 || Math.abs(y_min - y_max) < 5) {
         return false;

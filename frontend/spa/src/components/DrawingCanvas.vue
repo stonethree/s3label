@@ -12,8 +12,7 @@
 
 <script>
 
-import LabelStatus from './LabelStatus'
-
+import { mapGetters } from 'vuex'
 import axios from "axios";
 
 var baseUrl = "http://127.0.0.1:5000/image_labeler/api/v1.0";
@@ -24,20 +23,18 @@ axios.defaults.baseURL = baseUrl;
 var PolyBool = require('polybooljs');
 import {convertPolygonToPaths, convertPathToPolygon, isPointInPolygon, getSelectedPolygonIndex, isPolygonLargeEnough } from '../../static/PolygonOperations'
 
+import LabelStatus from './LabelStatus'
+import { extractColor, formatColor } from '../../static/color_utilities'
+
 
 export default {
-    name: 'image_labeling',
-    props: ['input_data_id_start'],
+    name: 'drawing_canvas',
     data: function() {
         return {
             active_tool: "freehand",
             active_mode: "new",
             active_overlap_mode: "no-overlap",
-            previous_tool: undefined,
-            previous_mode: undefined,
             active_label: null,
-            stroke_slider_value: "2",
-            opacity_slider_value: "50",
             isDrawing: false,
             polygons: [],
             currentPath: [],
@@ -47,72 +44,50 @@ export default {
             padY: 80,
             ctx: undefined,
             ctx_bg: undefined,
-            // input_data_id: undefined,
             label_status_toggler: {user_complete: false},
-            // label_id: undefined
         };
     },
     components: {
         LabelStatus,
     },
     computed: {
-        ...mapGetters([
-            'label_task',
-            'user_id'
+        ...mapGetters('image_labeling', [
+            'input_data_id',
+            'label_id'
         ]),
-        stroke_thickness: function() {
-            return Math.max(1, parseInt(this.stroke_slider_value));
-        },
-        use_stroke: function() {
-            return parseInt(this.stroke_slider_value) > 0 ? true : false; 
-        },
-        opacity: function() {
-            return parseFloat(this.opacity_slider_value) / 100.;
-        },
+        // stroke_thickness: function() {
+        //     return Math.max(1, parseInt(this.stroke_slider_value));
+        // },
+        // use_stroke: function() {
+        //     return parseInt(this.stroke_slider_value) > 0 ? true : false; 
+        // },
+        // opacity: function() {
+        //     return parseFloat(this.opacity_slider_value) / 100.;
+        // },
         // label_task: function() {
         //     return this.$store.getters.label_task;
         // },
-        labels: function() {
-            if (this.label_task != undefined) {
-                return JSON.parse(this.label_task.label_classes);
-            }
-            else {
-                return undefined;
-            }
-        },
-        label_colors: function() {
-            if (this.labels != undefined) {
-                var d = {};
+        // labels: function() {
+        //     if (this.label_task != undefined) {
+        //         return JSON.parse(this.label_task.label_classes);
+        //     }
+        //     else {
+        //         return undefined;
+        //     }
+        // },
+        // label_colors: function() {
+        //     if (this.labels != undefined) {
+        //         var d = {};
 
-                for (var i = 0; i < this.labels.length; i++) {
-                    d[this.labels[i].label_class] = this.extractColor(this.labels[i].color);
-                }
-                return d;
-            }
-            else {
-                return undefined
-            }
-        },
-    },
-    created: function () {
-
-        // go to label task chooser page if user has not selected a label task
-
-        // if (this.label_task == undefined) {
-        //     this.$router.push('label_tasks');
-        // }
-
-        
-        // dynamically add vuex store for storing local state of this component (useful for reusability of the component)
-        this.$store.registerModule('image_labeling', image_labeling_store)
-        console.log('registered store module dynamically')
-
-        // performing a mutation forces this dynamically registered module to show up in the Vuex devtools window
-        this.$store.commit('set_input_data_id', undefined)
-    },
-    beforeMount() {
-        window.addEventListener('keydown', this.keyDownHandler);
-        window.addEventListener('keyup', this.keyUpHandler);
+        //         for (var i = 0; i < this.labels.length; i++) {
+        //             d[this.labels[i].label_class] = this.extractColor(this.labels[i].color);
+        //         }
+        //         return d;
+        //     }
+        //     else {
+        //         return undefined
+        //     }
+        // },
     },
     mounted() {
         var el = document.getElementById('canvas-fg');
@@ -120,44 +95,14 @@ export default {
         this.ctx = el.getContext('2d');
         this.ctx_bg = el2.getContext('2d');
 
-        // initialise active label to the first label in the set
-
-        if (this.labels != undefined && this.labels.length > 0) {
-            this.active_label = this.labels[0].label_class;
-            console.log(this.labels[0].label_class)
-        }
-
-        // commit starting input data ID, whether defined or not
-
-        this.$store.commit('set_input_data_id', this.input_data_id_start)
-
         // if an image ID is specified, load that image
 
-        if (this.input_data_id_start != undefined) {
-            // this.fetchAndDisplayImage(baseUrl + '/input_images/' + this.input_data_id_start);
-            this.fetchAndDisplayImage(baseUrl + '/input_images/' + this.input_data_id_start);       // TODO: should handle this in loadNextImage function? (do commits in there?)
-        }
-        else {
-            // request a new unlabeled image
-            this.loadNextImage();
-        }
-    },
-    beforeDestroy () {
-        window.removeEventListener('keydown', this.keyDownHandler);
-        window.removeEventListener('keyup', this.keyUpHandler);
-
-        this.$store.unregisterModule('image_labeling')
-        console.log('unregistered image labeling store module')
-    },
-    beforeRouteLeave (to, from, next) {
-        // save image labels before navigating away
         if (this.input_data_id != undefined) {
-            this.uploadLabeledImage(this.input_data_id);
+            this.fetchAndDisplayImage(baseUrl + '/input_images/' + this.input_data_id);
         }
         else {
-            console.log("attempted to save image before leaving page, but input_data_id = undefined")
+            this.draw_image_unavailable_placeholder()
         }
-        next()
     },
     watch: {
         stroke_thickness: function () {
@@ -170,21 +115,29 @@ export default {
             this.drawAllPolygons(this.ctx, this.polygons);
         },
         input_data_id: function (new_input_data_id, old_input_data_id) {
-            // save previous image's labels to database
-            if (old_input_data_id != undefined) {
-                this.uploadLabeledImage(old_input_data_id);
-            }
+            // // save previous image's labels to database
+            // if (old_input_data_id != undefined) {
+            //     this.uploadLabeledImage(old_input_data_id);
+            // }
 
-            this.clearCanvas();
+            // this.clearCanvas();
             
             // when input image ID changes (i.e. new image is loaded), load latest image label from database 
-            if (new_input_data_id != undefined) {
-                this.loadImageLabels(new_input_data_id);
-            }
+            // if (new_input_data_id != undefined) {
+            //     this.loadImageLabels(new_input_data_id);
+            // }
 
             // get the label ID corresponding to this input data item, user and label task
 
             // this.get_label_id(this.label_task_id, new_input_data_id, this.user_id)
+
+
+            if (this.input_data_id != undefined) {
+                this.fetchAndDisplayImage(baseUrl + '/input_images/' + this.input_data_id);
+            }
+            else {
+                this.draw_image_unavailable_placeholder()
+            }
         },
     },
     methods: {
@@ -205,121 +158,6 @@ export default {
             ctx2.fillRect(this.padX, this.padY, w, h);
             ctx2.fillStyle = "hsl(25, 80%, 10%)";
             ctx2.fillText("No unlabeled images available for this label task", 200, 200);
-        },
-
-        keyDownHandler: function(e) {
-            if (e.ctrlKey && e.code === "KeyZ") {
-                console.log("Undo");
-                this.undo();
-                this.drawAllPolygons(this.ctx, this.polygons);
-            }
-            else if (e.ctrlKey && e.code === "KeyY") {
-                console.log("Redo");
-                this.redo();
-                this.drawAllPolygons(this.ctx, this.polygons);
-            }
-            else if (e.ctrlKey && e.code === "Enter") {
-                this.label_status_toggler.user_complete = !this.label_status_toggler.user_complete;
-            }
-            else if (e.code === "ArrowLeft") {
-                if (this.input_data_id == undefined) {
-                    this.loadLatestLabeledImage();
-                }
-                else {
-                    // get preceding labeled image
-
-                    let access_token = localStorage.getItem("s3_access_token");
-
-                    let config = {
-                        headers: {
-                        Authorization: "Bearer " + access_token
-                        }
-                    };
-
-                    var vm = this;
-
-                    axios
-                        .get("labeled_data/label_tasks/" + this.label_task.label_task_id + "?action=previous&current_input_data_id=" + this.input_data_id, config)
-                        .then(function(response) {
-                            if (response.data.length == 1) {
-                                var preceding_data_item = response.data[0];
-                                vm.fetchAndDisplayImage(baseUrl + '/input_images/' + preceding_data_item.input_data_id);
-                                vm.input_data_id = preceding_data_item.input_data_id;
-                            }
-                        })
-                        .catch(function(error) {
-                        console.log(error);
-                        });
-                }
-                
-            }
-            else if (e.code === "ArrowRight") {
-                this.loadNextImage();
-            }
-            else if (e.code === 'Delete') {
-                console.log('num orig polys:', this.polygons.length, 'num redo polys:', this.polygons_redo.length)
-                this.polygons_undo.push(...this.polygons.filter(poly => poly.selected));
-                this.polygons = this.polygons.filter(poly => !poly.selected);
-                console.log('num final polys:', this.polygons.length, 'num redo polys:', this.polygons_redo.length)
-                this.drawAllPolygons(this.ctx, this.polygons);
-            }
-            else if (e.code === 'Escape') {
-                for (let i = 0; i < this.polygons.length; i++) {
-                    this.polygons[i].selected = false;
-                }
-                this.drawAllPolygons(this.ctx, this.polygons);
-            }
-            else if (e.code == 'Space') {
-                if (this.previous_tool === undefined && !this.isDrawing) {
-                    this.previous_tool = this.active_tool;
-                    this.active_tool = 'select';
-                }
-            }
-            else if (e.code.startsWith('Shift')) {
-                if (this.previous_mode === undefined && !this.isDrawing) {
-                    this.previous_mode = this.active_mode;
-                    this.active_mode = 'append';
-                }
-            }
-            else if (e.code.startsWith('Alt')) {
-                if (this.previous_mode === undefined && !this.isDrawing) {
-                    this.previous_mode = this.active_mode;
-                    this.active_mode = 'erase';
-                }
-            }
-            else {
-                // console.log('key not found (down):', e.code);
-            }
-
-            // e.stopPropagation();
-            // e.preventDefault();
-        },
-
-        keyUpHandler: function (e) {
-            if (e.code === 'Space') {
-                if (this.previous_tool) {
-                    this.active_tool = this.previous_tool;
-                    this.previous_tool = undefined;
-                }
-            }
-            else if (e.code.startsWith('Shift')) {
-                if (this.previous_mode) {
-                    this.active_mode = this.previous_mode;
-                    this.previous_mode = undefined;
-                }
-            }
-            else if (e.code.startsWith('Alt')) {
-                if (this.previous_mode) {
-                    this.active_mode = this.previous_mode;
-                    this.previous_mode = undefined;
-                }
-            }
-            else {
-                // console.log('key not found (up):', e.code);
-            }
-
-            // e.stopPropagation();
-            // e.preventDefault();
         },
 
         getMousePos: function (canvas, event) {
@@ -537,22 +375,6 @@ export default {
             }
         },
 
-        extractColor: function (rgb_string) {
-            // takes a string of format
-            var rgb = JSON.parse(rgb_string)
-
-            if (rgb.length == 3) {
-                return rgb;
-            }
-            else {
-                throw TypeError('Color string must have 3 RGB elements specified');
-            }
-        },
-
-        formatColor: function (rgb, alpha) {
-            return 'rgba(' + rgb[0] + ',' + rgb[1] + ',' + rgb[2] + ',' + alpha + ')';
-        },
-
         setColor: function (rgb, alpha) {
             this.ctx.fillStyle = this.formatColor(rgb, alpha);
         },
@@ -672,204 +494,6 @@ export default {
                     console.log('error fetching and displaying image:', error);
                 });
         },
-
-        uploadLabeledImage: function (input_data_id) {
-
-            console.log('uploading label with label task ID', this.label_task.label_task_id, 'and input data ID', input_data_id)
-
-            var data = {label_serialised: this.polygons}
-
-            let access_token = localStorage.getItem("s3_access_token");
-
-            let config = {
-                headers: {
-                Authorization: "Bearer " + access_token
-                }
-            };
-
-            var vm = this;
-
-            axios
-                .post("label_history/label_tasks/" + vm.label_task.label_task_id + "/input_data/" + input_data_id, data, config)
-                .then(function(response) {
-                    console.log('saving:', vm.label_task.label_task_id, input_data_id, response)
-                })
-                .catch(function(error) {
-                    console.log('error saving label:', error);
-                });
-        },
-
-        loadImageLabels: function (input_data_id) {
-
-            console.log('getting image labels with label task ID', this.label_task.label_task_id, 'and input data ID', input_data_id)
-
-            let access_token = localStorage.getItem("s3_access_token");
-
-            let config = {
-                headers: {
-                Authorization: "Bearer " + access_token
-                }
-            };
-
-            var vm = this;
-
-            axios
-                .get("labels/input_data/" + input_data_id + "/label_tasks/" + this.label_task.label_task_id, config)
-                .then(function(response) {
-                    if (response.data.length == 1) {
-                        console.log("Label found for this image: attempting to apply it in the view")
-                        var label = response.data[0];
-
-                        // check label format is correct
-
-                        var polygons = JSON.parse(label.label_serialised);
-
-                        if (polygons.length > 0 && polygons[0].polygon != undefined) {
-                            console.log('Applied serialised label to image')
-                            vm.polygons = polygons;
-                            vm.drawAllPolygons(vm.ctx, vm.polygons);
-                        }
-                        else {
-                            console.log('Serialised label has wrong format:', polygons)
-                        }
-                    }
-                    else if (response.data.length == 0) {
-                        console.log("No label found for this image")
-                    }
-                    else {
-                        console.log("Error: expected at most one label for this image!")
-                    }
-                })
-                .catch(function(error) {
-                    console.log(error);
-                });
-        },
-
-        loadLatestLabeledImage: function() {
-            // get the input_data_id of the latest image that the user has labeled
-
-            const vm = this;
-
-            let access_token = localStorage.getItem("s3_access_token");
-
-            let config = {
-                headers: {
-                Authorization: "Bearer " + access_token
-                }
-            };
-
-            axios
-                .get("all_data/label_tasks/" + this.label_task.label_task_id + "/users/own?num_labeled_images=1", config)
-                .then(function(response) {
-                    if (response.data.length == 1) {
-                        let input_data_id_latest = response.data[0].input_data_id;
-
-                        vm.fetchAndDisplayImage(baseUrl + '/input_images/' + input_data_id_latest);
-                        vm.input_data_id = input_data_id_latest;
-                    }
-                })
-                .catch(function(error) {
-                    console.log(error);
-                });
-        },
-
-        loadNextImage: async function () {
-            // first try get next image that the user has already viewed/labeled, if one exists
-
-            let access_token = localStorage.getItem("s3_access_token");
-
-            let config = {
-                headers: {
-                Authorization: "Bearer " + access_token
-                }
-            };
-
-            var vm = this;
-            var got_an_image = false;
-
-
-            // check if we have an input data ID first
-
-            if (this.input_data_id != undefined) {
-                got_an_image = await axios
-                    .get("labeled_data/label_tasks/" + this.label_task.label_task_id + "?action=next&current_input_data_id=" + this.input_data_id, config)
-                    .then(function(response) {
-                        if (response.data.length == 1) {
-                            var next_data_item = response.data[0];
-                            vm.fetchAndDisplayImage(baseUrl + '/input_images/' + next_data_item.input_data_id);
-                            vm.input_data_id = next_data_item.input_data_id;
-                            return true;
-                        }
-                        else {
-                            return false;
-                        }
-                    })
-                    .catch(function(error) {
-                        console.log('error getting next image:', error);
-                        return false;
-                    });
-            }
-
-            // request a fresh unlabeled image if we have already scrolled to the most recent image
-
-            if (!got_an_image) {
-                console.log('get new unlabeled image')
-
-                got_an_image = await axios
-                    .get("unlabeled_images/label_tasks/" + this.label_task.label_task_id + "?shuffle=true", config)
-                    .then(function(response) {
-                        return response.data.input_data_id;
-                    })
-                    .then(function(input_data_id) {
-                        vm.fetchAndDisplayImage(baseUrl + '/input_images/' + input_data_id);
-                        vm.input_data_id = input_data_id;
-                        return true;
-                    })
-                    .catch(function(error) {
-                        console.log(error);
-                        return false;
-                    });
-            }
-
-            // if we have scrolled to the most recent image and no unlabeled images are available, display a message to the user
-
-            if (!got_an_image) {
-                console.log("No more unlabeled images available!")
-                vm.input_data_id = undefined;
-                this.draw_image_unavailable_placeholder();
-            }
-        },
-
-        get_label_id: function (label_task_id, input_data_id, user_id) {
-            // get the label ID, given user ID, label task ID and input data ID
-
-            if (label_task_id == undefined || input_data_id == undefined || user_id == undefined) {
-                console.log("Input fields must all be defined in order to get the label ID")
-                this.label_id = undefined;
-            }
-            else {
-                let access_token = localStorage.getItem("s3_access_token");
-
-                let config = {
-                    headers: {
-                    Authorization: "Bearer " + access_token
-                    }
-                };
-
-                var vm = this;
-
-                axios
-                    .get("label_ids/label_tasks/" + label_task_id + "/input_data/" + input_data_id + "/user/" + user_id, config)
-                    .then(function(response) {
-                        console.log('dfdgff', response.data, 'user_id:', user_id, 'input_data_id:', input_data_id, 'label_task_id:', label_task_id, 'label_id:', response.data.label_id)
-                        vm.label_id = response.data.label_id;
-                    })
-                    .catch(function(error) {
-                        console.log('error getting label id:', error);
-                        vm.label_id = undefined;
-                    });
-            }
-        }
     },
 
     directives: {
@@ -890,8 +514,8 @@ export default {
 
 
 <style>
-.canvas-section div { padding-top: 2em }
-/* #image_labeling {
+/* .canvas-section div { padding-top: 2em } */
+/* #drawing_canvas {
   font-family: 'Avenir', Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
