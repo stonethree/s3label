@@ -18,18 +18,42 @@ export const StoreImageLabeling = {
     },
     actions: {
         async set_input_data_id_of_existing_image ({ commit }, input_data_id) {
+            console.log('set_input_data_id_of_existing_image:::::::::1 ', input_data_id)
             commit(SET_INPUT_DATA_ID, input_data_id)
         },
-        async get_input_data_id_of_unlabeled_image ({ commit }, label_task_id) {
+        async get_input_data_id_of_most_recently_labeled_image ({ commit }, label_task_id) {
             let input_data_id = await getLatestLabeledImage(label_task_id);
 
-            commit(SET_INPUT_DATA_ID, input_data_id)
-        },
-        async get_input_data_id_of_most_recently_labeled_image ({ commit }) {
+            console.log('get_input_data_id_of_most_recently_labeled_image:::::::::2 ', input_data_id)
 
+            commit(SET_INPUT_DATA_ID, input_data_id)
         },
         async get_input_data_id_of_previous_labeled_image ({ commit, getters }, label_task_id) {
             let input_data_id = await getPrecedingLabeledImage(getters.input_data_id, label_task_id)
+
+            console.log('get_input_data_id_of_previous_labeled_image:::::::::3 ', input_data_id)
+
+            if (input_data_id != undefined) {
+                commit(SET_INPUT_DATA_ID, input_data_id)
+            }
+        },
+        async get_input_data_id_of_next_image ({ commit, getters }, label_task_id) {
+            console.log('get_input_data_id_of_next_image:::::::::4 ')
+            var input_data_id = undefined;
+
+            // firstly, check if the user has labeled another image following the current one
+
+            if (getters.input_data_id != undefined) {
+                input_data_id = await getFollowingLabeledImage(getters.input_data_id, label_task_id)
+                console.log('getFollowingLabeledImage (A) ', input_data_id)
+            }
+
+            // if no next image found, request a new unlabeled image for the user to label
+
+            if (input_data_id == undefined) {
+                input_data_id = await getUnlabeledImage(label_task_id)
+                console.log('getUnlabeledImage (B) ', input_data_id)
+            }
 
             if (input_data_id != undefined) {
                 commit(SET_INPUT_DATA_ID, input_data_id)
@@ -47,7 +71,7 @@ export const StoreImageLabeling = {
 }
 
 
-// utility functions
+// static functions for retrieving input_data_ids from backend
 
 import axios from "axios";
 
@@ -100,14 +124,68 @@ async function getPrecedingLabeledImage(current_input_data_id, label_task_id) {
             if (response.data.length == 1) {
                 var preceding_data_item = response.data[0];
 
-                console.log(preceding_data_item)
-
                 return preceding_data_item.input_data_id;
             }
             else {
-                console.log('errrrror!')
                 return undefined;
             }
+        })
+        .catch(function(error) {
+            console.log(error);
+            return undefined;
+        });
+}
+
+
+async function getFollowingLabeledImage(current_input_data_id, label_task_id) {
+    // get following labeled image that has already been
+
+    let access_token = localStorage.getItem("s3_access_token");
+
+    let config = {
+        headers: {
+        Authorization: "Bearer " + access_token
+        }
+    };
+
+    return await axios
+        .get("labeled_data/label_tasks/" + label_task_id + "?action=next&current_input_data_id=" + current_input_data_id, config)
+        .then(function(response) {
+            if (response.data.length == 1) {
+                var following_data_item = response.data[0];
+
+                return following_data_item.input_data_id;
+            }
+            else {
+                return undefined;
+            }
+        })
+        .catch(function(error) {
+            console.log(error);
+            return undefined;
+        });
+}
+
+
+async function getUnlabeledImage(label_task_id) {
+    // get a new image that the user has not already labeled
+
+    let access_token = localStorage.getItem("s3_access_token");
+
+    let config = {
+        headers: {
+        Authorization: "Bearer " + access_token
+        }
+    };
+
+    return await axios
+        .get("unlabeled_images/label_tasks/" + label_task_id + "?shuffle=true", config)
+        .then(function(response) {
+            console.log(response.data, response.data.length)
+
+            var following_data_item = response.data;
+            console.log(following_data_item.input_data_id)
+            return following_data_item.input_data_id;
         })
         .catch(function(error) {
             console.log(error);

@@ -139,8 +139,8 @@ export default {
 
         // if an image ID is specified, load that image
 
-        if (this.input_data_id_start == undefined) {
-            // this.loadNextImage();                // ************************************ get input_data_id and corresponding label_id of a new image (do this in vuex action)
+        if (this.input_data_id == undefined) {
+            this.$store.dispatch('image_labeling/get_input_data_id_of_next_image', this.label_task.label_task_id)
         }
     },
     beforeDestroy () {
@@ -198,7 +198,7 @@ export default {
             }
             else if (e.code === "ArrowLeft") {
                 if (this.input_data_id == undefined) {
-                    this.$store.dispatch('image_labeling/get_input_data_id_of_unlabeled_image', this.label_task.label_task_id)
+                    this.$store.dispatch('image_labeling/get_input_data_id_of_most_recently_labeled_image', this.label_task.label_task_id)
                 }
                 else {
                     this.$store.dispatch('image_labeling/get_input_data_id_of_previous_labeled_image', this.label_task.label_task_id)
@@ -206,7 +206,7 @@ export default {
                 
             }
             else if (e.code === "ArrowRight") {
-                // this.loadNextImage();
+                this.$store.dispatch('image_labeling/get_input_data_id_of_next_image', this.label_task.label_task_id)
             }
             else if (e.code === 'Delete') {
                 console.log('num orig polys:', this.polygons.length, 'num redo polys:', this.polygons_redo.length)
