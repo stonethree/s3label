@@ -195,8 +195,8 @@ def test_get_input_data_path_if_input_data_id_does_not_exist(refresh_db_once, db
 
 def test_get_label_tasks(refresh_db_once, db_connection_sqlalchemy):
     df_test = pd.DataFrame()
-    df_test['label_task_id'] = [1, 2, 3, 4]
-    df_test['dataset_group_id'] = [1, 2, 3, 3]
+    df_test['label_task_id'] = [1, 2, 3, 4, 5]
+    df_test['dataset_group_id'] = [1, 2, 3, 3, 1]
 
     engine = db_connection_sqlalchemy
     df = sql_queries.get_label_tasks(engine)

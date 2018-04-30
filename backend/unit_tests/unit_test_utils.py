@@ -1,5 +1,6 @@
 import psycopg2
 from sqlalchemy import create_engine
+import json
 
 
 def get_db_config():
@@ -37,3 +38,8 @@ def reset_db_contents():
     with connection as conn:
         with conn.cursor() as cursor:
             cursor.execute(open('unit_test_data/setup_test_db.sql', 'r').read())
+
+
+def json_of_response(response):
+    """ Decode json from response """
+    return json.loads(response.data.decode('utf8'))
