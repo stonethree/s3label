@@ -38,11 +38,14 @@ export default {
     };
   },
   computed: {
-      ...mapGetters('label_task_store', [
+    ...mapGetters('label_task_store', [
         'label_tasks'
     ]),
+    ...mapGetters('user_login', [
+        'user_id'
+    ]),
   },
-  beforeMount() {
+  mounted() {
         this.get_label_task_list();
     },
   methods: {
@@ -64,7 +67,7 @@ export default {
       };
 
       axios
-        .get("label_tasks", config)
+        .get("label_tasks/users/" + this.user_id, config)
         .then(function(response) {
           var label_tasks = response.data;
 

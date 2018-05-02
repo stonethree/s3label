@@ -328,12 +328,13 @@ def get_label_tasks_for_user(user_id):
 
     # check if user is an admin user
 
-    is_admin = sql_queries_admin.is_user_an_admin(engine, user_id_from_auth)
+    if user_id != user_id_from_auth:
+        is_admin = sql_queries_admin.is_user_an_admin(engine, user_id_from_auth)
 
-    if is_admin is None or not is_admin:
-        resp = make_response(jsonify(error='Not permitted to view this content. Must be an admin user.'), 403)
-        resp.mimetype = "application/javascript"
-        return resp
+        if is_admin is None or not is_admin:
+            resp = make_response(jsonify(error='Not permitted to view this content. Must be an admin user.'), 403)
+            resp.mimetype = "application/javascript"
+            return resp
 
     df_label_tasks = sql_queries.get_label_tasks(engine, user_id)
 

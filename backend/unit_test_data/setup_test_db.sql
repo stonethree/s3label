@@ -50,6 +50,11 @@ create table users(
     note VARCHAR,
     is_admin BOOLEAN DEFAULT FALSE NOT NULL);
 
+create table users_label_tasks(
+    user_label_task_id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(user_id) ON DELETE CASCADE,
+    label_task_id INTEGER REFERENCES label_tasks(label_task_id) ON DELETE CASCADE);
+
 create table labels(
     label_id SERIAL PRIMARY KEY,
     input_data_id INTEGER REFERENCES input_data(input_data_id) ON DELETE CASCADE,
@@ -124,14 +129,6 @@ create view latest_label_history_per_input_item as
 select i.*, llh.label_history_id, llh.timestamp_edit, llh.label_serialised from labels_per_input_data_item i
 left outer join latest_label_history llh using (input_data_id, label_task_id, label_id, user_id);
 
--- show label tasks per user (the label tasks that the user has labeled or viewed images for)
-create view user_label_tasks as
-with user_label_task_ids as (
-	select distinct label_task_id, user_id from labels
-)
-select * from user_label_task_ids
-inner join label_tasks using (label_task_id);
-
 
 -- add data
 
@@ -169,6 +166,11 @@ INSERT INTO users (user_code, password, first_name, last_name, email, is_admin) 
 INSERT INTO users (user_code, password, first_name, last_name, email, is_admin) VALUES ('79ACF', 'def', 'Kristo', 'Botha', 'kristo.botha@stonethree.com', true);
 INSERT INTO users (user_code, password, first_name, last_name, email, is_admin) VALUES ('U34DA', 'ghi', 'Jimmy', 'Smith', 'test@gmail.com', false);
 INSERT INTO users (user_code, password, first_name, last_name, email, is_admin) VALUES ('E23ZG', 'jkl', 'Marcus', 'Octavius', 'test2@gmail.com', false);
+
+INSERT INTO users_label_tasks (user_id, label_task_id) VALUES (1, 1);
+INSERT INTO users_label_tasks (user_id, label_task_id) VALUES (1, 2);
+INSERT INTO users_label_tasks (user_id, label_task_id) VALUES (1, 3);
+INSERT INTO users_label_tasks (user_id, label_task_id) VALUES (2, 2);
 
 INSERT INTO labels (input_data_id, label_task_id, user_id, in_progress) VALUES (1, 1, 1, true);
 INSERT INTO labels (input_data_id, label_task_id, user_id) VALUES (2, 1, 1);

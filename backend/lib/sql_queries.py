@@ -197,14 +197,17 @@ def get_label_tasks(engine, user_id=None):
 
         df = pd.read_sql_query(sql_query, engine)
     else:
-        sql_query = 'SELECT * FROM user_label_tasks WHERE user_id = :user_id ORDER BY label_task_id'
+        sql_query = """select label_tasks.* from users_label_tasks
+            inner join label_tasks using (label_task_id)
+            where user_id = :user_id
+            order by label_task_id"""
 
         sql_query_2 = text(sql_query).bindparams(user_id=user_id)
 
         df = pd.read_sql_query(sql_query_2, engine)
 
         # drop the "user_id" column
-        df.drop(labels=['user_id'], axis=1, inplace=True)
+        # df.drop(labels=['user_id'], axis=1, inplace=True)
 
     if len(df) > 0:
         return df

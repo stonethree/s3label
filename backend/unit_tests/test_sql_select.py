@@ -232,8 +232,9 @@ def test_get_label_tasks(refresh_db_once, db_connection_sqlalchemy):
 
 def test_get_label_tasks_for_specific_user(refresh_db_once, db_connection_sqlalchemy):
     df_test = pd.DataFrame()
-    df_test['label_task_id'] = [1, 2]
-    df_test['dataset_group_id'] = [1, 2]
+    df_test['label_task_id'] = [1, 2, 3]
+    df_test['dataset_group_id'] = [1, 2, 3]
+    df_test['title'] = ['Rock particle segmentation', 'Rock particle segmentation subset', 'Froth segmentation']
 
     engine = db_connection_sqlalchemy
     df = sql_queries.get_label_tasks(engine, user_id=1)
