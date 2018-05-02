@@ -18,6 +18,8 @@
 
             <div class="col">
                 <div>
+                    <!-- <label-status v-bind:user-completed-toggle="label_status_toggler.user_complete"></label-status> -->
+                    <label-status v-if="input_data_id !=undefined" v-bind:label-id="label_id"></label-status>
                     <div id="canvasesdiv" style="position:relative;" > <!--@mousedown="mouseDownHandler" @mouseup="mouseUpHandler" @mousemove="mouseMoveHandler"> -->
                         <canvas id="canvas-fg" width="400" height="350" style="width:400px;height:350px; border: 1px solid #ccc; z-index: 2; position:absolute; left:0px; top:0px;"></canvas>
                         <canvas id="canvas-bg" width="400" height="350" style="width:400px;height:350px; border: 1px solid #ccc; z-index: 1; position:absolute; left:0px; top:0px;"></canvas>
@@ -38,6 +40,8 @@ function convertPolygonToPaths(polygon) {
     return polygon.regions;
 }
 
+import LabelStatus from './LabelStatus'
+
 
 export default {
     name: "admin_view",
@@ -49,6 +53,7 @@ export default {
             label_tasks: undefined,
             labeled_input_data: undefined,
             input_data_id: undefined,
+            label_id: undefined,
             padX: 80,
             padY: 80,
             polygons: [],
@@ -57,6 +62,10 @@ export default {
             stroke_thickness: 2,
             use_stroke: true,
         };
+    },
+
+    components: {
+        LabelStatus,
     },
 
     beforeMount() {
@@ -70,7 +79,7 @@ export default {
         },
         label_task: function() {
             if (this.label_task_id != undefined) {
-                return this.label_tasks[this.label_task_id];
+                return this.label_tasks.find(label_task => label_task.label_task_id === this.label_task_id)
             }
             else {
                 return undefined;
@@ -247,6 +256,7 @@ export default {
 
         select_label: function(item, index, event) {
             this.input_data_id = item.input_data_id;
+            this.label_id = item.label_id;
 
             // highlight selected row
 

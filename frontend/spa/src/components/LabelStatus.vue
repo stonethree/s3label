@@ -91,7 +91,6 @@ export default {
     name: "label_status",
     props: {
         labelId: {
-            type: Number,
             required: true
         }, 
         userCompletedToggle: {
@@ -121,7 +120,7 @@ export default {
     data: function() {
         return {
             status: {
-                user_complete: true,
+                user_complete: false,
                 needs_improvement: false,
                 admin_complete: false,
                 paid: false,
@@ -153,20 +152,29 @@ export default {
 
     methods: {
         toggle_user_complete: function() {
-            this.status.user_complete = !this.status.user_complete;
-            this.update_label_field(this.labelId, 'user_complete', this.status.user_complete)
+            console.log('toggling:', this.labelId)
+            if (this.labelId != undefined) {
+                this.status.user_complete = !this.status.user_complete;
+                this.update_label_field(this.labelId, 'user_complete', this.status.user_complete)
+            }
         },
         toggle_needs_improvement: function() {
-            this.status.needs_improvement = !this.status.needs_improvement;
-            this.update_label_field(this.labelId, 'needs_improvement', this.status.needs_improvement)
+            if (this.labelId != undefined) {
+                this.status.needs_improvement = !this.status.needs_improvement;
+                this.update_label_field(this.labelId, 'needs_improvement', this.status.needs_improvement)
+            }
         },
         toggle_admin_complete: function() {
-            this.status.admin_complete = !this.status.admin_complete;
-            this.update_label_field(this.labelId, 'admin_complete', this.status.admin_complete)
+            if (this.labelId != undefined) {
+                this.status.admin_complete = !this.status.admin_complete;
+                this.update_label_field(this.labelId, 'admin_complete', this.status.admin_complete)
+            }
         },
         toggle_paid: function() {
-            this.status.paid = !this.status.paid;
-            this.update_label_field(this.labelId, 'paid', this.status.paid)
+            if (this.labelId != undefined) {
+                this.status.paid = !this.status.paid;
+                this.update_label_field(this.labelId, 'paid', this.status.paid)
+            }
         },
         update_label_field: function(label_id, field_name, value) {
             // update the label field
