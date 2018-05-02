@@ -5,7 +5,7 @@ from backend.lib.create_app import create_app
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Run backend server for the S3 Label web app')
-    # parser.add_argument('--use_test_database', action='store_true', help='Use test database instead of the live one')
+    parser.add_argument('--image_folder', action='store', default='.', help='Folder path of images')
     args = parser.parse_args()
 
     config = {'username': 'postgres',
@@ -13,6 +13,8 @@ if __name__ == '__main__':
               'ip': 'localhost',
               'database_name': 's3_label'}
 
-    s3_label_app = create_app(config)
+    print('image_folder:', args.image_folder)
+
+    s3_label_app = create_app(config, image_folder=args.image_folder)
 
     s3_label_app.run(debug=True)

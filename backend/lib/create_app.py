@@ -6,7 +6,7 @@ from sqlalchemy import create_engine
 from backend.lib.endpoints import ebp
 
 
-def create_app(db_config):
+def create_app(db_config, image_folder):
     # set the project root directory as the static folder, you can set others.
     app = Flask(__name__, static_url_path='')
 
@@ -22,6 +22,7 @@ def create_app(db_config):
     print('Current database being used: ', db_config['database_name'])
 
     app.config['engine'] = engine
+    app.config['image_folder'] = image_folder
 
     # Setup the Flask-JWT-Extended extension
     app.config['JWT_SECRET_KEY'] = 's3label-completely-secret'  # this should be kept secret!

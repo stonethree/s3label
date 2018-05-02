@@ -1,6 +1,7 @@
 from flask import jsonify, request, send_file, make_response, current_app, Blueprint
 import flask_jwt_extended as fje
 import json
+import os
 
 from backend.lib import sql_queries, sql_queries_admin, user_authentication as ua
 
@@ -51,11 +52,15 @@ def get_label_task(label_task_id):
 # @fje.jwt_required
 def get_image(input_image_id):
     engine = current_app.config['engine']
+    image_folder = current_app.config['image_folder']
     im_path = sql_queries.get_input_data_path(engine, input_image_id)
 
-    if im_path is not None:
+    im_path = os.path.abspath(os.path.join(image_folder, im_path))
+
+    if im_path is not None and os.path.exists(im_path):
         return send_file(im_path)
     else:
+        print('Could not find image: ', im_path)
         resp = make_response(jsonify(error='Input data item not found'), 404)
         resp.mimetype = "application/javascript"
         return resp
