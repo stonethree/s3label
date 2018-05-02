@@ -19,7 +19,7 @@
             <div class="col">
                 <div>
                     <!-- <label-status v-bind:user-completed-toggle="label_status_toggler.user_complete"></label-status> -->
-                    <label-status v-if="input_data_id !=undefined" v-bind:label-id="label_id"></label-status>
+                    <label-status v-if="input_data_id !=undefined" v-bind:label-id="label_id" mode="admin_mode"></label-status>
                     <div id="canvasesdiv" style="position:relative;" > <!--@mousedown="mouseDownHandler" @mouseup="mouseUpHandler" @mousemove="mouseMoveHandler"> -->
                         <canvas id="canvas-fg" width="400" height="350" style="width:400px;height:350px; border: 1px solid #ccc; z-index: 2; position:absolute; left:0px; top:0px;"></canvas>
                         <canvas id="canvas-bg" width="400" height="350" style="width:400px;height:350px; border: 1px solid #ccc; z-index: 1; position:absolute; left:0px; top:0px;"></canvas>
@@ -128,8 +128,10 @@ export default {
         },
 
         input_data_id: function () {
-            this.fetchAndDisplayImage(baseUrl + '/input_images/' + this.input_data_id);
-            this.loadImageLabels(this.input_data_id);
+            if (this.input_data_id != undefined) {
+                this.fetchAndDisplayImage(baseUrl + '/input_images/' + this.input_data_id);
+                this.loadImageLabels(this.input_data_id);
+            }
         }
     },
 
@@ -166,6 +168,7 @@ export default {
                 })
                 .catch(function(error) {
                     console.log(error);
+                    vm.users = undefined;
                 });
         },
 
@@ -191,6 +194,7 @@ export default {
                 })
                 .catch(function(error) {
                     console.log(error);
+                    vm.label_tasks = undefined;
                 });
         },
 
@@ -220,6 +224,7 @@ export default {
                     })
                     .catch(function(error) {
                         console.log(error);
+                        vm.labeled_input_data = undefined;
                     });
             }
         },
@@ -237,6 +242,11 @@ export default {
                     this.$set(this.users[i], '_rowVariant', undefined);
                 }
             }
+
+            // reset input data ID so that old image is no longer displayed
+
+            this.label_task_id = undefined;
+            this.input_data_id = undefined;
         },
 
         select_label_task: function(item, index, event) {
@@ -252,6 +262,10 @@ export default {
                     this.$set(this.label_tasks[i], '_rowVariant', undefined);
                 }
             }
+
+            // reset input data ID so that old image is no longer displayed
+
+            this.input_data_id = undefined;
         },
 
         select_label: function(item, index, event) {
