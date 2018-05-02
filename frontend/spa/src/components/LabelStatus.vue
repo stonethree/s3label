@@ -50,8 +50,8 @@ axios.defaults.baseURL = baseUrl;
 const tooltips_all = {
     user_mode: {
         user_complete: {
-            marked: "Click or <Ctrl+Enter> to unmark 'labeling complete' for this image",
-            unmarked: "Click or <Ctrl+Enter> to mark 'labeling complete' for this image"
+            marked: "Click or <Ctrl+Enter> to indicate that you have not yet finished labeling this image",
+            unmarked: "Click or <Ctrl+Enter> to indicate that you have finished labeling this image"
         },
         needs_improvement: {
             marked: "This image needs more labeling before it can be declared 'complete'!",
