@@ -34,7 +34,7 @@ def app():
               'ip': 'localhost',
               'database_name': 's3_label_test'}
 
-    test_app = create_app(config)
+    test_app = create_app(config, '.')
 
     yield test_app
 

@@ -58,7 +58,7 @@ create table labels(
     in_progress BOOLEAN DEFAULT FALSE NOT NULL,
     user_complete BOOLEAN DEFAULT FALSE NOT NULL,
     needs_improvement BOOLEAN DEFAULT FALSE NOT NULL,
-    admin_complete BOOLEAN DEFAULT NULL,
+    admin_complete BOOLEAN DEFAULT FALSE NOT NULL,
     paid BOOLEAN DEFAULT FALSE NOT NULL,
 	user_comment VARCHAR,
 	admin_comment VARCHAR,
@@ -90,20 +90,25 @@ create table priorities(
 
 -- show label tasks associated with each input data item
 create view input_data_per_label_task as
+select tmp.*, label_task_id from
+(
+    select dataset_id, input_data_id, dataset_group_id from input_data
+    full outer join dataset_group_lists using (dataset_id)
+) as tmp
+full outer join label_tasks using (dataset_group_id)
+order by label_task_id, input_data_id;
+
+-- show label IDs and priorities associated with each input data item
+create view labels_per_input_data_item as
 select * from
 (
 	select tmp_2.*, priority from
 	(
-	    select input_data_id, dataset_id, dataset_group_id, label_task_id from
-	    (
-	        select dataset_id, input_data_id, dataset_group_id from input_data
-	        inner join dataset_group_lists using (dataset_id)
-	    ) as tmp
-	    inner join label_tasks using (dataset_group_id)
+	    select * from input_data_per_label_task
 	) as tmp_2
-	inner join priorities using (input_data_id, label_task_id)
+	full outer join priorities using (input_data_id, label_task_id)
 ) as tmp_3
-left outer join labels using (input_data_id, label_task_id);
+full outer join labels using (input_data_id, label_task_id);
 
 -- show most recent label history for each label
 create view latest_label_history as
@@ -116,7 +121,7 @@ order by label_id, timestamp_edit desc;
 
 -- combine most recent label history with input data info
 create view latest_label_history_per_input_item as
-select i.*, llh.label_history_id, llh.timestamp_edit, llh.label_serialised  from input_data_per_label_task i
+select i.*, llh.label_history_id, llh.timestamp_edit, llh.label_serialised from labels_per_input_data_item i
 left outer join latest_label_history llh using (input_data_id, label_task_id, label_id, user_id);
 
 -- show label tasks per user (the label tasks that the user has labeled or viewed images for)
@@ -133,21 +138,25 @@ inner join label_tasks using (label_task_id);
 INSERT INTO datasets(site, sensor, dataset_description) VALUES ('test_site_1', 'test_lynxx', 'This is a test. We want to segment rock images');
 INSERT INTO datasets(site, sensor, dataset_description) VALUES ('test_site_2', 'test_lynxx', 'This is a test. We want to segment rock images 2');
 INSERT INTO datasets(site, sensor, dataset_description) VALUES ('test_site_3', 'test_froth_sensor', 'This is a test. We want to segment rock images 3');
+INSERT INTO datasets(site, sensor, dataset_description) VALUES ('test_site_4', 'test_froth_sensor', 'This is a test. We want to segment rock images 3');
 
 INSERT INTO dataset_groups(name, description) VALUES ('Lynxx datasets', 'Some description of why we grouped them...');
 INSERT INTO dataset_groups(name, description) VALUES ('Subset of Lynxx datasets', 'Some description of why we grouped them...2');
 INSERT INTO dataset_groups(name, description) VALUES ('Froth datasets', 'Some description of why we grouped them...3');
+INSERT INTO dataset_groups(name, description) VALUES ('Group with empty dataset', 'Some description of why we grouped them...4');
 
 INSERT INTO dataset_group_lists(dataset_group_id, dataset_id) VALUES (1, 1);
 INSERT INTO dataset_group_lists(dataset_group_id, dataset_id) VALUES (1, 2);
 INSERT INTO dataset_group_lists(dataset_group_id, dataset_id) VALUES (2, 1);
 INSERT INTO dataset_group_lists(dataset_group_id, dataset_id) VALUES (3, 3);
+INSERT INTO dataset_group_lists(dataset_group_id, dataset_id) VALUES (4, 4);
 
 INSERT INTO label_tasks(dataset_group_id, title, description, type) VALUES (1, 'Rock particle segmentation', 'Multi-instance segmentation for rock particles', 'instance_segmentation');
 INSERT INTO label_tasks(dataset_group_id, title, description, type) VALUES (2, 'Rock particle segmentation subset', 'Multi-instance segmentation for rock particles', 'instance_segmentation');
 INSERT INTO label_tasks(dataset_group_id, title, description, type) VALUES (3, 'Froth segmentation', 'Multi-instance segmentation for froth bubbles', 'instance_segmentation');
 INSERT INTO label_tasks(dataset_group_id, title, description, type) VALUES (3, 'Froth segmentation 2', 'Multi-instance segmentation for froth bubbles 2', 'instance_segmentation');
 INSERT INTO label_tasks(dataset_group_id, title, description, type) VALUES (1, 'Rock particle segmentation: Initially unlabeled', 'Multi-instance segmentation for rock particles', 'instance_segmentation');
+INSERT INTO label_tasks(dataset_group_id, title, description, type) VALUES (4, 'No images associated', 'Multi-instance segmentation for rock particles', 'instance_segmentation');
 
 INSERT INTO input_data(dataset_id, data_path) VALUES (1, 'test_images/image.jpg');
 INSERT INTO input_data(dataset_id, data_path) VALUES (1, 'test_images/image2.jpg');

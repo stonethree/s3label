@@ -161,9 +161,24 @@ def test_get_next_user_data_item_if_input_data_id_not_found(refresh_db_once, db_
 
 def test_get_next_unlabeled_input_data_item(refresh_db_once, db_connection_sqlalchemy):
     engine = db_connection_sqlalchemy
-    input_data_id = sql_queries.get_next_unlabeled_input_data_item(engine, label_task_id=1)
+    input_data_id = sql_queries.get_next_unlabeled_input_data_item(engine, label_task_id=1, shuffle=False)
 
     assert input_data_id == 5
+
+
+def test_get_next_unlabeled_input_data_item_when_all_images_unlabeled_for_a_label_task(refresh_db_once,
+                                                                                       db_connection_sqlalchemy):
+    engine = db_connection_sqlalchemy
+    input_data_id = sql_queries.get_next_unlabeled_input_data_item(engine, label_task_id=5, shuffle=False)
+
+    assert input_data_id is 1
+
+
+def test_get_next_unlabeled_input_data_item_when_no_images_available(refresh_db_once, db_connection_sqlalchemy):
+    engine = db_connection_sqlalchemy
+    input_data_id = sql_queries.get_next_unlabeled_input_data_item(engine, label_task_id=6, shuffle=False)
+
+    assert input_data_id is None
 
 
 def test_get_all_input_data_items_if_input_data_id_does_not_exist(refresh_db_once, db_connection_sqlalchemy):
@@ -195,8 +210,8 @@ def test_get_input_data_path_if_input_data_id_does_not_exist(refresh_db_once, db
 
 def test_get_label_tasks(refresh_db_once, db_connection_sqlalchemy):
     df_test = pd.DataFrame()
-    df_test['label_task_id'] = [1, 2, 3, 4, 5]
-    df_test['dataset_group_id'] = [1, 2, 3, 3, 1]
+    df_test['label_task_id'] = [1, 2, 3, 4, 5, 6]
+    df_test['dataset_group_id'] = [1, 2, 3, 3, 1, 4]
 
     engine = db_connection_sqlalchemy
     df = sql_queries.get_label_tasks(engine)
@@ -280,7 +295,7 @@ def test_get_label(refresh_db_once, db_connection_sqlalchemy):
     df_test['in_progress'] = [False]
     df_test['user_complete'] = [False]
     df_test['needs_improvement'] = [False]
-    df_test['admin_complete'] = [None]
+    df_test['admin_complete'] = [False]
     df_test['paid'] = [False]
     df_test['user_comment'] = [None]
     df_test['admin_comment'] = [None]
@@ -306,7 +321,7 @@ def test_get_label_by_id(refresh_db_once, db_connection_sqlalchemy):
     df_test['in_progress'] = [False]
     df_test['user_complete'] = [False]
     df_test['needs_improvement'] = [False]
-    df_test['admin_complete'] = [None]
+    df_test['admin_complete'] = [False]
     df_test['paid'] = [False]
     df_test['user_comment'] = [None]
     df_test['admin_comment'] = [None]
