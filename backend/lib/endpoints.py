@@ -131,6 +131,60 @@ def get_next_or_preceding_input_data_item(label_task_id):
         return resp
 
 
+@ebp.route('/image_labeler/api/v1.0/item_counts', methods=['GET'])
+@fje.jwt_required
+def get_labeled_and_unlabeled_item_counts():
+    """
+    Count the number of labeled and unlabeled input data items per user per label task
+
+    Requires admin privileges if viewing all users' data. Normal users can view their own data.
+
+    :return:
+    """
+
+    engine = current_app.config['engine']
+
+    user_identity = fje.get_jwt_identity()
+    user_id_from_auth = ua.get_user_id_from_token(user_identity)
+
+    # get optional URL query parameters
+
+    user_id = request.args.get('user_id', None)
+    label_task_id = request.args.get('label_task_id', None)
+
+    try:
+        user_id = int(user_id)
+    except (ValueError, TypeError):
+        user_id = None
+
+    try:
+        label_task_id = int(label_task_id)
+    except (ValueError, TypeError):
+        label_task_id = None
+
+    # check if user is an admin user
+
+    is_admin = sql_queries_admin.is_user_an_admin(engine, user_id_from_auth)
+
+    if is_admin is None or not is_admin:
+        # only allow non-admin user to view their own data
+        if user_id is None or user_id != user_id_from_auth:
+            resp = make_response(jsonify(error='Not permitted to view this content. Must be an admin user.'), 403)
+            resp.mimetype = "application/javascript"
+            return resp
+
+    df_counts = sql_queries.count_input_data_items_per_user_per_label_task(engine, label_task_id, user_id)
+
+    if df_counts is not None:
+        resp = make_response(df_counts.to_json(orient='records'), 200)
+        resp.mimetype = "application/javascript"
+        return resp
+    else:
+        resp = make_response(jsonify(error='No users found'), 404)
+        resp.mimetype = "application/javascript"
+        return resp
+
+
 @ebp.route('/image_labeler/api/v1.0/all_data/label_tasks/<int:label_task_id>/users/<user_id>', methods=['GET'])
 @fje.jwt_required
 def get_all_user_input_data(label_task_id, user_id):
@@ -427,7 +481,7 @@ def get_unlabeled_image_id(label_task_id):
         shuffle = False
 
     try:
-        input_data_id = sql_queries.get_next_unlabeled_input_data_item(engine, label_task_id, shuffle=shuffle)
+        input_data_id = sql_queries.get_next_unlabeled_input_data_item(engine, label_task_id, user_id, shuffle=shuffle)
 
         if input_data_id is None:
             resp = make_response(jsonify(error='No input data found for this label task'), 404)

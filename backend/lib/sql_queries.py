@@ -46,13 +46,40 @@ def get_all_input_data_items(engine, label_task_id):
     return df
 
 
-def get_next_unlabeled_input_data_item(engine, label_task_id, shuffle=True):
+def count_input_data_items_per_user_per_label_task(engine, label_task_id=None, user_id=None):
+    """
+    Count the number of labeled, unlabeled and in progress input data items per label task for the user
+
+    :param engine: SQLAlchemy engine
+    :param label_task_id:
+    :param user_id:
+    :return:
+    """
+
+    if label_task_id is not None and user_id is not None:
+        where_clause = 'where label_task_id = %(label_task_id)s and user_id = %(user_id)s'
+    elif label_task_id is not None:
+        where_clause = 'where label_task_id = %(label_task_id)s'
+    elif user_id is not None:
+        where_clause = 'where user_id = %(user_id)s'
+    else:
+        where_clause = ''
+
+    sql_query = """select * from item_counts {}""".format(where_clause)
+
+    df = pd.read_sql_query(sql_query, engine, params={'label_task_id': label_task_id, 'user_id': user_id})
+
+    return df
+
+
+def get_next_unlabeled_input_data_item(engine, label_task_id, user_id, shuffle=True):
     """
     Get the highest priority input data item for the specified label task that has not yet been labeled and is not
     currently being labeled by another user
 
     :param engine:
     :param label_task_id:
+    :param user_id:
     :param shuffle: if True, shuffle the data before sorting by priority
     :return:
     """

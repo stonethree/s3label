@@ -95,24 +95,24 @@ create table priorities(
 
 -- show label tasks associated with each input data item
 create view input_data_per_label_task as
-select tmp.*, label_task_id from
+select tmp_2.*, priority from
 (
-    select dataset_id, input_data_id, dataset_group_id from input_data
-    full outer join dataset_group_lists using (dataset_id)
-) as tmp
-full outer join label_tasks using (dataset_group_id)
+    select tmp.*, label_task_id from
+    (
+        select dataset_id, input_data_id, dataset_group_id from input_data
+        full outer join dataset_group_lists using (dataset_id)
+    ) as tmp
+    full outer join label_tasks using (dataset_group_id)
+) as tmp_2
+full outer join priorities using (input_data_id, label_task_id)
 order by label_task_id, input_data_id;
 
 -- show label IDs and priorities associated with each input data item
 create view labels_per_input_data_item as
 select * from
 (
-	select tmp_2.*, priority from
-	(
-	    select * from input_data_per_label_task
-	) as tmp_2
-	full outer join priorities using (input_data_id, label_task_id)
-) as tmp_3
+    select * from input_data_per_label_task
+) as tmp
 full outer join labels using (input_data_id, label_task_id);
 
 -- show most recent label history for each label
@@ -126,9 +126,30 @@ order by label_id, timestamp_edit desc;
 
 -- combine most recent label history with input data info
 create view latest_label_history_per_input_item as
-select i.*, llh.label_history_id, llh.timestamp_edit, llh.label_serialised from labels_per_input_data_item i
-left outer join latest_label_history llh using (input_data_id, label_task_id, label_id, user_id);
+with t as (
+    select * from
+    (
+        select tmp_3.*, user_id from
+        (
+            select * from input_data_per_label_task
+        ) as tmp_3
+        full outer join users_label_tasks using (label_task_id)
+    ) as tmp_4
+    full outer join latest_label_history using (input_data_id, label_task_id, user_id)
+)
+-- identify labeled and unlabeled input data items
+select *, (not in_progress or in_progress isnull) and label_serialised isnull as unlabeled from t;
 
+-- count number of labeled, unlabeled and in progress items per user and label task
+create view item_counts as
+select user_id, label_task_id,
+    count(*) as total_items,
+    sum(case when unlabeled = true then 1 else 0 end) as num_unlabeled,
+    sum(case when unlabeled = false then 1 else 0 end) as num_labeled,
+    sum(case when in_progress = false and unlabeled = true then 1 else 0 end) as in_progress_unlabeled,
+    sum(case when in_progress = false and unlabeled = false then 1 else 0 end) as in_progress_labeled
+from latest_label_history_per_input_item
+group by user_id, label_task_id;
 
 -- add data
 
@@ -170,6 +191,8 @@ INSERT INTO users (user_code, password, first_name, last_name, email, is_admin) 
 INSERT INTO users_label_tasks (user_id, label_task_id) VALUES (1, 1);
 INSERT INTO users_label_tasks (user_id, label_task_id) VALUES (1, 2);
 INSERT INTO users_label_tasks (user_id, label_task_id) VALUES (1, 3);
+INSERT INTO users_label_tasks (user_id, label_task_id) VALUES (1, 5);
+INSERT INTO users_label_tasks (user_id, label_task_id) VALUES (2, 2);
 INSERT INTO users_label_tasks (user_id, label_task_id) VALUES (2, 2);
 
 INSERT INTO labels (input_data_id, label_task_id, user_id, in_progress) VALUES (1, 1, 1, true);

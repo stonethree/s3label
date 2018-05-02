@@ -1,6 +1,7 @@
 import psycopg2
 from sqlalchemy import create_engine
 import json
+import pandas as pd
 
 
 def get_db_config():
@@ -43,3 +44,7 @@ def reset_db_contents():
 def json_of_response(response):
     """ Decode json from response """
     return json.loads(response.data.decode('utf8'))
+
+
+def nans_to_nones(df):
+    return df.where((pd.notnull(df)), None)

@@ -1,4 +1,6 @@
-from .unit_test_utils import json_of_response
+from .unit_test_utils import json_of_response, nans_to_nones
+
+import pandas as pd
 
 
 def test_server_exists(client, refresh_db_once):
@@ -37,6 +39,44 @@ def test_get_label_tasks(auth, refresh_db_once):
 
     assert label_tasks[0]['label_task_id'] == 1
     assert label_tasks[0]['title'] == 'Rock particle segmentation'
+
+
+def test_count_input_data_items_per_user_per_label_task_as_non_admin(auth, refresh_db_once):
+    auth.login()
+
+    rv_counts = auth.client.get(auth.base_url + '/item_counts?user_id=3', headers=auth.auth_header())
+
+    assert rv_counts.status_code == 200
+
+    item_counts = json_of_response(rv_counts)
+
+    df_item_counts = pd.DataFrame(item_counts)
+    df_item_counts = nans_to_nones(df_item_counts)
+
+    assert df_item_counts['user_id'].tolist() == [3]
+    assert df_item_counts['label_task_id'].tolist() == [1]
+    assert df_item_counts['total_items'].tolist() == [1]
+    assert df_item_counts['num_unlabeled'].tolist() == [0]
+    assert df_item_counts['num_labeled'].tolist() == [1]
+
+
+def test_count_input_data_items_per_user_per_label_task_as_admin(auth, refresh_db_once):
+    auth.login(email='shaun.irwin@stonethree.com', password='abc')
+
+    rv_counts = auth.client.get(auth.base_url + '/item_counts', headers=auth.auth_header())
+
+    assert rv_counts.status_code == 200
+
+    item_counts = json_of_response(rv_counts)
+
+    df_item_counts = pd.DataFrame(item_counts)
+    df_item_counts = nans_to_nones(df_item_counts)
+
+    assert df_item_counts['user_id'].tolist() == [1, 1, 1, 1, 2, 2, 3, None, None]
+    assert df_item_counts['label_task_id'].tolist() == [1, 2, 3, 5, 1, 2, 1, 4, 6]
+    assert df_item_counts['total_items'].tolist() == [5, 3, 1, 5, 1, 4, 1, 1, 1]
+    assert df_item_counts['num_unlabeled'].tolist() == [2, 2, 1, 5, 0, 4, 0, 1, 1]
+    assert df_item_counts['num_labeled'].tolist() == [3, 1, 0, 0, 1, 0, 1, 0, 0]
 
 
 def test_get_next_unlabeled_image(auth, refresh_db_every_time):

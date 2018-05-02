@@ -39,6 +39,30 @@ def test_get_user_info_for_non_existant_user(refresh_db_once, db_connection_sqla
     assert user_id is None
 
 
+def test_count_input_data_items_for_all_users_and_label_tasks(refresh_db_once, db_connection_sqlalchemy):
+    df_test = pd.DataFrame()
+    df_test['user_id'] = [1, 1, 1, 1, 2, 2, 3, None, None]
+    df_test['label_task_id'] = [1, 2, 3, 5, 1, 2, 1, 4, 6]
+    df_test['total_items'] = [5, 3, 1, 5, 1, 4, 1, 1, 1]
+    df_test['num_unlabeled'] = [2, 2, 1, 5, 0, 4, 0, 1, 1]
+    df_test['num_labeled'] = [3, 1, 0, 0, 1, 0, 1, 0, 0]
+
+    engine = db_connection_sqlalchemy
+    df = sql_queries.count_input_data_items_per_user_per_label_task(engine, label_task_id=None, user_id=None)
+
+    assert_series_equal(df['user_id'], df_test['user_id'])
+    assert_series_equal(df['label_task_id'], df_test['label_task_id'])
+    assert_series_equal(df['total_items'], df_test['total_items'])
+    assert_series_equal(df['num_unlabeled'], df_test['num_unlabeled'])
+    assert_series_equal(df['num_labeled'], df_test['num_labeled'])
+
+    # sanity check
+
+    df['summed'] = df['num_unlabeled'] + df['num_labeled']
+
+    assert df['total_items'].tolist() == df['summed'].tolist()
+
+
 def test_get_all_input_data_items(refresh_db_once, db_connection_sqlalchemy):
     df_test = pd.DataFrame()
     df_test['input_data_id'] = [1, 2, 3, 4, 5]
@@ -232,9 +256,12 @@ def test_get_label_tasks(refresh_db_once, db_connection_sqlalchemy):
 
 def test_get_label_tasks_for_specific_user(refresh_db_once, db_connection_sqlalchemy):
     df_test = pd.DataFrame()
-    df_test['label_task_id'] = [1, 2, 3]
-    df_test['dataset_group_id'] = [1, 2, 3]
-    df_test['title'] = ['Rock particle segmentation', 'Rock particle segmentation subset', 'Froth segmentation']
+    df_test['label_task_id'] = [1, 2, 3, 5]
+    df_test['dataset_group_id'] = [1, 2, 3, 1]
+    df_test['title'] = ['Rock particle segmentation',
+                        'Rock particle segmentation subset',
+                        'Froth segmentation',
+                        'Rock particle segmentation: Initially unlabeled']
 
     engine = db_connection_sqlalchemy
     df = sql_queries.get_label_tasks(engine, user_id=1)
