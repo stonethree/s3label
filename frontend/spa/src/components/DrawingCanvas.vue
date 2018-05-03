@@ -6,6 +6,9 @@
             <div id="canvasesdiv" style="position:relative;" @mousedown="mouseDownHandler" @mouseup="mouseUpHandler" @mousemove="mouseMoveHandler">
                 <canvas id="canvas-fg" width="900" height="350" style="width:900px;height:350px; border: 1px solid #ccc; z-index: 2; position:absolute; left:0px; top:0px;" v-draw-on-canvas="polygons"></canvas>
                 <canvas id="canvas-bg" width="900" height="350" style="width:900px;height:350px; border: 1px solid #ccc; z-index: 1; position:absolute; left:0px; top:0px;"></canvas>
+                <canvas id="canvas-fg" width="900" height="350" style="width:900px;height:350px; border: 1px solid #ccc; z-index: 3; position:absolute; left:0px; top:0px;" v-draw-on-canvas="polygons"></canvas>
+                <canvas id="canvas-bg" width="900" height="350" style="width:900px;height:350px; border: 1px solid #ccc; z-index: 2; position:absolute; left:0px; top:0px;"></canvas>
+                <canvas id="canvas-pattern" width="900" height="350" style="width:900px;height:350px; border: 1px solid #ccc; z-index: 1; position:absolute; left:0px; top:0px;"></canvas>
             </div>
         </div>
 </template>
@@ -45,6 +48,7 @@ export default {
             ctx: undefined,
             ctx_bg: undefined,
             label_status_toggler: {user_complete: false},
+            label_id: undefined
         };
     },
     components: {
@@ -478,7 +482,15 @@ export default {
             img.onload = function () {
                 vm.setCanvasSize(canvas_fg, img.width, img.height, vm.padX, vm.padY);
                 vm.setCanvasSize(canvas_bg, img.width, img.height, vm.padX, vm.padY);
+
+                // add shadow
+
+                ctx2.shadowBlur = 10;
+                ctx2.shadowColor = "hsla(2, 0%, 0%, 0.46)";
+
                 ctx2.drawImage(img, vm.padX, vm.padY);
+
+                // add checkerboard pattern around image
 
                 vm.draw_pattern(img.width, img.height);
             }
