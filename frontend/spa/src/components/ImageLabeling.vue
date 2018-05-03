@@ -54,7 +54,17 @@
             </div>
         </div>
     
-        <drawing-canvas></drawing-canvas>
+        <drawing-canvas v-bind:active_tool="active_tool"
+                        v-bind:active_mode="active_mode"
+                        v-bind:active_overlap_mode="active_overlap_mode"
+                        v-bind:active_label="active_label"
+                        v-bind:input_data_id="input_data_id"
+                        v-bind:label_task_id="label_task.label_task_id"
+                        v-bind:stroke_thickness="stroke_thickness"
+                        v-bind:use_stroke="use_stroke"
+                        v-bind:opacity="opacity"
+                        v-bind:clear_canvas_event="clear_canvas_event"
+                        ref="mySubComponent"></drawing-canvas>
     </div>
 </template>
 
@@ -67,7 +77,6 @@ import axios from "axios";
 
 var baseUrl = "http://127.0.0.1:5000/image_labeler/api/v1.0";
 axios.defaults.baseURL = baseUrl;
-
 
 
 export default {
@@ -83,12 +92,7 @@ export default {
             active_label: undefined,
             stroke_slider_value: "2",
             opacity_slider_value: "50",
-            // isDrawing: false,
-            polygons: [],                   // TODO: polygons must be stored in vuex. Dispatch actions to perform canvas clear, delete, undo, etc
-            // currentPath: [],
-            polygons_redo: [],
-            polygons_undo: [],
-            // label_status_toggler: {user_complete: false},
+            clear_canvas_event: false
         };
     },
     components: {
@@ -116,11 +120,6 @@ export default {
         },
 
     },
-    created: function () {
-        // dynamically add vuex store for storing local state of this component (useful for reusability of the component)
-        // this.$store.registerModule('image_labeling', image_labeling_store)
-        // console.log('registered store module dynamically')
-    },
     beforeMount() {
         window.addEventListener('keydown', this.keyDownHandler);
         window.addEventListener('keyup', this.keyUpHandler);
@@ -130,169 +129,185 @@ export default {
 
         if (this.labels != undefined && this.labels.length > 0) {
             this.active_label = this.labels[0].label_class;
-            console.log(this.labels[0].label_class)
         }
 
         // commit starting input data ID, whether defined or not
 
-        this.$store.dispatch('image_labeling/set_input_data_id_of_existing_image', this.input_data_id_start)
+        this.$store.dispatch('image_labeling/set_input_data_id_of_existing_image', this.input_data_id_start);
 
         // if an image ID is specified, load that image
 
         if (this.input_data_id == undefined) {
-            this.$store.dispatch('image_labeling/get_input_data_id_of_next_image', this.label_task.label_task_id)
+            this.$store.dispatch('image_labeling/get_input_data_id_of_next_image', this.label_task.label_task_id);
         }
     },
     beforeDestroy () {
         window.removeEventListener('keydown', this.keyDownHandler);
         window.removeEventListener('keyup', this.keyUpHandler);
 
-        // this.$store.unregisterModule('image_labeling')
-            // this.uploadLabeledImage(this.input_data_id);
-        // console.log('unregistered image labeling store module')
+        // this.$store.dispatch('image_labeling/upload_labels_for_current_image', this.label_task.label_task_id)
     },
     beforeRouteLeave (to, from, next) {
-        // save image labels before navigating away
-        if (this.input_data_id != undefined) {
-            // this.uploadLabeledImage(this.input_data_id);
-        }
-        else {
-            console.log("attempted to save image before leaving page, but input_data_id = undefined")
-        }
+        // notify drawing canvas to save image labels before navigating away
+
+        // this.save_labels_toggler = !this.save_labels_toggler;
+
+        console.log('save now!')
+
+        this.$refs.mySubComponent.save_labels();
+
+        this.$store.dispatch('image_labeling/clear_input_data_id');
+
+        console.log('-----  leaving page')
+
         next()
     },
-    watch: {
-        input_data_id: function (new_input_data_id, old_input_data_id) {
-            // save previous image's labels to database
-            if (old_input_data_id != undefined) {
-                // this.uploadLabeledImage(old_input_data_id);
-            }
 
-            // this.clearCanvas();
-            
-            // when input image ID changes (i.e. new image is loaded), load latest image label from database 
-            if (new_input_data_id != undefined) {
-                // this.loadImageLabels(new_input_data_id);
-            }
-
-            // get the label ID corresponding to this input data item, user and label task
-
-            // this.get_label_id(this.label_task_id, new_input_data_id, this.user_id)
-        },
-    },
     methods: {
 
         keyDownHandler: function(e) {
+            var key_handled = false;
+
             if (e.ctrlKey && e.code === "KeyZ") {
                 console.log("Undo");
                 this.undo();
                 // this.drawAllPolygons(this.ctx, this.polygons);
+
+                key_handled = true;
             }
             else if (e.ctrlKey && e.code === "KeyY") {
                 console.log("Redo");
                 this.redo();
                 // this.drawAllPolygons(this.ctx, this.polygons);
+
+                key_handled = true;
             }
             else if (e.ctrlKey && e.code === "Enter") {
-                this.label_status_toggler.user_complete = !this.label_status_toggler.user_complete;
+                // this.label_status_toggler.user_complete = !this.label_status_toggler.user_complete;
+
+                key_handled = true;
             }
             else if (e.code === "ArrowLeft") {
                 if (this.input_data_id == undefined) {
-                    this.$store.dispatch('image_labeling/get_input_data_id_of_most_recently_labeled_image', this.label_task.label_task_id)
+                    this.$store.dispatch('image_labeling/get_input_data_id_of_most_recently_labeled_image', this.label_task.label_task_id);
                 }
                 else {
-                    this.$store.dispatch('image_labeling/get_input_data_id_of_previous_labeled_image', this.label_task.label_task_id)
+                    this.$store.dispatch('image_labeling/get_input_data_id_of_previous_labeled_image', this.label_task.label_task_id);
                 }
                 
+                key_handled = true;
             }
             else if (e.code === "ArrowRight") {
-                this.$store.dispatch('image_labeling/get_input_data_id_of_next_image', this.label_task.label_task_id)
+                this.$store.dispatch('image_labeling/get_input_data_id_of_next_image', this.label_task.label_task_id);
+
+                key_handled = true;
             }
             else if (e.code === 'Delete') {
-                console.log('num orig polys:', this.polygons.length, 'num redo polys:', this.polygons_redo.length)
-                this.polygons_undo.push(...this.polygons.filter(poly => poly.selected));
-                this.polygons = this.polygons.filter(poly => !poly.selected);
-                console.log('num final polys:', this.polygons.length, 'num redo polys:', this.polygons_redo.length)
-                // this.drawAllPolygons(this.ctx, this.polygons);
+                // console.log('num orig polys:', this.polygons.length, 'num redo polys:', this.polygons_redo.length)
+                // this.polygons_undo.push(...this.polygons.filter(poly => poly.selected));
+                // this.polygons = this.polygons.filter(poly => !poly.selected);
+                // console.log('num final polys:', this.polygons.length, 'num redo polys:', this.polygons_redo.length)
+                // // this.drawAllPolygons(this.ctx, this.polygons);
+
+                key_handled = true;
             }
             else if (e.code === 'Escape') {
-                for (let i = 0; i < this.polygons.length; i++) {
-                    this.polygons[i].selected = false;
-                }
-                // this.drawAllPolygons(this.ctx, this.polygons);
+                // for (let i = 0; i < this.polygons.length; i++) {
+                //     this.polygons[i].selected = false;
+                // }
+                // // this.drawAllPolygons(this.ctx, this.polygons);
+
+                key_handled = true;
             }
             else if (e.code == 'Space') {
                 if (this.previous_tool === undefined && !this.isDrawing) {
                     this.previous_tool = this.active_tool;
                     this.active_tool = 'select';
                 }
+
+                key_handled = true;
             }
             else if (e.code.startsWith('Shift')) {
                 if (this.previous_mode === undefined && !this.isDrawing) {
                     this.previous_mode = this.active_mode;
                     this.active_mode = 'append';
                 }
+
+                key_handled = true;
             }
             else if (e.code.startsWith('Alt')) {
                 if (this.previous_mode === undefined && !this.isDrawing) {
                     this.previous_mode = this.active_mode;
                     this.active_mode = 'erase';
                 }
+
+                key_handled = true;
             }
             else {
                 // console.log('key not found (down):', e.code);
             }
 
-            // e.stopPropagation();
-            // e.preventDefault();
+            if (!key_handled) {
+                e.stopPropagation();
+                e.preventDefault();
+            }
         },
 
         keyUpHandler: function (e) {
+            var key_handled = false;
+
             if (e.code === 'Space') {
                 if (this.previous_tool) {
                     this.active_tool = this.previous_tool;
                     this.previous_tool = undefined;
                 }
+
+                key_handled = true;
             }
             else if (e.code.startsWith('Shift')) {
                 if (this.previous_mode) {
                     this.active_mode = this.previous_mode;
                     this.previous_mode = undefined;
                 }
+
+                key_handled = true;
             }
             else if (e.code.startsWith('Alt')) {
                 if (this.previous_mode) {
                     this.active_mode = this.previous_mode;
                     this.previous_mode = undefined;
                 }
+
+                key_handled = true;
             }
             else {
                 // console.log('key not found (up):', e.code);
             }
 
-            // e.stopPropagation();
-            // e.preventDefault();
+            if (!key_handled) {
+                e.stopPropagation();
+                e.preventDefault();
+            }
         },
 
         undo: function() {
-            if (this.polygons_undo.length > 0) {
-                this.polygons.push(this.polygons_undo.pop());
-            }
-            else if (this.polygons.length > 0) {
-                this.polygons_redo.push(this.polygons.pop());
-            }
+            // if (this.polygons_undo.length > 0) {
+            //     this.polygons.push(this.polygons_undo.pop());
+            // }
+            // else if (this.polygons.length > 0) {
+            //     this.polygons_redo.push(this.polygons.pop());
+            // }
         },
 
         redo: function() {
-            if (this.polygons_redo.length > 0) {
-                this.polygons.push(this.polygons_redo.pop());
-            }
+            // if (this.polygons_redo.length > 0) {
+            //     this.polygons.push(this.polygons_redo.pop());
+            // }
         },
 
         clearCanvas: function() {
-            // this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
-            this.polygons = [];
-            this.polygons_redo = [];
+            this.clear_canvas_event = !this.clear_canvas_event;
+            console.log('clear canvas called', this.clear_canvas_event)
         },
 
     },

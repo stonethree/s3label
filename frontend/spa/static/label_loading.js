@@ -1,102 +1,247 @@
-// uploadLabeledImage: function (input_data_id) {      // TODO: this should be made a "static" function and moved into a separate javascript file
+import axios from "axios";
 
-//     console.log('uploading label with label task ID', this.label_task.label_task_id, 'and input data ID', input_data_id)
+var baseUrl = "http://127.0.0.1:5000/image_labeler/api/v1.0";
+axios.defaults.baseURL = baseUrl;
 
-//     var data = {label_serialised: this.polygons}
 
-//     let access_token = localStorage.getItem("s3_access_token");
+// static functions for retrieving input_data_ids from backend
 
-//     let config = {
-//         headers: {
-//         Authorization: "Bearer " + access_token
-//         }
-//     };
 
-//     var vm = this;
+export async function getLatestLabeledImage(label_task_id) {
+    // get the input_data_id of the latest image that the user has labeled
 
-//     axios
-//         .post("label_history/label_tasks/" + vm.label_task.label_task_id + "/input_data/" + input_data_id, data, config)
-//         .then(function(response) {
-//             console.log('saving:', vm.label_task.label_task_id, input_data_id, response)
-//         })
-//         .catch(function(error) {
-//             console.log('error saving label:', error);
-//         });
-// },
+    let access_token = localStorage.getItem("s3_access_token");
 
-// loadImageLabels: function (input_data_id) {     // TODO: this should be made a "static" function and moved into a separate javascript file (i.e. maybe return a promise with the polygons array)
+    let config = {
+        headers: {
+        Authorization: "Bearer " + access_token
+        }
+    };
 
-//     console.log('getting image labels with label task ID', this.label_task.label_task_id, 'and input data ID', input_data_id)
+    return await axios
+        .get("all_data/label_tasks/" + label_task_id + "/users/own?num_labeled_images=1", config)
+        .then(function(response) {
+            if (response.data.length == 1) {
+                let input_data_id_latest = response.data[0].input_data_id;
 
-//     let access_token = localStorage.getItem("s3_access_token");
+                return input_data_id_latest;
+            }
+            else {
+                return undefined;
+            }
+        })
+        .catch(function(error) {
+            console.log(error);
+            return undefined;
+        });
+}
 
-//     let config = {
-//         headers: {
-//         Authorization: "Bearer " + access_token
-//         }
-//     };
+export async function getPrecedingLabeledImage(current_input_data_id, label_task_id) {
+    // get preceding labeled image
 
-//     var vm = this;
+    let access_token = localStorage.getItem("s3_access_token");
 
-//     axios
-//         .get("labels/input_data/" + input_data_id + "/label_tasks/" + this.label_task.label_task_id, config)
-//         .then(function(response) {
-//             if (response.data.length == 1) {
-//                 console.log("Label found for this image: attempting to apply it in the view")
-//                 var label = response.data[0];
+    let config = {
+        headers: {
+        Authorization: "Bearer " + access_token
+        }
+    };
 
-//                 // check label format is correct
+    return await axios
+        .get("labeled_data/label_tasks/" + label_task_id + "?action=previous&current_input_data_id=" + current_input_data_id, config)
+        .then(function(response) {
+            if (response.data.length == 1) {
+                var preceding_data_item = response.data[0];
 
-//                 var polygons = JSON.parse(label.label_serialised);
+                return preceding_data_item.input_data_id;
+            }
+            else {
+                return undefined;
+            }
+        })
+        .catch(function(error) {
+            console.log(error);
+            return undefined;
+        });
+}
 
-//                 if (polygons.length > 0 && polygons[0].polygon != undefined) {
-//                     console.log('Applied serialised label to image')
-//                     vm.polygons = polygons;
-//                     // vm.drawAllPolygons(vm.ctx, vm.polygons);
-//                 }
-//                 else {
-//                     console.log('Serialised label has wrong format:', polygons)
-//                 }
-//             }
-//             else if (response.data.length == 0) {
-//                 console.log("No label found for this image")
-//             }
-//             else {
-//                 console.log("Error: expected at most one label for this image!")
-//             }
-//         })
-//         .catch(function(error) {
-//             console.log(error);
-//         });
-// },
 
-// get_label_id: function (label_task_id, input_data_id, user_id) {
-//     // get the label ID, given user ID, label task ID and input data ID
+export async function getFollowingLabeledImage(current_input_data_id, label_task_id) {
+    // get following labeled image that has already been
 
-//     if (label_task_id == undefined || input_data_id == undefined || user_id == undefined) {
-//         console.log("Input fields must all be defined in order to get the label ID")
-//         this.label_id = undefined;
-//     }
-//     else {
-//         let access_token = localStorage.getItem("s3_access_token");
+    let access_token = localStorage.getItem("s3_access_token");
 
-//         let config = {
-//             headers: {
-//             Authorization: "Bearer " + access_token
-//             }
-//         };
+    let config = {
+        headers: {
+        Authorization: "Bearer " + access_token
+        }
+    };
 
-//         var vm = this;
+    return await axios
+        .get("labeled_data/label_tasks/" + label_task_id + "?action=next&current_input_data_id=" + current_input_data_id, config)
+        .then(function(response) {
+            if (response.data.length == 1) {
+                var following_data_item = response.data[0];
 
-//         axios
-//             .get("label_ids/label_tasks/" + label_task_id + "/input_data/" + input_data_id + "/user/" + user_id, config)
-//             .then(function(response) {
-//                 console.log('dfdgff', response.data, 'user_id:', user_id, 'input_data_id:', input_data_id, 'label_task_id:', label_task_id, 'label_id:', response.data.label_id)
-//                 vm.label_id = response.data.label_id;
-//             })
-//             .catch(function(error) {
-//                 console.log('error getting label id:', error);
-//                 vm.label_id = undefined;
-//             });
-//     }
-// }
+                return following_data_item.input_data_id;
+            }
+            else {
+                return undefined;
+            }
+        })
+        .catch(function(error) {
+            console.log(error);
+            return undefined;
+        });
+}
+
+
+export async function getUnlabeledImage(label_task_id) {
+    // get a new image that the user has not already labeled
+
+    let access_token = localStorage.getItem("s3_access_token");
+
+    let config = {
+        headers: {
+        Authorization: "Bearer " + access_token
+        }
+    };
+
+    return await axios
+        .get("unlabeled_images/label_tasks/" + label_task_id + "?shuffle=true", config)
+        .then(function(response) {
+            console.log(response.data, response.data.length)
+
+            var following_data_item = response.data;
+            console.log(following_data_item.input_data_id)
+            return following_data_item.input_data_id;
+        })
+        .catch(function(error) {
+            console.log(error);
+            return undefined;
+        });
+}
+
+
+// static functions for retrieving labels from backend
+
+
+function checkLabelFormatValid(polygons) {
+    // check that the labels are of the correct format to load
+
+    if ((polygons != undefined && polygons.length > 0 && polygons[0].polygon != undefined) || 
+        (polygons != undefined && polygons.length == 0)) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+
+export async function uploadLabels(input_data_id, label_task_id, polygons) {
+
+    console.log('uploading label with label task ID', label_task_id, 'and input data ID', input_data_id)
+
+    if (label_task_id == undefined || input_data_id == undefined) {
+        throw Error("Input fields must all be defined in order to upload label")
+    }
+    else {
+        var data = {label_serialised: polygons}
+
+        let access_token = localStorage.getItem("s3_access_token");
+
+        let config = {
+            headers: {
+            Authorization: "Bearer " + access_token
+            }
+        };
+
+        await axios
+            .post("label_history/label_tasks/" + label_task_id + "/input_data/" + input_data_id, data, config)
+            .then(function(response) {
+                console.log('saved label:', label_task_id, input_data_id, response)
+            })
+            .catch(function(error) {
+                throw Error('error saving label:' + error + ', input_data_id:' + input_data_id + ', label_task_id:' + label_task_id + ', polygons:' + polygons);
+            });
+    }
+}
+
+export async function loadLabels(input_data_id, label_task_id) {
+
+    console.log('getting image labels with label task ID', label_task_id, 'and input data ID', input_data_id)
+
+    if (label_task_id == undefined || input_data_id == undefined) {
+        throw Error("Input fields must all be defined in order to load label")
+    }
+    else {
+
+        let access_token = localStorage.getItem("s3_access_token");
+
+        let config = {
+            headers: {
+            Authorization: "Bearer " + access_token
+            }
+        };
+
+        return await axios
+            .get("labels/input_data/" + input_data_id + "/label_tasks/" + label_task_id, config)
+            .then(function(response) {
+                if (response.data.length == 1) {
+                    console.log("Label found for this image. Attempting to apply it in the view")
+                    var label = response.data[0];
+
+                    // check label format is correct
+
+                    var polygons = JSON.parse(label.label_serialised);
+
+                    if (checkLabelFormatValid(polygons)) {
+                        console.log('Applied serialised label to image')
+                        return polygons;
+                    }
+                    else {
+                        throw Error('Serialised label has wrong format:' + polygons)
+                    }
+                }
+                else if (response.data.length == 0) {
+                    throw Error("No label found for this image")
+                }
+                else {
+                    throw Error("Error: expected at most one label for this image!")
+                }
+            })
+            // .catch(function(error) {
+            //     console.log(error);
+            //     return undefined;
+            // });
+    }
+}
+
+export async function getLabelId(label_task_id, input_data_id, user_id) {
+    // get the label ID, given user ID, label task ID and input data ID
+
+    if (label_task_id == undefined || input_data_id == undefined || user_id == undefined) {
+        throw Error("Input fields must all be defined in order to get the label ID")
+    }
+    else {
+        let access_token = localStorage.getItem("s3_access_token");
+
+        let config = {
+            headers: {
+            Authorization: "Bearer " + access_token
+            }
+        };
+
+        return await axios
+            .get("label_ids/label_tasks/" + label_task_id + "/input_data/" + input_data_id + "/user/" + user_id, config)
+            .then(function(response) {
+                console.log('dfdgff', response.data, 'user_id:', user_id, 'input_data_id:', input_data_id, 'label_task_id:', label_task_id, 'label_id:', response.data.label_id)
+                return response.data.label_id;
+            })
+            // .catch(function(error) {
+            //     console.log('error getting label id:', error);
+            //     return undefined;
+            // });
+    }
+}

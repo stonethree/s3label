@@ -196,7 +196,7 @@ export default {
             axios
                 .patch("/labels/" + label_id, config)
                 .then(function(response) {
-                    console.log(response.data)
+                    // console.log(response.data)
 
                     // vm.users = response.data;
                     // TODO: should get fields from update SQL query and update the values in this component, to prevent possibly going out of sync
