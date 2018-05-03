@@ -35,7 +35,8 @@ export default {
     methods: {
         ...mapActions('user_login', [
             'login',
-            'get_user_id'
+            'get_user_id',
+            'get_user_type'
         ]),
         logUserIn: function() {
             // get access token from server to permit user to make requests to the backend
@@ -44,7 +45,10 @@ export default {
 
             this.login({ email: this.email, password: this.password })
                 .then(function(response) {
-                    vm.get_user_id()
+                    vm.get_user_id();
+                })
+                .then(function(response) {
+                    vm.get_user_type();
                 })
                 .then(function(response) {
                     vm.$router.push('label_tasks');

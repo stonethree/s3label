@@ -158,7 +158,7 @@ export default {
                     })
             }
             else {
-                throw ERROR('could not save image before leaving page!')
+                throw Error('could not save image before leaving page!')
             }
 
             console.groupEnd();

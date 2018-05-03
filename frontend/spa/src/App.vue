@@ -23,7 +23,7 @@
           <li class="nav-item">
             <router-link v-bind:to="'/image_grid'" class="nav-link ">Image Grid</router-link>
           </li>
-          <li class="nav-item">
+          <li v-if="is_admin_user && is_logged_in" class="nav-item">
             <router-link v-bind:to="'/admin'" class="nav-link ">Admin</router-link>
           </li>
         </ul>
@@ -44,7 +44,8 @@ export default {
     name: "App",
     computed: {
         ...mapGetters('user_login', [
-            'is_logged_in'
+            'is_logged_in',
+            'is_admin_user'
         ])
     },
 };
