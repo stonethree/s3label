@@ -146,6 +146,7 @@ export default {
 
             let canvas_bg = document.getElementById("canvas-bg");
             let canvas_fg = document.getElementById("canvas-fg");
+            let canvas_pattern = document.getElementById("canvas-pattern");
             let ctx2 = canvas_bg.getContext("2d");  
 
             let w = 600;
@@ -158,6 +159,8 @@ export default {
             ctx2.fillRect(this.padX, this.padY, w, h);
             ctx2.fillStyle = "hsl(25, 80%, 10%)";
             ctx2.fillText("No unlabeled images available for this label task", 200, 200);
+
+            this.draw_pattern(w, h);
         },
 
         getMousePos: function (canvas, event) {
@@ -465,7 +468,7 @@ export default {
         showImage: function (responseAsBlob) {
             let canvas_fg = document.getElementById("canvas-fg");
             let canvas_bg = document.getElementById("canvas-bg");
-            let ctx2 = canvas_bg.getContext("2d");    
+            let ctx2 = canvas_bg.getContext("2d");
 
             let img = new Image();
             let imgUrl = URL.createObjectURL(responseAsBlob);
@@ -476,6 +479,8 @@ export default {
                 vm.setCanvasSize(canvas_fg, img.width, img.height, vm.padX, vm.padY);
                 vm.setCanvasSize(canvas_bg, img.width, img.height, vm.padX, vm.padY);
                 ctx2.drawImage(img, vm.padX, vm.padY);
+
+                vm.draw_pattern(img.width, img.height);
             }
             img.src = imgUrl;
         },
@@ -494,6 +499,26 @@ export default {
                     console.log('error fetching and displaying image:', error);
                 });
         },
+
+        draw_pattern: function(width, height) {
+            // draw background pattern
+
+            let canvas_pattern = document.getElementById("canvas-pattern");
+            let ctx_pattern = canvas_pattern.getContext("2d");    
+            this.setCanvasSize(canvas_pattern, width, height, this.padX, this.padY);
+
+            var vm = this;
+
+            var img_pattern = new Image();
+
+            function drawPattern() {
+                ctx_pattern.fillStyle = ctx_pattern.createPattern(img_pattern, 'repeat');
+                ctx_pattern.fillRect(0, 0, width + vm.padX*2, height + vm.padY*2);
+            }
+
+            img_pattern.src = '../../static/canvas_bg_pattern_3.png';
+            img_pattern.onload = drawPattern;
+        }
     },
 
     directives: {
@@ -514,7 +539,7 @@ export default {
 
 
 <style>
-/* .canvas-section div { padding-top: 2em } */
+.canvas-section div { padding-top: 2em }
 /* #drawing_canvas {
   font-family: 'Avenir', Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
