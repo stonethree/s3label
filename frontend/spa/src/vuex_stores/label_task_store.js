@@ -21,6 +21,14 @@ export const StoreLabelTask = {
         label_task: state => {
             return state.label_tasks.find(label_task => label_task.label_task_id === state.label_task_id)
         },
+        label_task_id: (state, getters) => {
+            if (getters.label_task != undefined) {
+                return getters.label_task.label_task_id;
+            }
+            else {
+                return undefined;
+            }
+        },
         labels: (state, getters) => {
             if (getters.label_task != undefined) {
                 return JSON.parse(getters.label_task.label_classes);

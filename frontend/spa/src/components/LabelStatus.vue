@@ -50,8 +50,8 @@ axios.defaults.baseURL = baseUrl;
 const tooltips_all = {
     user_mode: {
         user_complete: {
-            marked: "Click or <Ctrl+Enter> to indicate that you have not yet finished labeling this image",
-            unmarked: "Click or <Ctrl+Enter> to indicate that you have finished labeling this image"
+            marked: "Click to indicate that you have not yet finished labeling this image",
+            unmarked: "Click to indicate that you have finished labeling this image"
         },
         needs_improvement: {
             marked: "This image needs more labeling before it can be declared 'complete'!",
@@ -68,8 +68,8 @@ const tooltips_all = {
     },
     admin_mode: {
         user_complete: {
-            marked: "Click or <Ctrl+Enter> to unmark 'user labeling complete status' for this image",
-            unmarked: "Click or <Ctrl+Enter> to mark 'user labeling complete status' for this image"
+            marked: "Click to unmark 'user labeling complete status' for this image",
+            unmarked: "Click to mark 'user labeling complete status' for this image"
         },
         needs_improvement: {
             marked: "Click to unmark 'needs improvement to the labeling' for this image",
@@ -86,6 +86,9 @@ const tooltips_all = {
     }
     
 };
+
+const ADMIN_MODE = 'admin_mode';
+const USER_MODE = 'user_mode';
 
 export default {
     name: "label_status",
@@ -111,9 +114,9 @@ export default {
         }, 
         mode: {
             type: String,
-            default: 'user_mode',
+            default: USER_MODE,
             validator: function(value) {
-                return ['admin_mode', 'user_mode'].indexOf(value) !== -1
+                return [ADMIN_MODE, USER_MODE].indexOf(value) !== -1
             }
         },
     },
@@ -131,9 +134,6 @@ export default {
         tooltips: function () {
             return tooltips_all[this.mode];
         }
-    },
-    beforeMount() {
-        // this.fetchAndDisplayImage(this.image_request_path);
     },
     watch: {
         userCompletedToggle: function() {
@@ -159,19 +159,19 @@ export default {
             }
         },
         toggle_needs_improvement: function() {
-            if (this.labelId != undefined) {
+            if (this.labelId != undefined && this.mode == ADMIN_MODE) {
                 this.status.needs_improvement = !this.status.needs_improvement;
                 this.update_label_field(this.labelId, 'needs_improvement', this.status.needs_improvement)
             }
         },
         toggle_admin_complete: function() {
-            if (this.labelId != undefined) {
+            if (this.labelId != undefined && this.mode == ADMIN_MODE) {
                 this.status.admin_complete = !this.status.admin_complete;
                 this.update_label_field(this.labelId, 'admin_complete', this.status.admin_complete)
             }
         },
         toggle_paid: function() {
-            if (this.labelId != undefined) {
+            if (this.labelId != undefined && this.mode == ADMIN_MODE) {
                 this.status.paid = !this.status.paid;
                 this.update_label_field(this.labelId, 'paid', this.status.paid)
             }
