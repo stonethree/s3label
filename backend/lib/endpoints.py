@@ -481,27 +481,36 @@ def get_unlabeled_image_id(label_task_id):
         shuffle = False
 
     try:
-        input_data_id = sql_queries.get_next_unlabeled_input_data_item(engine, label_task_id, user_id, shuffle=shuffle)
+        df_unlabeled = sql_queries.get_next_unlabeled_input_data_item(engine, label_task_id, user_id, shuffle=shuffle,
+                                                                      n=1)
 
-        if input_data_id is None:
-            resp = make_response(jsonify(error='No input data found for this label task'), 404)
+        if df_unlabeled is None:
+            resp = make_response(jsonify(error='No unlabeled input data found for this label task'), 404)
             resp.mimetype = "application/javascript"
             return resp
         else:
-            label_id = sql_queries.create_new_label(engine,
-                                                    input_data_id=input_data_id,
-                                                    label_task_id=label_task_id,
-                                                    user_id=user_id)
-
-            if label_id is None:
-                resp = make_response(jsonify(error='Could not create label. Possibly due to a clash with existing '
-                                                   'label ID'), 500)
+            try:
+                input_data_id = int(df_unlabeled['input_data_id'][0])
+            except:
+                resp = make_response(jsonify(error='Error retrieving unlabeled input_data_id'), 500)
                 resp.mimetype = "application/javascript"
                 return resp
             else:
-                resp = make_response(jsonify(input_data_id=input_data_id, label_id=label_id), 200)
-                resp.mimetype = "application/javascript"
-                return resp
+                label_id = sql_queries.create_new_label(engine,
+                                                        input_data_id=input_data_id,
+                                                        label_task_id=label_task_id,
+                                                        user_id=user_id)
+
+                if label_id is None:
+                    resp = make_response(jsonify(error='Could not create label. Possibly due to a clash with existing '
+                                                       'label ID'), 500)
+                    resp.mimetype = "application/javascript"
+                    return resp
+                else:
+                    resp = make_response(jsonify(input_data_id=input_data_id, label_id=label_id), 200)
+                    resp.mimetype = "application/javascript"
+                    return resp
+
     except Exception:
         resp = make_response(jsonify(error='Bad request'), 400)
         resp.mimetype = "application/javascript"

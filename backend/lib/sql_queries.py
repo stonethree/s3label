@@ -72,7 +72,7 @@ def count_input_data_items_per_user_per_label_task(engine, label_task_id=None, u
     return df
 
 
-def get_next_unlabeled_input_data_item(engine, label_task_id, user_id, shuffle=True):
+def get_next_unlabeled_input_data_item(engine, label_task_id, user_id, shuffle=True, n=1):
     """
     Get the highest priority input data item for the specified label task that has not yet been labeled and is not
     currently being labeled by another user
@@ -81,27 +81,32 @@ def get_next_unlabeled_input_data_item(engine, label_task_id, user_id, shuffle=T
     :param label_task_id:
     :param user_id:
     :param shuffle: if True, shuffle the data before sorting by priority
+    :param n: number of items to return. If None, return all
     :return:
     """
 
     if shuffle:
-        apply_shuffle = 'order by random()'
+        apply_shuffle = 'random(),'
     else:
         apply_shuffle = ''
 
-    sql_query = """
-        WITH tmp_table AS (
-            select * from latest_label_history_per_input_item
-            where (not in_progress or in_progress isnull) and label_serialised isnull
-            and label_task_id = %(label_task_id)s
-            {apply_shuffle}
-        )
-        select * from tmp_table order by priority desc limit 1""".format(apply_shuffle=apply_shuffle)
+    if n is None:
+        max_limit = ''
+    else:
+        max_limit = 'limit {}'.format(int(n))
 
-    df = pd.read_sql_query(sql_query, engine, params={'label_task_id': label_task_id})
+    sql_query = """
+        select * from latest_label_history_per_input_item
+        where user_id = %(user_id)s and label_task_id = %(label_task_id)s
+        and unlabeled = true
+        order by {apply_shuffle} priority desc
+        {max_limit}""".format(apply_shuffle=apply_shuffle, max_limit=max_limit)
+
+    df = pd.read_sql_query(sql_query, engine, params={'label_task_id': label_task_id,
+                                                      'user_id': user_id})
 
     if len(df) > 0:
-        return df.values[0][0]
+        return df
     else:
         return None
 

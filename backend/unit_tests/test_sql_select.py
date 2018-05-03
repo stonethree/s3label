@@ -185,24 +185,43 @@ def test_get_next_user_data_item_if_input_data_id_not_found(refresh_db_once, db_
 
 def test_get_next_unlabeled_input_data_item(refresh_db_once, db_connection_sqlalchemy):
     engine = db_connection_sqlalchemy
-    input_data_id = sql_queries.get_next_unlabeled_input_data_item(engine, label_task_id=1, shuffle=False)
+    df_unlabeled = sql_queries.get_next_unlabeled_input_data_item(engine, label_task_id=1, user_id=1, shuffle=False,
+                                                                  n=None)
 
-    assert input_data_id == 5
+    assert len(df_unlabeled) == 2
+    assert df_unlabeled['input_data_id'][0] == 4
+    assert df_unlabeled['input_data_id'][1] == 5
+
+
+def test_get_next_unlabeled_input_data_item_with_limit(refresh_db_once, db_connection_sqlalchemy):
+    engine = db_connection_sqlalchemy
+    df_unlabeled = sql_queries.get_next_unlabeled_input_data_item(engine, label_task_id=1, user_id=1, shuffle=False,
+                                                                  n=1)
+
+    assert len(df_unlabeled) == 1
+    assert df_unlabeled['input_data_id'][0] == 4
 
 
 def test_get_next_unlabeled_input_data_item_when_all_images_unlabeled_for_a_label_task(refresh_db_once,
                                                                                        db_connection_sqlalchemy):
     engine = db_connection_sqlalchemy
-    input_data_id = sql_queries.get_next_unlabeled_input_data_item(engine, label_task_id=5, shuffle=False)
+    df_unlabeled = sql_queries.get_next_unlabeled_input_data_item(engine, label_task_id=5, user_id=1, shuffle=False,
+                                                                  n=None)
 
-    assert input_data_id is 1
+    assert len(df_unlabeled) == 5
+    assert df_unlabeled['input_data_id'][0] == 1
+    assert df_unlabeled['input_data_id'][1] == 2
+    assert df_unlabeled['input_data_id'][2] == 3
+    assert df_unlabeled['input_data_id'][3] == 4
+    assert df_unlabeled['input_data_id'][4] == 5
 
 
 def test_get_next_unlabeled_input_data_item_when_no_images_available(refresh_db_once, db_connection_sqlalchemy):
     engine = db_connection_sqlalchemy
-    input_data_id = sql_queries.get_next_unlabeled_input_data_item(engine, label_task_id=6, shuffle=False)
+    df_unlabeled = sql_queries.get_next_unlabeled_input_data_item(engine, label_task_id=6, user_id=1, shuffle=False,
+                                                                  n=None)
 
-    assert input_data_id is None
+    assert df_unlabeled is None
 
 
 def test_get_all_input_data_items_if_input_data_id_does_not_exist(refresh_db_once, db_connection_sqlalchemy):

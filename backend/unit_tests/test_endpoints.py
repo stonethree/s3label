@@ -80,18 +80,75 @@ def test_count_input_data_items_per_user_per_label_task_as_admin(auth, refresh_d
 
 
 def test_get_next_unlabeled_image(auth, refresh_db_every_time):
-    auth.login()
+    auth.login(email='shaun.irwin@stonethree.com', password='abc')
 
-    rv_next_im = auth.client.get(auth.base_url + '/unlabeled_images/label_tasks/5?shuffle=false',
+    # request first image
+
+    rv_next_im = auth.client.get(auth.base_url + '/unlabeled_images/label_tasks/5?shuffle=false&limit=1',
                                  headers=auth.auth_header())
 
     assert rv_next_im.status_code == 200
 
     next_im = json_of_response(rv_next_im)
 
-    # TODO: make several requests to get a few new images. Check that the order and the input_data_ids are correct
+    assert next_im['input_data_id'] == 1
+    assert next_im['label_id'] == 7
 
-    # assert label_tasks[0]['label_task_id'] == 1
-    # assert label_tasks[0]['title'] == 'Rock particle segmentation'
+    # request second image
 
-    print('test')
+    rv_next_im = auth.client.get(auth.base_url + '/unlabeled_images/label_tasks/5?shuffle=false&limit=1',
+                                 headers=auth.auth_header())
+
+    assert rv_next_im.status_code == 200
+
+    next_im = json_of_response(rv_next_im)
+
+    assert next_im['input_data_id'] == 2
+    assert next_im['label_id'] == 8
+
+    # request third image
+
+    rv_next_im = auth.client.get(auth.base_url + '/unlabeled_images/label_tasks/5?shuffle=false&limit=1',
+                                 headers=auth.auth_header())
+
+    assert rv_next_im.status_code == 200
+
+    next_im = json_of_response(rv_next_im)
+
+    # TODO: the following assert is breaking: we need to change the SQL query for getting the next unlabeled image, to
+    # TODO take into account existing label IDs when classifying an image as being "labeled": if an image has a corresponding label_id,
+    # TODO it is considered "labeled" (therefore maybe just need to update the view, not the SQL query?)
+
+    assert next_im['input_data_id'] == 3
+    assert next_im['label_id'] == 9
+
+    # request fourth image
+
+    rv_next_im = auth.client.get(auth.base_url + '/unlabeled_images/label_tasks/5?shuffle=false&limit=1',
+                                 headers=auth.auth_header())
+
+    assert rv_next_im.status_code == 200
+
+    next_im = json_of_response(rv_next_im)
+
+    assert next_im['input_data_id'] == 4
+    assert next_im['label_id'] == 10
+
+    # request fifth image
+
+    rv_next_im = auth.client.get(auth.base_url + '/unlabeled_images/label_tasks/5?shuffle=false&limit=1',
+                                 headers=auth.auth_header())
+
+    assert rv_next_im.status_code == 200
+
+    next_im = json_of_response(rv_next_im)
+
+    assert next_im['input_data_id'] == 5
+    assert next_im['label_id'] == 11
+
+    # request sixth image
+
+    rv_next_im = auth.client.get(auth.base_url + '/unlabeled_images/label_tasks/5?shuffle=false&limit=1',
+                                 headers=auth.auth_header())
+
+    assert rv_next_im.status_code == 404
