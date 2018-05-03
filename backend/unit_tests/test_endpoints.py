@@ -1,6 +1,7 @@
 from .unit_test_utils import json_of_response, nans_to_nones
 
 import pandas as pd
+import json
 
 
 def test_server_exists(client, refresh_db_once):
@@ -19,26 +20,41 @@ def test_login_logout(auth, refresh_db_once):
 
     assert rv_login.status_code == 200
 
-    rv_get_tasks = auth.client.get(auth.base_url + '/label_tasks')
+    rv_label_tasks = auth.client.get(auth.base_url + '/label_tasks')
 
-    assert rv_get_tasks.status_code == 401
+    assert rv_label_tasks.status_code == 401
 
-    rv_get_tasks = auth.client.get(auth.base_url + '/label_tasks', headers=auth.auth_header())
+    rv_label_tasks = auth.client.get(auth.base_url + '/label_tasks', headers=auth.auth_header())
 
-    assert rv_get_tasks.status_code == 200
+    assert rv_label_tasks.status_code == 200
 
 
 def test_get_label_tasks(auth, refresh_db_once):
     auth.login()
 
-    rv_get_tasks = auth.client.get(auth.base_url + '/label_tasks', headers=auth.auth_header())
+    rv_label_tasks = auth.client.get(auth.base_url + '/label_tasks', headers=auth.auth_header())
 
-    assert rv_get_tasks.status_code == 200
+    assert rv_label_tasks.status_code == 200
 
-    label_tasks = json_of_response(rv_get_tasks)
+    label_tasks = json_of_response(rv_label_tasks)
 
     assert label_tasks[0]['label_task_id'] == 1
     assert label_tasks[0]['title'] == 'Rock particle segmentation'
+
+
+def test_get_label(auth, refresh_db_once):
+    auth.login()
+
+    rv_label = auth.client.get(auth.base_url + '/labels/6', headers=auth.auth_header())
+
+    assert rv_label.status_code == 200
+
+    label = json_of_response(rv_label)
+
+    assert label['user_id'] == 3
+    assert label['in_progress'] is True
+    assert label['user_complete'] is False
+    assert label['admin_complete'] is False
 
 
 def test_count_input_data_items_per_user_per_label_task_as_non_admin(auth, refresh_db_once):
@@ -159,3 +175,115 @@ def test_get_next_unlabeled_image_for_label_task_without_images(auth, refresh_db
                                  headers=auth.auth_header())
 
     assert rv_next_im.status_code == 404
+
+
+def test_update_label_fields_as_admin_user(auth, refresh_db_every_time):
+    auth.login(email='shaun.irwin@stonethree.com', password='abc')
+
+    # update fields of label
+
+    rv = auth.client.patch(auth.base_url + '/labels/6',
+                           headers=auth.auth_header(),
+                           data=json.dumps({'user_complete': True, 'admin_complete': True}),
+                           content_type='application/json')
+
+    assert rv.status_code == 200
+
+    rv_label = auth.client.get(auth.base_url + '/labels/6', headers=auth.auth_header())
+
+    assert rv_label.status_code == 200
+
+    label = json_of_response(rv_label)
+
+    assert label['user_id'] == 3
+    assert label['in_progress'] is True
+    assert label['user_complete'] is True
+    assert label['admin_complete'] is True
+    assert label['needs_improvement'] is False
+    assert label['paid'] is False
+
+    # update other fields of label
+
+    rv = auth.client.patch(auth.base_url + '/labels/6',
+                           headers=auth.auth_header(),
+                           data=json.dumps({'needs_improvement': True, 'paid': True}),
+                           content_type='application/json')
+
+    assert rv.status_code == 200
+
+    rv_label = auth.client.get(auth.base_url + '/labels/6', headers=auth.auth_header())
+
+    assert rv_label.status_code == 200
+
+    label = json_of_response(rv_label)
+
+    assert label['user_id'] == 3
+    assert label['in_progress'] is True
+    assert label['user_complete'] is True
+    assert label['admin_complete'] is True
+    assert label['needs_improvement'] is True
+    assert label['paid'] is True
+
+
+def test_update_label_fields_as_non_admin_user(auth, refresh_db_every_time):
+    auth.login()
+
+    # update fields of label
+
+    rv = auth.client.patch(auth.base_url + '/labels/6',
+                           headers=auth.auth_header(),
+                           data=json.dumps({'user_complete': True}),
+                           content_type='application/json')
+
+    assert rv.status_code == 200
+
+    rv_label = auth.client.get(auth.base_url + '/labels/6', headers=auth.auth_header())
+
+    assert rv_label.status_code == 200
+
+    label = json_of_response(rv_label)
+
+    assert label['user_complete'] is True
+
+    # update other fields of label
+
+    rv = auth.client.patch(auth.base_url + '/labels/6',
+                           headers=auth.auth_header(),
+                           data=json.dumps({'user_complete': False}),
+                           content_type='application/json')
+
+    assert rv.status_code == 200
+
+    rv_label = auth.client.get(auth.base_url + '/labels/6', headers=auth.auth_header())
+
+    assert rv_label.status_code == 200
+
+    label = json_of_response(rv_label)
+
+    assert label['user_complete'] is False
+
+
+def test_update_label_fields_as_non_admin_user_fails_if_label_was_created_by_another_user(auth, refresh_db_every_time):
+    auth.login()
+
+    # update fields of label
+
+    rv = auth.client.patch(auth.base_url + '/labels/5',
+                           headers=auth.auth_header(),
+                           data=json.dumps({'user_complete': True}),
+                           content_type='application/json')
+
+    assert rv.status_code == 403
+
+
+def test_update_label_fields_as_non_admin_user_fails_if_updating_admin_only_field(auth, refresh_db_every_time):
+    auth.login()
+
+    # update fields of label
+
+    rv = auth.client.patch(auth.base_url + '/labels/6',
+                           headers=auth.auth_header(),
+                           data=json.dumps({'paid': True}),
+                           content_type='application/json')
+
+    assert rv.status_code == 403

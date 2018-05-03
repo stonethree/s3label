@@ -136,6 +136,35 @@ export default {
         }
     },
     watch: {
+        labelId: function () {
+            if (this.labelId != undefined) {
+                // get initial status values from backend
+
+                const vm = this;
+
+                let access_token = localStorage.getItem("s3_access_token");
+
+                let config = {
+                    headers: {
+                    Authorization: "Bearer " + access_token
+                    }
+                };
+
+                axios
+                    .get("/labels/" + this.labelId, config)
+                    .then(function(response) {
+                        var label = response.data;
+                        vm.status.user_complete = label.user_complete;
+                        vm.status.needs_improvement = label.needs_improvement;
+                        vm.status.admin_complete = label.admin_complete;
+                        vm.status.paid = label.paid;
+                        console.log(label, vm.status.user_complete, vm.status.needs_improvement, vm.status.admin_complete, vm.status.paid)
+                    })
+                    .catch(function(error) {
+                        throw Error('Could not get label status values', error);
+                    });
+            }
+        },
         userCompletedToggle: function() {
             this.toggle_user_complete();
         },
@@ -183,9 +212,8 @@ export default {
 
             let access_token = localStorage.getItem("s3_access_token");
 
-            let data = {
-                field_name: value
-            }
+            let data = {};
+            data[field_name] = value;
 
             let config = {
                 headers: {
@@ -193,13 +221,11 @@ export default {
                 }
             };
 
-            axios
-                .patch("/labels/" + label_id, config)
-                .then(function(response) {
-                    // console.log(response.data)
+            console.log('Attempting to update fields:', data);
 
-                    // vm.users = response.data;
-                    // TODO: should get fields from update SQL query and update the values in this component, to prevent possibly going out of sync
+            axios
+                .patch("/labels/" + this.labelId, data, config)
+                .then(function(response) {
                 })
                 .catch(function(error) {
                     console.log(error);

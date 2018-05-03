@@ -247,7 +247,7 @@ def get_all_user_input_data(label_task_id, user_id):
 
 @ebp.route('/image_labeler/api/v1.0/labels/input_data/<int:input_data_id>/label_tasks/<int:label_task_id>', methods=['GET'])
 @fje.jwt_required
-def get_latest_label(input_data_id, label_task_id):
+def get_latest_label_history(input_data_id, label_task_id):
     """
     Get the latest label history item for a particular user/label task/input data item combination
 
@@ -317,6 +317,54 @@ def get_label_id(user_id, label_task_id, input_data_id):
             resp = make_response(jsonify(label_id=label_id), 200)
             resp.mimetype = "application/javascript"
             return resp
+    except Exception:
+        resp = make_response(jsonify(error='Bad request'), 400)
+        resp.mimetype = "application/javascript"
+        return resp
+
+
+@ebp.route('/image_labeler/api/v1.0/labels/<int:label_id>',
+           methods=['GET'])
+@fje.jwt_required
+def get_label(label_id):
+    """
+    Get the label
+
+    :param label_id: ID of label
+    :return:
+    """
+
+    engine = current_app.config['engine']
+
+    # get ID of user
+
+    user_identity = fje.get_jwt_identity()
+    user_id_from_auth = ua.get_user_id_from_token(user_identity)
+
+    try:
+        df_labels = sql_queries.get_label_by_id(engine, label_id)
+
+        if df_labels is None:
+            resp = make_response(jsonify(error='Could not find label'), 404)
+            resp.mimetype = "application/javascript"
+            return resp
+        else:
+            # get the first label (which should be the only one)
+            if len(df_labels) == 1:
+                df_label = df_labels.iloc[0, :]
+            else:
+                raise ValueError('Expected single label to be returned')
+
+            is_admin = sql_queries_admin.is_user_an_admin(engine, user_id_from_auth)
+
+            if df_label['user_id'] == user_id_from_auth or is_admin:
+                resp = make_response(df_label.to_json(), 200)
+                resp.mimetype = "application/javascript"
+                return resp
+            else:
+                resp = make_response(jsonify(error='Not permitted to view this content. Must be an admin user.'), 403)
+                resp.mimetype = "application/javascript"
+                return resp
     except Exception:
         resp = make_response(jsonify(error='Bad request'), 400)
         resp.mimetype = "application/javascript"
@@ -603,6 +651,8 @@ def update_label_fields(label_id):
     user_identity = fje.get_jwt_identity()
     user_id_from_auth = ua.get_user_id_from_token(user_identity)
 
+    is_admin = sql_queries_admin.is_user_an_admin(engine, user_id_from_auth)
+
     # only the user who created the label or an admin user may update the label fields
 
     df_label = sql_queries.get_label_by_id(engine, label_id)
@@ -613,8 +663,6 @@ def update_label_fields(label_id):
         return resp
 
     if df_label['user_id'][0] != user_id_from_auth:
-        is_admin = sql_queries_admin.is_user_an_admin(engine, user_id_from_auth)
-
         if is_admin is None or not is_admin:
             resp = make_response(jsonify(error='Not permitted to perform this update. Must be an admin user or the '
                                                'owner of the label.'), 403)
@@ -626,16 +674,23 @@ def update_label_fields(label_id):
         resp.mimetype = "application/javascript"
         return resp
 
-    fields = {'user_complete': {'value': None, 'type': bool},
-              'needs_improvement': {'value': None, 'type': bool},
-              'admin_complete': {'value': None, 'type': bool},
-              'paid': {'value': None, 'type': bool},
-              'user_comment': {'value': None, 'type': str},
-              'admin_comment': {'value': None, 'type': str}}
+    fields = {'user_complete': {'value': None, 'type': bool, 'admin_only': False},
+              'needs_improvement': {'value': None, 'type': bool, 'admin_only': True},
+              'admin_complete': {'value': None, 'type': bool, 'admin_only': True},
+              'paid': {'value': None, 'type': bool, 'admin_only': True},
+              'user_comment': {'value': None, 'type': str, 'admin_only': False},
+              'admin_comment': {'value': None, 'type': str, 'admin_only': True}}
 
     for field, params in fields.items():
         val = request.json.get(field, None)
         if field in request.json:
+            # check that user has correct privileges to update the given field
+            if params['admin_only'] and not is_admin:
+                resp = make_response(jsonify(error='Not permitted to perform this update. Must be an admin user to'
+                                                   'modify field "{}".'.format(field)), 403)
+                resp.mimetype = "application/javascript"
+                return resp
+
             if isinstance(val, params['type']):
                 fields[field]['value'] = request.json.get(field, None)
             else:
