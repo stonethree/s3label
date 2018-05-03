@@ -115,10 +115,6 @@ def test_get_next_unlabeled_image(auth, refresh_db_every_time):
 
     next_im = json_of_response(rv_next_im)
 
-    # TODO: the following assert is breaking: we need to change the SQL query for getting the next unlabeled image, to
-    # TODO take into account existing label IDs when classifying an image as being "labeled": if an image has a corresponding label_id,
-    # TODO it is considered "labeled" (therefore maybe just need to update the view, not the SQL query?)
-
     assert next_im['input_data_id'] == 3
     assert next_im['label_id'] == 9
 
@@ -149,6 +145,17 @@ def test_get_next_unlabeled_image(auth, refresh_db_every_time):
     # request sixth image
 
     rv_next_im = auth.client.get(auth.base_url + '/unlabeled_images/label_tasks/5?shuffle=false&limit=1',
+                                 headers=auth.auth_header())
+
+    assert rv_next_im.status_code == 404
+
+
+def test_get_next_unlabeled_image_for_label_task_without_images(auth, refresh_db_every_time):
+    auth.login(email='shaun.irwin@stonethree.com', password='abc')
+
+    # request first image
+
+    rv_next_im = auth.client.get(auth.base_url + '/unlabeled_images/label_tasks/6?shuffle=false&limit=1',
                                  headers=auth.auth_header())
 
     assert rv_next_im.status_code == 404

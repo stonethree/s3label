@@ -138,7 +138,7 @@ with t as (
     full outer join latest_label_history using (input_data_id, label_task_id, user_id)
 )
 -- identify labeled and unlabeled input data items
-select *, (not in_progress or in_progress isnull) and label_serialised isnull as unlabeled from t;
+select *, (not in_progress or in_progress isnull) and label_serialised isnull and label_id isnull as unlabeled from t;
 
 -- count number of labeled, unlabeled and in progress items per user and label task
 create view item_counts as
