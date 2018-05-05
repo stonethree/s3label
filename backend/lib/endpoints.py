@@ -49,6 +49,22 @@ def get_label_task(label_task_id):
         return resp
 
 
+@ebp.route('/image_labeler/api/v1.0/datasets', methods=['GET'])
+@fje.jwt_required
+def get_list_of_datasets():
+    engine = current_app.config['engine']
+    df_datasets = sql_queries.get_all_datasets(engine)
+
+    if df_datasets is not None:
+        resp = make_response(df_datasets.to_json(orient='records'), 200)
+        resp.mimetype = "application/javascript"
+        return resp
+    else:
+        resp = make_response(jsonify(error='No datasets found'), 404)
+        resp.mimetype = "application/javascript"
+        return resp
+
+
 @ebp.route('/image_labeler/api/v1.0/image_paths', methods=['GET'])
 @fje.jwt_required
 def get_image_paths_in_folder():
@@ -750,6 +766,30 @@ def upload_input_data_item():
             return resp
     except Exception:
         resp = make_response(jsonify(error='Bad request'), 400)
+        resp.mimetype = "application/javascript"
+        return resp
+
+
+@ebp.route('/image_labeler/api/v1.0/images_on_disk', methods=['POST'])
+# @fje.jwt_required
+def get_image_by_path():
+    if not request.json:
+        resp = make_response(jsonify(error='Must use JSON format'), 400)
+        resp.mimetype = "application/javascript"
+        return resp
+
+    if 'input_data_path' not in request.json:
+        resp = make_response(jsonify(error='Requires input_data_path to be specified'), 400)
+        resp.mimetype = "application/javascript"
+        return resp
+
+    im_path = request.json['input_data_path']
+
+    if im_path is not None and os.path.exists(im_path):
+        return send_file(im_path)
+    else:
+        print('Could not find image: ', im_path)
+        resp = make_response(jsonify(error='Input data item not found'), 404)
         resp.mimetype = "application/javascript"
         return resp
 

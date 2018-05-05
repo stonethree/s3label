@@ -25,15 +25,15 @@ def test_get_images_in_folder_nonrecursive():
     im_paths = du.get_images_in_folder('test_images', recursive=False)
 
     assert len(im_paths) == 6
-    assert im_paths[0] == r'test_images\froth_image.jpg'
-    assert im_paths[1] == r'test_images\image.jpg'
+    assert im_paths[0] == r'test_images/froth_image.jpg'
+    assert im_paths[1] == r'test_images/image.jpg'
 
 
 def test_get_images_in_folder_recursive():
     im_paths = du.get_images_in_folder('test_images', recursive=True)
 
     assert len(im_paths) == 7
-    assert im_paths[0] == r'test_images\another_folder\image_copy.jpg'
-    assert im_paths[1] == r'test_images\froth_image.jpg'
-    assert im_paths[2] == r'test_images\image.jpg'
+    assert im_paths[0] == r'test_images/another_folder/image_copy.jpg'
+    assert im_paths[1] == r'test_images/froth_image.jpg'
+    assert im_paths[2] == r'test_images/image.jpg'
 

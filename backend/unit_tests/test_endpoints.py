@@ -57,6 +57,22 @@ def test_get_label(auth, refresh_db_once):
     assert label['admin_complete'] is False
 
 
+def test_get_datasets(auth, refresh_db_once):
+    auth.login()
+
+    rv_datasets = auth.client.get(auth.base_url + '/datasets', headers=auth.auth_header())
+
+    assert rv_datasets.status_code == 200
+
+    datasets = json_of_response(rv_datasets)
+
+    assert len(datasets) == 4
+    assert datasets[0]['dataset_id'] == 1
+    assert datasets[0]['site'] == 'test_site_1'
+    assert datasets[0]['sensor'] == 'test_lynxx'
+    assert datasets[0]['dataset_description'] == 'This is a test. We want to segment rock images'
+
+
 def test_count_input_data_items_per_user_per_label_task_as_non_admin(auth, refresh_db_once):
     auth.login()
 
@@ -301,8 +317,8 @@ def test_get_paths_of_images_in_folder(auth, refresh_db_once):
     response = json_of_response(rv)
 
     assert len(response['image_paths']) == 6
-    assert response['image_paths'][0] == r'test_images\froth_image.jpg'
-    assert response['image_paths'][1] == r'test_images\image.jpg'
+    assert response['image_paths'][0] == r'test_images/froth_image.jpg'
+    assert response['image_paths'][1] == r'test_images/image.jpg'
 
 
 def test_get_paths_of_images_in_folder_recursive(auth, refresh_db_once):
@@ -317,9 +333,9 @@ def test_get_paths_of_images_in_folder_recursive(auth, refresh_db_once):
     response = json_of_response(rv)
 
     assert len(response['image_paths']) == 7
-    assert response['image_paths'][0] == r'test_images\another_folder\image_copy.jpg'
-    assert response['image_paths'][1] == r'test_images\froth_image.jpg'
-    assert response['image_paths'][2] == r'test_images\image.jpg'
+    assert response['image_paths'][0] == r'test_images/another_folder/image_copy.jpg'
+    assert response['image_paths'][1] == r'test_images/froth_image.jpg'
+    assert response['image_paths'][2] == r'test_images/image.jpg'
 
 
 def test_get_paths_of_images_in_folder_only_admin_allowed(auth, refresh_db_once):

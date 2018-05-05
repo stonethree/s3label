@@ -52,4 +52,7 @@ def get_images_in_folder(folder, recursive=False):
         image_paths.extend(glob.glob(os.path.join(folder, '*.png'), recursive=False))
         image_paths.extend(glob.glob(os.path.join(folder, '*.bmp'), recursive=False))
 
+    # convert to forward slashes
+    image_paths = [p.replace('\\', '/') for p in image_paths]
+
     return sorted(image_paths)

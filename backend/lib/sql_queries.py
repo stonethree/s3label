@@ -46,6 +46,21 @@ def get_all_input_data_items(engine, label_task_id):
     return df
 
 
+def get_all_datasets(engine):
+    """
+    Get list of all datasets
+
+    :param engine: SQLAlchemy engine
+    :return:
+    """
+
+    sql_query = """select * from datasets"""
+
+    df = pd.read_sql_query(sql_query, engine)
+
+    return df
+
+
 def count_input_data_items_per_user_per_label_task(engine, label_task_id=None, user_id=None):
     """
     Count the number of labeled, unlabeled and in progress input data items per label task for the user

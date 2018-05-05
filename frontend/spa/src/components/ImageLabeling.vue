@@ -1,7 +1,8 @@
 <template>
     <div id="image_labeling" class="container" >
-        <div id="drawingtools">
-            <div class="row">
+        <div id="drawingtools" class="row">
+            <div class="col">
+            <div class="row justify-content-center">
                 <div id="tools" class="col border-right">
                     <span>Tools</span>
                     <form id="tools_form">
@@ -52,19 +53,26 @@
                     <button type="submit" @click="clearCanvas">Clear canvas</button>
                 </div>
             </div>
+            </div>
         </div>
     
-        <drawing-canvas v-bind:active_tool="active_tool"
-                        v-bind:active_mode="active_mode"
-                        v-bind:active_overlap_mode="active_overlap_mode"
-                        v-bind:active_label="active_label"
-                        v-bind:input_data_id="input_data_id"
-                        v-bind:label_task_id="label_task.label_task_id"
-                        v-bind:stroke_thickness="stroke_thickness"
-                        v-bind:use_stroke="use_stroke"
-                        v-bind:opacity="opacity"
-                        v-bind:clear_canvas_event="clear_canvas_event"
-                        ref="mySubComponent"></drawing-canvas>
+        <div class="row justify-content-center">
+            <div class="col">
+            <drawing-canvas v-bind:active_tool="active_tool"
+                            v-bind:active_mode="active_mode"
+                            v-bind:active_overlap_mode="active_overlap_mode"
+                            v-bind:active_label="active_label"
+                            v-bind:input_data_id="input_data_id"
+                            v-bind:label_task_id="label_task.label_task_id"
+                            v-bind:stroke_thickness="stroke_thickness"
+                            v-bind:use_stroke="use_stroke"
+                            v-bind:opacity="opacity"
+                            v-bind:clear_canvas_event="clear_canvas_event"
+                            ref="mySubComponent"
+                            class="row"
+                            ></drawing-canvas>
+            </div>
+        </div>
     </div>
 </template>
 
