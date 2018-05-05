@@ -4,6 +4,7 @@ import json
 import os
 
 from backend.lib import sql_queries, sql_queries_admin, user_authentication as ua
+from backend.lib import data_upload as du
 
 # create a "blueprint" for the endpoints in this file
 ebp = Blueprint('endpoints', __name__)
@@ -46,6 +47,48 @@ def get_label_task(label_task_id):
         resp = make_response(jsonify(error='No label task found'), 404)
         resp.mimetype = "application/javascript"
         return resp
+
+
+@ebp.route('/image_labeler/api/v1.0/image_paths', methods=['GET'])
+@fje.jwt_required
+def get_image_paths_in_folder():
+    engine = current_app.config['engine']
+
+    # check that the user has permission to get the requested data: admin users can get any user's data, but an
+    # ordinary user can only get their own data
+
+    user_identity = fje.get_jwt_identity()
+    user_id_from_auth = ua.get_user_id_from_token(user_identity)
+
+    is_admin = sql_queries_admin.is_user_an_admin(engine, user_id_from_auth)
+
+    if is_admin is None or not is_admin:
+        resp = make_response(jsonify(error='Not permitted to view this content. Must be an admin user.'), 403)
+        resp.mimetype = "application/javascript"
+        return resp
+
+    folder_path = request.args.get('folder_path', None)
+    recursive = request.args.get('recursive', None)
+
+    if recursive == 'True' or recursive == 'true':
+        recursive = True
+    else:
+        recursive = False
+
+    if folder_path is None:
+        resp = make_response(jsonify(error='Need to specify a folder path.'), 400)
+        resp.mimetype = "application/javascript"
+        return resp
+    elif not os.path.exists(folder_path):
+        resp = make_response(jsonify(error='Need to specify a folder path that exists.'), 400)
+        resp.mimetype = "application/javascript"
+        return resp
+
+    im_paths = du.get_images_in_folder(folder_path, recursive)
+
+    resp = make_response(jsonify(image_paths=im_paths), 200)
+    resp.mimetype = "application/javascript"
+    return resp
 
 
 @ebp.route('/image_labeler/api/v1.0/input_images/<int:input_image_id>', methods=['GET'])
@@ -627,6 +670,84 @@ def store_label(label_task_id, input_data_id):
                 resp = make_response(jsonify(label_id=label_id, label_hist_pks=label_hist_id), 200)
                 resp.mimetype = "application/javascript"
                 return resp
+    except Exception:
+        resp = make_response(jsonify(error='Bad request'), 400)
+        resp.mimetype = "application/javascript"
+        return resp
+
+
+@ebp.route('/image_labeler/api/v1.0/input_data', methods=['POST'])
+@fje.jwt_required
+def upload_input_data_item():
+    """
+    Store the input data item's path
+    :return:
+    """
+
+    engine = current_app.config['engine']
+
+    # get ID of user
+
+    user_identity = fje.get_jwt_identity()
+    user_id_from_auth = ua.get_user_id_from_token(user_identity)
+
+    is_admin = sql_queries_admin.is_user_an_admin(engine, user_id_from_auth)
+
+    if is_admin is None or not is_admin:
+        resp = make_response(jsonify(error='Not permitted to add input data items. Must be an admin user.'), 403)
+        resp.mimetype = "application/javascript"
+        return resp
+
+    if not request.json:
+        resp = make_response(jsonify(error='Must use JSON format'), 400)
+        resp.mimetype = "application/javascript"
+        return resp
+
+    if 'input_data_path' not in request.json:
+        resp = make_response(jsonify(error='Requires input_data_path to be specified'), 400)
+        resp.mimetype = "application/javascript"
+        return resp
+
+    if 'dataset_id' not in request.json:
+        resp = make_response(jsonify(error='Requires dataset_id to be specified'), 400)
+        resp.mimetype = "application/javascript"
+        return resp
+
+    input_data_path = request.json.get('input_data_path', None)
+    dataset_id = request.json.get('dataset_id', None)
+
+    try:
+        dataset_id = int(dataset_id)
+    except:
+        resp = make_response(jsonify(error='dataset_id must be an integer'), 400)
+        resp.mimetype = "application/javascript"
+        return resp
+
+    # calculate the hash of the file, which can be used to identify the file contents uniquely
+
+    hash = du.calculate_file_hash(input_data_path)
+
+    if hash is None:
+        resp = make_response(jsonify(error='File does not exist at input_data_path: {}'.format(input_data_path)), 404)
+        resp.mimetype = "application/javascript"
+        return resp
+
+    try:
+        # insert new input_data item into database
+
+        input_data_id = sql_queries_admin.create_new_input_data_item(engine,
+                                                                     input_data_path=input_data_path,
+                                                                     dataset_id=dataset_id,
+                                                                     sha1_hash=hash)
+
+        if input_data_id is None:
+            resp = make_response(jsonify(error='Could not find label ID'), 404)
+            resp.mimetype = "application/javascript"
+            return resp
+        else:
+            resp = make_response(jsonify(input_data_id=input_data_id), 200)
+            resp.mimetype = "application/javascript"
+            return resp
     except Exception:
         resp = make_response(jsonify(error='Bad request'), 400)
         resp.mimetype = "application/javascript"

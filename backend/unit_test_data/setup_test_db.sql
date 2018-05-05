@@ -37,7 +37,9 @@ create table label_tasks(
 create table input_data(
     input_data_id SERIAL PRIMARY KEY,
     dataset_id INTEGER REFERENCES datasets(dataset_id) ON DELETE CASCADE,
-    data_path VARCHAR NOT NULL);
+    data_path VARCHAR NOT NULL,
+    sha1_hash VARCHAR NOT NULL);
+    COMMENT ON COLUMN input_data.sha1_hash is 'SHA-1 hash of the file content. Useful for checking files are unique in database and for checking file identity when they are moved to other drives or folders in the future.';
 
 create table users(
     user_id SERIAL PRIMARY KEY,
@@ -80,7 +82,7 @@ create table label_history(
     label_history_id SERIAL PRIMARY KEY,
     label_id INTEGER REFERENCES labels(label_id) ON DELETE CASCADE,
     timestamp_edit TIMESTAMPTZ,
-    label_serialised VARCHAR NOT NULL);
+    label_serialised VARCHAR NOT NULL);     -- TODO: input_data's serialised_label field should be of type json
 --    UNIQUE (label_id, timestamp_edit));
 ALTER TABLE label_history ALTER COLUMN timestamp_edit SET DEFAULT now();
 
@@ -176,12 +178,12 @@ INSERT INTO label_tasks(dataset_group_id, title, description, type) VALUES (3, '
 INSERT INTO label_tasks(dataset_group_id, title, description, type) VALUES (1, 'Rock particle segmentation: Initially unlabeled', 'Multi-instance segmentation for rock particles', 'instance_segmentation');
 INSERT INTO label_tasks(dataset_group_id, title, description, type) VALUES (4, 'No images associated', 'Multi-instance segmentation for rock particles', 'instance_segmentation');
 
-INSERT INTO input_data(dataset_id, data_path) VALUES (1, 'test_images/image.jpg');
-INSERT INTO input_data(dataset_id, data_path) VALUES (1, 'test_images/image2.jpg');
-INSERT INTO input_data(dataset_id, data_path) VALUES (2, 'test_images/image3.jpg');
-INSERT INTO input_data(dataset_id, data_path) VALUES (2, 'test_images/image4.jpg');
-INSERT INTO input_data(dataset_id, data_path) VALUES (2, 'test_images/image_test.jpg');
-INSERT INTO input_data(dataset_id, data_path) VALUES (3, 'test_images/froth_image.jpg');
+INSERT INTO input_data(dataset_id, data_path, sha1_hash) VALUES (1, 'test_images/image.jpg', 'abc1');
+INSERT INTO input_data(dataset_id, data_path, sha1_hash) VALUES (1, 'test_images/image2.jpg', 'abc2');
+INSERT INTO input_data(dataset_id, data_path, sha1_hash) VALUES (2, 'test_images/image3.jpg', 'abc3');
+INSERT INTO input_data(dataset_id, data_path, sha1_hash) VALUES (2, 'test_images/image4.jpg', 'abc4');
+INSERT INTO input_data(dataset_id, data_path, sha1_hash) VALUES (2, 'test_images/image_test.jpg', 'abc5');
+INSERT INTO input_data(dataset_id, data_path, sha1_hash) VALUES (3, 'test_images/froth_image.jpg', 'abc6');
 
 INSERT INTO users (user_code, password, first_name, last_name, email, is_admin) VALUES ('3Hx45', 'abc', 'Shaun', 'Irwin', 'shaun.irwin@stonethree.com', true);
 INSERT INTO users (user_code, password, first_name, last_name, email, is_admin) VALUES ('79ACF', 'def', 'Kristo', 'Botha', 'kristo.botha@stonethree.com', true);

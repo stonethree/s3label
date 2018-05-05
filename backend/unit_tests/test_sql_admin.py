@@ -81,3 +81,16 @@ def test_get_labeled_data_for_user_and_task(refresh_db_once, db_connection_sqlal
     for col in cols:
         assert col in df.columns.tolist()
 
+
+def test_insert_new_input_data_item(refresh_db_every_time, db_connection_sqlalchemy):
+    df_test = pd.DataFrame()
+    df_test['input_data_id'] = [6]
+    df_test['dataset_id'] = [1]
+
+    engine = db_connection_sqlalchemy
+    input_data_id = sql_queries_admin.create_new_input_data_item(engine,
+                                                                 input_data_path='path_to_an_image.jpg',
+                                                                 dataset_id=2,
+                                                                 sha1_hash='abcdef')
+
+    assert input_data_id == 7

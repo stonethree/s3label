@@ -287,3 +287,94 @@ def test_update_label_fields_as_non_admin_user_fails_if_updating_admin_only_fiel
                            content_type='application/json')
 
     assert rv.status_code == 403
+
+
+def test_get_paths_of_images_in_folder(auth, refresh_db_once):
+    auth.login(email='shaun.irwin@stonethree.com', password='abc')
+
+    rv = auth.client.get(auth.base_url + '/image_paths?folder_path=test_images&recursive=false',
+                         headers=auth.auth_header(),
+                         content_type='application/json')
+
+    assert rv.status_code == 200
+
+    response = json_of_response(rv)
+
+    assert len(response['image_paths']) == 6
+    assert response['image_paths'][0] == r'test_images\froth_image.jpg'
+    assert response['image_paths'][1] == r'test_images\image.jpg'
+
+
+def test_get_paths_of_images_in_folder_recursive(auth, refresh_db_once):
+    auth.login(email='shaun.irwin@stonethree.com', password='abc')
+
+    rv = auth.client.get(auth.base_url + '/image_paths?folder_path=test_images&recursive=true',
+                         headers=auth.auth_header(),
+                         content_type='application/json')
+
+    assert rv.status_code == 200
+
+    response = json_of_response(rv)
+
+    assert len(response['image_paths']) == 7
+    assert response['image_paths'][0] == r'test_images\another_folder\image_copy.jpg'
+    assert response['image_paths'][1] == r'test_images\froth_image.jpg'
+    assert response['image_paths'][2] == r'test_images\image.jpg'
+
+
+def test_get_paths_of_images_in_folder_only_admin_allowed(auth, refresh_db_once):
+    auth.login()
+
+    rv = auth.client.get(auth.base_url + '/image_paths?folder_path=test_images',
+                         headers=auth.auth_header(),
+                         content_type='application/json')
+
+    assert rv.status_code == 403
+
+
+def test_get_paths_of_images_in_folder_returns_error_if_path_invalid(auth, refresh_db_once):
+    auth.login(email='shaun.irwin@stonethree.com', password='abc')
+
+    rv = auth.client.get(auth.base_url + '/image_paths?folder_path=does_not_exist',
+                         headers=auth.auth_header(),
+                         content_type='application/json')
+
+    assert rv.status_code == 400
+
+
+def test_get_paths_of_images_in_folder_returns_error_if_no_path_specified(auth, refresh_db_once):
+    auth.login(email='shaun.irwin@stonethree.com', password='abc')
+
+    rv = auth.client.get(auth.base_url + '/image_paths',
+                         headers=auth.auth_header(),
+                         content_type='application/json')
+
+    assert rv.status_code == 400
+
+
+def test_upload_new_input_data_item(auth, refresh_db_every_time):
+    auth.login(email='shaun.irwin@stonethree.com', password='abc')
+
+    rv = auth.client.post(auth.base_url + '/input_data',
+                          headers=auth.auth_header(),
+                          data=json.dumps({'input_data_path': 'test_images/another_folder/image_copy.jpg',
+                                           'dataset_id': 1}),
+                          content_type='application/json')
+
+    assert rv.status_code == 200
+
+    response = json_of_response(rv)
+
+    assert response['input_data_id'] == 7
+
+    rv = auth.client.post(auth.base_url + '/input_data',
+                          headers=auth.auth_header(),
+                          data=json.dumps({'input_data_path': 'test_images/another_folder/image_copy.jpg',
+                                           'dataset_id': 1}),
+                          content_type='application/json')
+
+    assert rv.status_code == 200
+
+    response = json_of_response(rv)
+
+    assert response['input_data_id'] == 8

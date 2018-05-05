@@ -91,16 +91,36 @@ def create_new_dataset(engine, site, sensor, description):
     pass
 
 
-def create_new_input_data_item(engine, input_data_path, dataset_id):
+def create_new_input_data_item(engine, input_data_path, dataset_id, sha1_hash):
     """
 
     :param engine:
     :param input_data_path:
     :param dataset_id:
+    :param sha1_hash: SHA-1 hash of the input data item
     :return:
     """
 
-    pass
+    sql_query = """
+                INSERT INTO input_data (dataset_id, data_path, sha1_hash) VALUES (:dataset_id, :data_path, :sha1_hash) 
+                RETURNING input_data_id;
+                """
+
+    # execute the query
+
+    sql_query = text(sql_query)
+
+    result = engine.execute(sql_query.execution_options(autocommit=True),
+                            dataset_id=int(dataset_id),
+                            data_path=input_data_path,
+                            sha1_hash=sha1_hash
+                            )
+
+    # read the label ID from the returned result
+
+    input_data_id = [r for r in result][0][0]
+
+    return input_data_id
 
 
 def create_new_dataset_group(engine, dataset_ids, description):
@@ -110,30 +130,6 @@ def create_new_dataset_group(engine, dataset_ids, description):
     :param engine:
     :param dataset_ids:
     :param description:
-    :return:
-    """
-
-    pass
-
-
-def delete_dataset_group(engine, dataset_group_id):
-    """
-    Delete the specified dataset group
-
-    :param engine:
-    :param dataset_group_id:
-    :return:
-    """
-
-    pass
-
-
-def delete_label_task(engine, label_task_id):
-    """
-    Delete the specified label task
-
-    :param engine:
-    :param label_task_id:
     :return:
     """
 
