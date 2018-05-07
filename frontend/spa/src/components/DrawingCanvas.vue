@@ -70,6 +70,26 @@ export default {
             type: Boolean,
             default: false
         },
+        delete_event: {
+            required: false,
+            type: Boolean,
+            default: false
+        },
+        deselect_event: {
+            required: false,
+            type: Boolean,
+            default: false
+        },
+        undo_event: {
+            required: false,
+            type: Boolean,
+            default: false
+        },
+        redo_event: {
+            required: false,
+            type: Boolean,
+            default: false
+        },
     },
     data: function() {
         return {
@@ -146,7 +166,27 @@ export default {
 
         clear_canvas_event: function() {
             this.clearCanvas();
-            console.log('clear canvas toggled')
+            console.log('clear canvas event occured')
+        },
+
+        delete_event: function() {
+            this.delete();
+            console.log('delete event occured')
+        },
+
+        deselect_event: function() {
+            this.deselect();
+            console.log('deselect event occured')
+        },
+
+        undo_event: function() {
+            this.undo();
+            console.log('undo event occured')
+        },
+
+        redo_event: function() {
+            this.redo();
+            console.log('redo event occured')
         }
     },
     methods: {
@@ -389,7 +429,7 @@ export default {
             this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
             this.polygons = [];
             this.polygons_redo = [];
-            // console.log('(CLEARING CANVAS)')
+            console.log('(CLEARING CANVAS)')
         },
 
         drawAllPolygons: function (context, polygon_list) {
@@ -530,7 +570,40 @@ export default {
 
             img_pattern.src = '../../static/canvas_bg_pattern_3.png';
             img_pattern.onload = drawPattern;
-        }
+        },
+
+        undo: function() {
+            if (this.polygons_undo.length > 0) {
+                this.polygons.push(this.polygons_undo.pop());
+            }
+            else if (this.polygons.length > 0) {
+                this.polygons_redo.push(this.polygons.pop());
+            }
+        },
+
+        redo: function() {
+            if (this.polygons_redo.length > 0) {
+                this.polygons.push(this.polygons_redo.pop());
+            }
+        },
+
+        delete: function() {
+            console.log('DELETE CALLED')
+            console.log('num orig polys:', this.polygons.length, 'num redo polys:', this.polygons_redo.length)
+            this.polygons_undo.push(...this.polygons.filter(poly => poly.selected));
+            this.polygons = this.polygons.filter(poly => !poly.selected);
+            console.log('num final polys:', this.polygons.length, 'num redo polys:', this.polygons_redo.length)
+            this.drawAllPolygons(this.ctx, this.polygons);
+        },
+        
+        deselect: function() {
+            console.log('DESELECT CALLED')
+            for (let i = 0; i < this.polygons.length; i++) {
+                this.polygons[i].selected = false;
+            }
+            this.drawAllPolygons(this.ctx, this.polygons);
+        },
+
     },
 
     directives: {

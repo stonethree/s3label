@@ -71,6 +71,10 @@
                             v-bind:use_stroke="use_stroke"
                             v-bind:opacity="opacity"
                             v-bind:clear_canvas_event="clear_canvas_event"
+                            v-bind:delete_event="delete_event"
+                            v-bind:deselect_event="deselect_event"
+                            v-bind:undo_event="undo_event"
+                            v-bind:redo_event="redo_event"
                             ref="mySubComponent"
                             class="row"
                             ></drawing-canvas>
@@ -116,6 +120,11 @@ export default {
             stroke_slider_value: "2",
             opacity_slider_value: "50",
             clear_canvas_event: false,
+            delete_event: false,
+            clear_canvas_event: false,
+            deselect_event: false,
+            undo_event: false,
+            redo_event: false,
             keyboard_shortcuts: [
                 { key: 'Left', action: 'Go to previous image' },
                 { key: 'Right', action: 'Go to next image or request new image to label' },
@@ -238,19 +247,13 @@ export default {
 
             if (e.ctrlKey && e.code === "KeyZ") {
                 console.log("Undo");
-                this.undo();
-                // this.drawAllPolygons(this.ctx, this.polygons);
-
-                // TODO: need to toggle a DrawingCanvas prop 
+                this.undo_event = !this.undo_event;
 
                 key_handled = true;
             }
             else if (e.ctrlKey && e.code === "KeyY") {
                 console.log("Redo");
-                this.redo();
-                // this.drawAllPolygons(this.ctx, this.polygons);
-
-                // TODO: need to toggle a DrawingCanvas prop 
+                this.redo_event = !this.redo_event;
 
                 key_handled = true;
             }
@@ -332,23 +335,12 @@ export default {
                 key_handled = true;
             }
             else if (e.code === 'Delete') {
-                // console.log('num orig polys:', this.polygons.length, 'num redo polys:', this.polygons_redo.length)
-                // this.polygons_undo.push(...this.polygons.filter(poly => poly.selected));
-                // this.polygons = this.polygons.filter(poly => !poly.selected);
-                // console.log('num final polys:', this.polygons.length, 'num redo polys:', this.polygons_redo.length)
-                // // this.drawAllPolygons(this.ctx, this.polygons);
-
-                // TODO: need to toggle a DrawingCanvas prop to signal that current polygon must be deleted
+                this.delete_event = !this.delete_event;
 
                 key_handled = true;
             }
             else if (e.code === 'Escape') {
-                // for (let i = 0; i < this.polygons.length; i++) {
-                //     this.polygons[i].selected = false;
-                // }
-                // // this.drawAllPolygons(this.ctx, this.polygons);
-
-                // TODO: need to toggle a DrawingCanvas prop to signal that polygons must be deselected
+                this.deselect_event = !this.deselect_event;
 
                 key_handled = true;
             }
@@ -421,21 +413,6 @@ export default {
                 e.stopPropagation();
                 e.preventDefault();
             }
-        },
-
-        undo: function() {
-            // if (this.polygons_undo.length > 0) {
-            //     this.polygons.push(this.polygons_undo.pop());
-            // }
-            // else if (this.polygons.length > 0) {
-            //     this.polygons_redo.push(this.polygons.pop());
-            // }
-        },
-
-        redo: function() {
-            // if (this.polygons_redo.length > 0) {
-            //     this.polygons.push(this.polygons_redo.pop());
-            // }
         },
 
         clearCanvas: function() {
