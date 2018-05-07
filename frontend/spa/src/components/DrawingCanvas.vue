@@ -35,10 +35,6 @@ import { convertPolygonToPaths,
 import LabelStatus from './LabelStatus'
 import { extractColor, formatColor } from '../../static/color_utilities'
 
-import { uploadLabels,
-         loadLabels,
-         getLabelId } from '../../static/label_loading'
-
 
 export default {
     name: 'drawing_canvas',
@@ -79,15 +75,14 @@ export default {
         return {
             isDrawing: false,
             currentPath: [],
-            padX: 80,
+            padX: 80,           // TODO: the coordinates in the polygons object must not depend on the padX and padY values
             padY: 80,
             ctx: undefined,
             ctx_bg: undefined,
             label_status_toggler: {user_complete: false},
             polygons: [],
             polygons_redo: [],
-            polygons_undo: [],
-            label_id: undefined
+            polygons_undo: []
         };
     },
     components: {
@@ -99,6 +94,10 @@ export default {
         ]),
         ...mapGetters('user_login', [
             'user_id'
+        ]),
+        ...mapGetters('image_labeling', [
+            // 'input_data_id',
+            'label_id'
         ]),
     },
     mounted() {
@@ -112,12 +111,10 @@ export default {
         // if an image ID is specified, get its corresponding label ID and load that image
 
         if (this.input_data_id != undefined) {
-            console.group('input_data_id: ' + this.input_data_id);
-            
-            this.open_image();
+            this.fetchAndDisplayImage(baseUrl + '/input_images/' + this.input_data_id);
         }
         else {
-            this.draw_image_unavailable_placeholder()
+            this.draw_image_unavailable_placeholder();
         }
     },
     watch: {
@@ -132,7 +129,15 @@ export default {
         },
         input_data_id: function (new_input_data_id, old_input_data_id) {
             console.log('switching image...')
-            this.switch_image(old_input_data_id, new_input_data_id);
+
+            this.clearCanvas();
+
+            if (new_input_data_id != undefined) {
+                this.fetchAndDisplayImage(baseUrl + '/input_images/' + new_input_data_id);
+            }
+            else {
+                this.draw_image_unavailable_placeholder();
+            }
         },
 
         polygons: function() {
@@ -145,142 +150,14 @@ export default {
         }
     },
     methods: {
-        save_labels: async function() {
-            // save image labels before navigating away. Called by parent component, since we cannot use vue-router's beforeRouteLeave() function within a subcomponent.
-
-            var vm = this;
-
-            if (this.input_data_id != undefined) {
-                await uploadLabels(this.input_data_id, this.label_task_id, this.polygons)
-                    .then(function(response) {
-                        console.log('test8-B')
-                        if (vm.polygons.length > 0) {
-                            console.log('SAVED LABELS SUCCESSFULLY (LEAVING PAGE)', vm.polygons)
-                        }
-                        else {
-                            console.warn('SAVED LABELS SUCCESSFULLY, but length 0 (LEAVING PAGE):', vm.polygons)
-                        }
-                    })
-            }
-            else {
-                throw Error('could not save image before leaving page!')
-            }
-
-            console.groupEnd();
+        set_polygons: function(polygons) {
+            // the parent component can set the polygons using this method in order to load the labels from the backend
+            this.polygons = polygons;
         },
 
-        open_image: async function() {
-            // display an image and load corresponding labels if any exist
-
-            var vm = this;
-            console.log('test1-A')
-            await this.fetchAndDisplayImage(baseUrl + '/input_images/' + this.input_data_id);
-            console.log('test2-A')
-
-            await getLabelId(this.label_task_id, this.input_data_id, this.user_id)
-                .then(function(label_id) {
-                        vm.label_id = label_id;
-                        console.log('test3-A')
-                        console.log('GOT LABEL ID SUCCESSFULLY', label_id)
-                    })
-                    .catch(function(error) {
-                        throw Error('error getting label ID:', error, vm.label_task_id, vm.input_data_id, vm.user_id);
-                    });
-
-            console.log('test4-A')
-
-            // load latest image labels for this image from database 
-
-            if (this.input_data_id != undefined) {
-                await loadLabels(this.input_data_id, this.label_task_id)
-                    .then(function(polygons) {
-                        vm.polygons = polygons;
-                        console.log('test5-A')
-                        if (vm.polygons.length > 0) {
-                            console.log('SAVED LABELS SUCCESSFULLY', vm.polygons)
-                        }
-                        else {
-                            console.warn('SAVED LABELS SUCCESSFULLY, but length 0:', vm.polygons)
-                        }
-                    })
-            }
-        },
-
-        switch_image: async function(old_input_data_id, new_input_data_id) {
-
-            // save previous image's labels to database
-
-            if (old_input_data_id != undefined) {
-                var vm = this;
-                await uploadLabels(old_input_data_id, this.label_task_id, this.polygons)
-                    .then(function(response) {
-                        console.log('test8')
-                        if (vm.polygons.length > 0) {
-                            console.log('SAVED LABELS SUCCESSFULLY', vm.polygons)
-                        }
-                        else {
-                            console.warn('SAVED LABELS SUCCESSFULLY, but length 0:', vm.polygons)
-                        }
-                    })
-                    .catch(function(error) {
-                        throw Error('could not upload labels:', old_input_data_id, vm.label_task_id, vm.polygons)
-                    });
-            }
-
-            console.log('test9')
-
-            console.log('CLEARING CANVAS: SWITCHING TO NEW IMAGE')
-
-            await this.clearCanvas();
-
-            console.groupEnd();
-
-            console.group('input_data_id: ' + new_input_data_id);
-
-            console.log('test1')
-
-            if (new_input_data_id != undefined) {
-                await this.fetchAndDisplayImage(baseUrl + '/input_images/' + new_input_data_id);
-
-                console.log('test2')
-
-                // get the label ID corresponding to this input data item, user and label task
-
-                var vm = this;
-
-                await getLabelId(this.label_task_id, new_input_data_id, this.user_id)
-                    .then(function(label_id) {
-                        console.log('test3')
-                        vm.label_id = label_id;
-                        console.log('GOT LABEL ID SUCCESSFULLY', label_id)
-                    })
-                    .catch(function(error) {
-                        throw Error('error getting label ID:', error, vm.label_task_id, new_input_data_id, vm.user_id);
-                    });
-
-                // load latest image labels for this image from database 
-
-                console.log('test4')
-
-                await loadLabels(new_input_data_id, this.label_task_id)
-                    .then(function(polygons) {
-                        // if (checkLabelFormatValid) {
-                            console.log('test5')
-                            vm.polygons = polygons;
-                            console.log('LOADED LABELS SUCCESSFULLY', vm.polygons)
-                            vm.drawAllPolygons(vm.ctx, vm.polygons);
-                        // }
-                        // else {
-                        //     throw Error('could not load labels: wrong format!!!!!' + polygons)
-                        // }
-                    })
-                    // .catch(function(error) {
-                    //     console.log('error getting label ID:', error);
-                    // });
-            }
-            else {
-                this.draw_image_unavailable_placeholder();
-            }
+        fetch_polygons: function() {
+            // the parent component can fetch the polygons using this method in order to save the labels to the backend
+            return this.polygons;
         },
 
         draw_image_unavailable_placeholder: function() {
@@ -512,7 +389,7 @@ export default {
             this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
             this.polygons = [];
             this.polygons_redo = [];
-            console.log('(CLEARING CANVAS)')
+            // console.log('(CLEARING CANVAS)')
         },
 
         drawAllPolygons: function (context, polygon_list) {

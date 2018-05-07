@@ -45,10 +45,14 @@ export const StoreImageLabeling = {
         }
     },
     actions: {
-        async set_initial_image ({ commit }, input_data_id) {
-            console.log('setting initial image')
+        async set_initial_image ({ commit, rootGetters }, input_data_id) {
+            var label_task_id = rootGetters['label_task_store/label_task_id'];
+            var user_id = rootGetters['user_login/user_id'];
+
+            console.log('setting initial image');
+
             if (input_data_id != undefined) {
-                var label_id = getLabelId(label_task_id, input_data_id, user_id)
+                var label_id = await getLabelId(label_task_id, input_data_id, user_id);
 
                 if (label_id != undefined) {
                     commit(SET_INPUT_DATA_ID, input_data_id);
@@ -122,16 +126,20 @@ export const StoreImageLabeling = {
                 }
             }
 
+            console.log('getting next image2:', input_data_id, label_id)
+
             // if no next image found, request a new unlabeled image for the user to label
 
             if (input_data_id == undefined) {
-                let data = await getUnlabeledImage(label_task_id)
+                let data = await getUnlabeledImage(label_task_id);
 
                 if (data != undefined) {
                     input_data_id = data.input_data_id;
                     label_id = data.label_id;
                 }
             }
+
+            console.log('getting next image3:', input_data_id, label_id)
 
             if (input_data_id != undefined && label_id != undefined) {
                 commit(SET_INPUT_DATA_ID, input_data_id);
@@ -146,6 +154,7 @@ export const StoreImageLabeling = {
                 commit(CLEAR_LABEL_ID);
                 commit(SET_UNLABELED_IMAGES_AVAILABLE, false);
             }
+            console.log('completed function:', getters.input_data_id, getters.label_id)
         }
     },
     getters: {

@@ -115,11 +115,9 @@ export async function getUnlabeledImage(label_task_id) {
     return await axios
         .get("unlabeled_images/label_tasks/" + label_task_id + "?shuffle=true", config)
         .then(function(response) {
-            console.log(response.data, response.data.length)
-
             var following_data_item = response.data;
-            console.log(following_data_item.input_data_id)
-            return following_data_item.input_data_id;
+            console.log('unlabeled data:', following_data_item)
+            return following_data_item;
         })
         .catch(function(error) {
             console.log(error);
@@ -152,7 +150,7 @@ export async function uploadLabels(input_data_id, label_task_id, polygons) {
     console.log('uploading label with label task ID', label_task_id, 'and input data ID', input_data_id)
 
     if (label_task_id == undefined || input_data_id == undefined) {
-        throw Error("Input fields must all be defined in order to upload label")
+        throw Error("Input fields must all be defined in order to upload label:" + label_task_id + input_data_id)
     }
     else {
         var data = {label_serialised: polygons}
@@ -223,10 +221,10 @@ export async function loadLabels(input_data_id, label_task_id) {
                     throw Error("Error: expected at most one label for this image!")
                 }
             })
-            // .catch(function(error) {
-            //     console.log(error);
-            //     return undefined;
-            // });
+            .catch(function(error) {
+                console.log(error);
+                return undefined;
+            });
     }
 }
 
@@ -251,9 +249,9 @@ export async function getLabelId(label_task_id, input_data_id, user_id) {
                 console.log('dfdgff', response.data, 'user_id:', user_id, 'input_data_id:', input_data_id, 'label_task_id:', label_task_id, 'label_id:', response.data.label_id)
                 return response.data.label_id;
             })
-            // .catch(function(error) {
-            //     console.log('error getting label id:', error);
-            //     return undefined;
-            // });
+            .catch(function(error) {
+                console.log('error getting label id:', error);
+                return undefined;
+            });
     }
 }

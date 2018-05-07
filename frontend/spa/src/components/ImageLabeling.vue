@@ -61,7 +61,7 @@
     
         <div class="row justify-content-center">
             <div class="col">
-            <!-- <drawing-canvas v-bind:active_tool="active_tool"
+            <drawing-canvas v-bind:active_tool="active_tool"
                             v-bind:active_mode="active_mode"
                             v-bind:active_overlap_mode="active_overlap_mode"
                             v-bind:active_label="active_label"
@@ -73,8 +73,9 @@
                             v-bind:clear_canvas_event="clear_canvas_event"
                             ref="mySubComponent"
                             class="row"
-                            ></drawing-canvas> -->
+                            ></drawing-canvas>
             </div>
+            <!-- use a v-if to display error with slot if no images found: https://vuejs.org/v2/guide/components.html#Content-Distribution-with-Slots -->
         </div>
 
         <b-modal id="hotkeyModal" title="Keyboard Shortcuts" ok-only>
@@ -89,6 +90,10 @@
 <script>
 
 import DrawingCanvas from './DrawingCanvas'
+
+import { uploadLabels,
+         loadLabels,
+         getLabelId } from '../../static/label_loading'
 
 import { mapGetters } from 'vuex'
 import axios from "axios";
@@ -131,13 +136,15 @@ export default {
     computed: {
         ...mapGetters('label_task_store', [
             'label_task',
-            'labels'
+            'labels',
+            'label_task_id'
         ]),
         ...mapGetters('user_login', [
             'user_id'
         ]),
         ...mapGetters('image_labeling', [
-            'input_data_id'
+            'input_data_id',
+            'label_id'
         ]),
         stroke_thickness: function() {
             return Math.max(1, parseInt(this.stroke_slider_value));
@@ -161,20 +168,47 @@ export default {
             this.active_label = this.labels[0].label_class;
         }
 
+        var old_input_data_id = this.input_data_id;
+        var vm = this;
+
         if (this.input_data_id_start != undefined) {
             // an initial image is specified, so load this image
-            this.$store.dispatch('image_labeling/set_initial_image', this.input_data_id_start);
+            this.$store.dispatch('image_labeling/set_initial_image', this.input_data_id_start)
+            .then(function() {
+                if (vm.input_data_id != old_input_data_id) {
+
+                    // load the labels from the next image
+                    loadLabels(vm.input_data_id, vm.label_task_id)
+                    .then(function(polygons_new) {
+                        if (polygons_new != undefined) {
+                            console.log('setting polygons:', polygons_new)
+                            vm.$refs.mySubComponent.set_polygons(polygons_new);
+                        }
+                    });
+                }
+            });
         }
         else {
             // no initial image specified. Request a new unlabeled image
-            this.$store.dispatch('image_labeling/next_image', this.label_task.label_task_id);
+            this.$store.dispatch('image_labeling/next_image', this.label_task.label_task_id)
+            .then(function() {
+                if (vm.input_data_id != old_input_data_id) {
+
+                    // load the labels from the next image
+                    loadLabels(vm.input_data_id, vm.label_task_id)
+                    .then(function(polygons_new) {
+                        if (polygons_new != undefined) {
+                            console.log('setting polygons:', polygons_new)
+                            vm.$refs.mySubComponent.set_polygons(polygons_new);
+                        }
+                    });
+                }
+            });
         }
     },
     beforeDestroy () {
         window.removeEventListener('keydown', this.keyDownHandler);
         window.removeEventListener('keyup', this.keyUpHandler);
-
-        // this.$store.dispatch('image_labeling/upload_labels_for_current_image', this.label_task.label_task_id)
     },
     beforeRouteLeave (to, from, next) {
         // notify drawing canvas to save image labels before navigating away
@@ -183,9 +217,15 @@ export default {
 
         console.log('save now!')
 
-        // this.$refs.mySubComponent.save_labels();
+        // get current polygons array from drawing canvas component (NB: this isn't the most elegant solution, but it will do for now)
+        var polygons = this.$refs.mySubComponent.fetch_polygons();
 
-        this.$store.dispatch('image_labeling/leave_page');
+        var vm = this;
+
+        uploadLabels(this.input_data_id, this.label_task_id, polygons)  // upload the labels from the previous image
+        .then( function() {
+            vm.$store.dispatch('image_labeling/leave_page');
+        });
 
         console.log('-----  leaving page')
 
@@ -193,7 +233,6 @@ export default {
     },
 
     methods: {
-
         keyDownHandler: function(e) {
             var key_handled = false;
 
@@ -202,12 +241,16 @@ export default {
                 this.undo();
                 // this.drawAllPolygons(this.ctx, this.polygons);
 
+                // TODO: need to toggle a DrawingCanvas prop 
+
                 key_handled = true;
             }
             else if (e.ctrlKey && e.code === "KeyY") {
                 console.log("Redo");
                 this.redo();
                 // this.drawAllPolygons(this.ctx, this.polygons);
+
+                // TODO: need to toggle a DrawingCanvas prop 
 
                 key_handled = true;
             }
@@ -217,20 +260,74 @@ export default {
                 key_handled = true;
             }
             else if (e.code === "ArrowLeft") {
-                // if (this.input_data_id == undefined) {
-                //     this.$store.dispatch('image_labeling/get_input_data_id_of_most_recently_labeled_image', this.label_task.label_task_id);
-                // }
-                // else {
-                //     this.$store.dispatch('image_labeling/get_input_data_id_of_previous_labeled_image', this.label_task.label_task_id);
-                // }
 
-                this.$store.dispatch('image_labeling/previous_image', this.label_task.label_task_id);
+                var old_input_data_id = this.input_data_id;
+
+                // get current polygons array from drawing canvas component (NB: this isn't the most elegant solution, but it will do for now)
+                var polygons = this.$refs.mySubComponent.fetch_polygons();
+
+                var vm = this;
+
+                uploadLabels(this.input_data_id, this.label_task_id, polygons)  // upload the labels from the previous image
+                .catch(function(error) {
+                    console.log('error getting label ID:', error, vm.label_task_id, vm.input_data_id, vm.user_id);
+                })
+                .then( function() {
+                    vm.$store.dispatch('image_labeling/previous_image', vm.label_task.label_task_id)    // switch to the previous image
+                    .then(function() {
+                    console.log('should load labels now...............', vm.input_data_id, old_input_data_id, vm.label_id, old_label_id)
+                    if (vm.input_data_id != old_input_data_id) {
+                        console.log('loading image labels for:', vm.input_data_id, vm.label_task_id, vm.user_id)
+                        
+                        // load the labels from the next image
+                        loadLabels(vm.input_data_id, vm.label_task_id)
+                        .then(function(polygons_new) {
+                            if (polygons_new != undefined) {
+                                console.log('setting polygons:', polygons_new)
+                                vm.$refs.mySubComponent.set_polygons(polygons_new);
+                            }
+                        });
+
+                    }
+                    });
+                });  
                 
                 key_handled = true;
             }
             else if (e.code === "ArrowRight") {
-                // this.$store.dispatch('image_labeling/get_input_data_id_of_next_image', this.label_task.label_task_id);
-                this.$store.dispatch('image_labeling/next_image', this.label_task.label_task_id);
+                var old_input_data_id = this.input_data_id;
+                var old_label_id = this.label_id;
+
+                // get current polygons array from drawing canvas component (NB: this isn't the most elegant solution, but it will do for now)
+                var polygons = this.$refs.mySubComponent.fetch_polygons();
+
+                var vm = this;
+
+                console.log('Arrow right. this.input_data_id:', this.input_data_id)
+
+                uploadLabels(this.input_data_id, this.label_task_id, polygons)  // upload the labels from the previous image
+                .catch(function(error) {
+                    console.log('error getting label ID:', error, vm.label_task_id, vm.input_data_id, vm.user_id);
+                })
+                .then( function() {
+                    vm.$store.dispatch('image_labeling/next_image', vm.label_task.label_task_id)    // switch to the next image
+                    .then(function() {
+                    console.log('should load labels now...............', vm.input_data_id, old_input_data_id, vm.label_id, old_label_id)
+                    if (vm.input_data_id != old_input_data_id) {
+                        console.log('loading image labels for:', vm.input_data_id, vm.label_task_id, vm.user_id)
+                        
+                        // load the labels from the next image
+                        loadLabels(vm.input_data_id, vm.label_task_id)
+                        .then(function(polygons_new) {
+                            if (polygons_new != undefined) {
+                                console.log('setting polygons:', polygons_new)
+                                vm.$refs.mySubComponent.set_polygons(polygons_new);
+                            }
+                        });
+
+                    }
+                    });
+                });
 
                 key_handled = true;
             }
@@ -241,6 +338,8 @@ export default {
                 // console.log('num final polys:', this.polygons.length, 'num redo polys:', this.polygons_redo.length)
                 // // this.drawAllPolygons(this.ctx, this.polygons);
 
+                // TODO: need to toggle a DrawingCanvas prop to signal that current polygon must be deleted
+
                 key_handled = true;
             }
             else if (e.code === 'Escape') {
@@ -248,6 +347,8 @@ export default {
                 //     this.polygons[i].selected = false;
                 // }
                 // // this.drawAllPolygons(this.ctx, this.polygons);
+
+                // TODO: need to toggle a DrawingCanvas prop to signal that polygons must be deselected
 
                 key_handled = true;
             }
