@@ -6,8 +6,12 @@
           <div class="col">
               <div class="row justify-content-center">
 
-                <div class="col-md-12">
+                <div class="col-md-12" v-if="user_labeled_data.length > 0">
                     <ImageThumbnail class="col-md-4 col-xs-6 im" v-for="uld in user_labeled_data_reversed" :key="uld.input_data_id" v-bind:user-labeled-data="uld"> {{ uld.input_data_id }} </ImageThumbnail>
+                </div>
+                <div v-else class="no-images-labeled">
+                    <h6>No images labeled yet.</h6>
+                    <h6>Click the "Labeler" tab to begin labeling images for this label task.</h6>
                 </div>
 
               </div>
@@ -78,6 +82,7 @@ export default {
 
 <style>
 .im { display: inline }
+.no-images-labeled { padding-top: 2em }
 /* #label_task_chooser {
   font-family: "Avenir", Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
