@@ -61,7 +61,7 @@
     
         <div class="row justify-content-center">
             <div class="col">
-            <drawing-canvas v-bind:active_tool="active_tool"
+            <!-- <drawing-canvas v-bind:active_tool="active_tool"
                             v-bind:active_mode="active_mode"
                             v-bind:active_overlap_mode="active_overlap_mode"
                             v-bind:active_label="active_label"
@@ -73,7 +73,7 @@
                             v-bind:clear_canvas_event="clear_canvas_event"
                             ref="mySubComponent"
                             class="row"
-                            ></drawing-canvas>
+                            ></drawing-canvas> -->
             </div>
         </div>
 
@@ -161,14 +161,13 @@ export default {
             this.active_label = this.labels[0].label_class;
         }
 
-        // commit starting input data ID, whether defined or not
-
-        this.$store.dispatch('image_labeling/set_input_data_id_of_existing_image', this.input_data_id_start);
-
-        // if an image ID is specified, load that image
-
-        if (this.input_data_id == undefined) {
-            this.$store.dispatch('image_labeling/get_input_data_id_of_next_image', this.label_task.label_task_id);
+        if (this.input_data_id_start != undefined) {
+            // an initial image is specified, so load this image
+            this.$store.dispatch('image_labeling/set_initial_image', this.input_data_id_start);
+        }
+        else {
+            // no initial image specified. Request a new unlabeled image
+            this.$store.dispatch('image_labeling/next_image', this.label_task.label_task_id);
         }
     },
     beforeDestroy () {
@@ -184,9 +183,9 @@ export default {
 
         console.log('save now!')
 
-        this.$refs.mySubComponent.save_labels();
+        // this.$refs.mySubComponent.save_labels();
 
-        this.$store.dispatch('image_labeling/clear_input_data_id');
+        this.$store.dispatch('image_labeling/leave_page');
 
         console.log('-----  leaving page')
 
@@ -218,17 +217,20 @@ export default {
                 key_handled = true;
             }
             else if (e.code === "ArrowLeft") {
-                if (this.input_data_id == undefined) {
-                    this.$store.dispatch('image_labeling/get_input_data_id_of_most_recently_labeled_image', this.label_task.label_task_id);
-                }
-                else {
-                    this.$store.dispatch('image_labeling/get_input_data_id_of_previous_labeled_image', this.label_task.label_task_id);
-                }
+                // if (this.input_data_id == undefined) {
+                //     this.$store.dispatch('image_labeling/get_input_data_id_of_most_recently_labeled_image', this.label_task.label_task_id);
+                // }
+                // else {
+                //     this.$store.dispatch('image_labeling/get_input_data_id_of_previous_labeled_image', this.label_task.label_task_id);
+                // }
+
+                this.$store.dispatch('image_labeling/previous_image', this.label_task.label_task_id);
                 
                 key_handled = true;
             }
             else if (e.code === "ArrowRight") {
-                this.$store.dispatch('image_labeling/get_input_data_id_of_next_image', this.label_task.label_task_id);
+                // this.$store.dispatch('image_labeling/get_input_data_id_of_next_image', this.label_task.label_task_id);
+                this.$store.dispatch('image_labeling/next_image', this.label_task.label_task_id);
 
                 key_handled = true;
             }

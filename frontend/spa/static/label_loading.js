@@ -22,9 +22,14 @@ export async function getLatestLabeledImage(label_task_id) {
         .get("all_data/label_tasks/" + label_task_id + "/users/own?num_labeled_images=1", config)
         .then(function(response) {
             if (response.data.length == 1) {
-                let input_data_id_latest = response.data[0].input_data_id;
+                let data = {
+                    input_data_id: response.data[0].input_data_id,
+                    label_id: response.data[0].label_id
+                };
 
-                return input_data_id_latest;
+                console.log(data)
+
+                return data;
             }
             else {
                 return undefined;
@@ -53,7 +58,7 @@ export async function getPrecedingLabeledImage(current_input_data_id, label_task
             if (response.data.length == 1) {
                 var preceding_data_item = response.data[0];
 
-                return preceding_data_item.input_data_id;
+                return preceding_data_item;
             }
             else {
                 return undefined;
@@ -83,7 +88,7 @@ export async function getFollowingLabeledImage(current_input_data_id, label_task
             if (response.data.length == 1) {
                 var following_data_item = response.data[0];
 
-                return following_data_item.input_data_id;
+                return following_data_item;
             }
             else {
                 return undefined;
@@ -129,13 +134,16 @@ export async function getUnlabeledImage(label_task_id) {
 function checkLabelFormatValid(polygons) {
     // check that the labels are of the correct format to load
 
-    if ((polygons != undefined && polygons.length > 0 && polygons[0].polygon != undefined) || 
-        (polygons != undefined && polygons.length == 0)) {
-        return true;
+    if (polygons != undefined) {
+        if (polygons.length > 0 && polygons[0].polygon != undefined) {
+            return true;
+        }
+        else if (polygons.length == 0) {
+            return true;
+        }
     }
-    else {
-        return false;
-    }
+    
+    return false;
 }
 
 
@@ -189,12 +197,16 @@ export async function loadLabels(input_data_id, label_task_id) {
             .get("labels/input_data/" + input_data_id + "/label_tasks/" + label_task_id, config)
             .then(function(response) {
                 if (response.data.length == 1) {
-                    console.log("Label found for this image. Attempting to apply it in the view")
+                    console.log("Label found for this image. Attempting to apply it in the view", response.data)
                     var label = response.data[0];
 
                     // check label format is correct
 
                     var polygons = JSON.parse(label.label_serialised);
+
+                    if (polygons == null) {
+                        polygons = [];
+                    }
 
                     if (checkLabelFormatValid(polygons)) {
                         console.log('Applied serialised label to image')

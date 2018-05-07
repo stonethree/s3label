@@ -4,22 +4,25 @@ import { getLatestLabeledImage,
          getUnlabeledImage,
          } from '../../static/label_loading'
 
-
-// NB: for now we will not include the label ID and polygons in the vuex states, however it would be good to include it later when handling undo/redo etc
-// Moreover, there is currently a bug that occurs when the user presses left/right arrow keys too quickly through the images in the image labeler page. In
-// this situation, it appears that the multiple asynchronous calls (ie. switching images) are being dispatched too quickly in succession, which causes them
-// to result in weird clearing of polygons. To remedy this, either the polygons objects and label IDs etc should be moved to a Vuex store, or have a Vuex flag
-// that prevents input_data_id changes until finished handling the request. However, this will add coupling between image labeler and drawing canvas components,
-// so maybe best to just use Vuex store for all the variables and then perform atomic mutations.
+import { uploadLabels,
+         loadLabels,
+         getLabelId } from '../../static/label_loading'
 
 
-export const SET_INPUT_DATA_ID = 'set_input_data_id'; 
-export const CLEAR_INPUT_DATA_ID = 'clear_input_data_id'; 
+const SET_INPUT_DATA_ID = 'set_input_data_id'; 
+const CLEAR_INPUT_DATA_ID = 'clear_input_data_id'; 
+const SET_LABEL_ID = 'set_label_id'; 
+const CLEAR_LABEL_ID = 'clear_label_id'; 
+const SET_UNLABELED_IMAGES_AVAILABLE = 'set_unlabeled_images_available'; 
+const SET_PREVIOUS_IMAGES_AVAILABLE = 'set_previous_images_available'; 
  
 export const StoreImageLabeling = {
     namespaced: true,
     state: {
         input_data_id: undefined,
+        label_id: undefined,
+        unlabeled_images_available: true,
+        previous_images_available: true,
     },
     mutations: {
         [SET_INPUT_DATA_ID] (state, input_data_id) {
@@ -27,61 +30,130 @@ export const StoreImageLabeling = {
         },
         [CLEAR_INPUT_DATA_ID] (state) {
             state.input_data_id = undefined;
+        },
+        [SET_LABEL_ID] (state, label_id) {
+            state.label_id = label_id;
+        },
+        [CLEAR_LABEL_ID] (state) {
+            state.label_id = undefined;
+        },
+        [SET_UNLABELED_IMAGES_AVAILABLE] (state, images_are_available) {
+            state.unlabeled_images_available = images_are_available;
+        },
+        [SET_PREVIOUS_IMAGES_AVAILABLE] (state, images_are_available) {
+            state.previous_images_available = images_are_available;
         }
     },
     actions: {
-        // actions for requesting input_data_ids
-
-        async set_input_data_id_of_existing_image ({ commit }, input_data_id) {
-            // console.log('set_input_data_id_of_existing_image:::::::::1 ', input_data_id)
-            commit(SET_INPUT_DATA_ID, input_data_id)
-        },
-        async clear_input_data_id ({ commit }) {
-            // console.log('set_input_data_id_of_existing_image:::::::::1 ', input_data_id)
-            commit(CLEAR_INPUT_DATA_ID)
-        },
-        async get_input_data_id_of_most_recently_labeled_image ({ commit }, label_task_id) {
-            let input_data_id = await getLatestLabeledImage(label_task_id);
-
-            // console.log('get_input_data_id_of_most_recently_labeled_image:::::::::2 ', input_data_id)
-
-            commit(SET_INPUT_DATA_ID, input_data_id)
-        },
-        async get_input_data_id_of_previous_labeled_image ({ commit, getters }, label_task_id) {
-            let input_data_id = await getPrecedingLabeledImage(getters.input_data_id, label_task_id)
-
-            // console.log('get_input_data_id_of_previous_labeled_image:::::::::3 ', input_data_id)
-
+        async set_initial_image ({ commit }, input_data_id) {
+            console.log('setting initial image')
             if (input_data_id != undefined) {
-                commit(SET_INPUT_DATA_ID, input_data_id)
+                var label_id = getLabelId(label_task_id, input_data_id, user_id)
+
+                if (label_id != undefined) {
+                    commit(SET_INPUT_DATA_ID, input_data_id);
+                    commit(SET_LABEL_ID, label_id);
+                    return;
+                }
+            }
+
+            // clear input_data_id and label_id 
+
+            commit(CLEAR_INPUT_DATA_ID);
+            commit(CLEAR_LABEL_ID);
+        },
+
+        async leave_page ({ commit }) {
+            console.log('leaving page')
+            commit(CLEAR_INPUT_DATA_ID);
+            commit(CLEAR_LABEL_ID);
+        },
+
+        async previous_image ({ commit, getters, dispatch }, label_task_id) {
+
+            console.log('getting previous image')
+
+            var input_data_id = undefined;
+            var label_id = undefined;
+
+            if (getters.input_data_id == undefined) {
+                let data = await getLatestLabeledImage(label_task_id);
+
+                if (data != undefined) {
+                    input_data_id = data.input_data_id;
+                    label_id = data.label_id;
+                }
+            }
+            else {
+                let data = await getPrecedingLabeledImage(getters.input_data_id, label_task_id);
+
+                if (data != undefined) {
+                    input_data_id = data.input_data_id;
+                    label_id = data.label_id;
+                }
+            }
+
+            if (input_data_id != undefined && label_id != undefined) {
+                commit(SET_INPUT_DATA_ID, input_data_id);
+                commit(SET_LABEL_ID, label_id);
+                commit(SET_UNLABELED_IMAGES_AVAILABLE, true);
+                commit(SET_PREVIOUS_IMAGES_AVAILABLE, true);
+            }
+            else {
+                commit(SET_PREVIOUS_IMAGES_AVAILABLE, false);
             }
         },
-        async get_input_data_id_of_next_image ({ commit, getters }, label_task_id) {
-            // console.log('get_input_data_id_of_next_image:::::::::4 ')
+
+        async next_image ({ commit, getters, dispatch }, label_task_id) {
+
+            console.log('getting next image')
+
             var input_data_id = undefined;
+            var label_id = undefined;
 
             // firstly, check if the user has labeled another image following the current one
 
             if (getters.input_data_id != undefined) {
-                input_data_id = await getFollowingLabeledImage(getters.input_data_id, label_task_id)
-                // console.log('getFollowingLabeledImage (A) ', input_data_id)
+                let next_data = await getFollowingLabeledImage(getters.input_data_id, label_task_id);
+
+                if (next_data != undefined) {
+                    input_data_id = next_data.input_data_id;
+                    label_id = next_data.label_id;
+                }
             }
 
             // if no next image found, request a new unlabeled image for the user to label
 
             if (input_data_id == undefined) {
-                input_data_id = await getUnlabeledImage(label_task_id)
-                // console.log('getUnlabeledImage (B) ', input_data_id)
+                let data = await getUnlabeledImage(label_task_id)
+
+                if (data != undefined) {
+                    input_data_id = data.input_data_id;
+                    label_id = data.label_id;
+                }
             }
 
-            if (input_data_id != undefined) {
-                commit(SET_INPUT_DATA_ID, input_data_id)
+            if (input_data_id != undefined && label_id != undefined) {
+                commit(SET_INPUT_DATA_ID, input_data_id);
+                commit(SET_LABEL_ID, label_id);
+                commit(SET_UNLABELED_IMAGES_AVAILABLE, true);
+                commit(SET_PREVIOUS_IMAGES_AVAILABLE, true);
             }
-        },
+            else {
+                // clear input_data_id and label_id
+
+                commit(CLEAR_INPUT_DATA_ID);
+                commit(CLEAR_LABEL_ID);
+                commit(SET_UNLABELED_IMAGES_AVAILABLE, false);
+            }
+        }
     },
     getters: {
         input_data_id: state => {
             return state.input_data_id;
+        },
+        label_id: state => {
+            return state.label_id;
         }
     }
 }
