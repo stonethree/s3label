@@ -52,6 +52,9 @@
                 <div id="clear_canvas_container" class="col">
                     <button type="submit" @click="clearCanvas">Clear canvas</button>
                 </div>
+                <div>
+                    <b-btn v-b-modal.hotkeyModal>Keyboard Shortcuts</b-btn>
+                </div>
             </div>
             </div>
         </div>
@@ -73,6 +76,13 @@
                             ></drawing-canvas>
             </div>
         </div>
+
+        <b-modal id="hotkeyModal" title="Keyboard Shortcuts" ok-only>
+            <b-table striped hover :items="keyboard_shortcuts">
+                <span slot="action" slot-scope="data" v-html="data.value">     
+                </span>
+            </b-table>
+        </b-modal>
     </div>
 </template>
 
@@ -100,7 +110,19 @@ export default {
             active_label: undefined,
             stroke_slider_value: "2",
             opacity_slider_value: "50",
-            clear_canvas_event: false
+            clear_canvas_event: false,
+            keyboard_shortcuts: [
+                { key: 'Left', action: 'Go to previous image' },
+                { key: 'Right', action: 'Go to next image or request new image to label' },
+                { key: 'Space bar', action: 'Temporarily activate "select" mode' },
+                { key: 'Shift', action: 'Temporarily activate "append" mode' },
+                { key: 'Alt', action: 'Temporarily activate "erase" mode' },
+                { key: 'Ctrl+Z', action: 'Undo <br><b>NB: does not currently undo canvas delete!</b>' },
+                { key: 'Ctrl+Y', action: 'Redo' },
+                { key: 'Escape', action: 'Deselect all regions' },
+                { key: 'Delete', action: 'Delete selected region' },
+                // { key: 'Ctrl+Enter', action: 'Mark/unmark image as "completed"<br><em>This will notify an admin user to check the labeled image</em>' },
+            ]
         };
     },
     components: {
@@ -255,7 +277,7 @@ export default {
                 // console.log('key not found (down):', e.code);
             }
 
-            if (!key_handled) {
+            if (key_handled) {
                 e.stopPropagation();
                 e.preventDefault();
             }
@@ -292,7 +314,7 @@ export default {
                 // console.log('key not found (up):', e.code);
             }
 
-            if (!key_handled) {
+            if (key_handled) {
                 e.stopPropagation();
                 e.preventDefault();
             }
