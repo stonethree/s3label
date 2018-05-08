@@ -1,39 +1,23 @@
 <template>
-  <div id="app" class="container-fluid">
-    <div class="row justify-content-center">
-      <h1>S3 Label</h1>
+    <div id="app" class="container-fluid">
+        <div style="position: relative">
+        <div class="row justify-content-center">
+            <b-nav pills>
+                <b-nav-item v-if="!is_logged_in" :to="'/login'" >Login</b-nav-item>
+                <b-nav-item v-else :to="'/logout'">Logout</b-nav-item>
+                <b-nav-item :to="'/label_tasks'" variant="secondary">Label Tasks</b-nav-item>
+                <b-nav-item :to="'/image_labeler'">Labeler</b-nav-item>
+                <b-nav-item :to="'/image_grid'">Image Grid</b-nav-item>
+                <b-nav-item v-if="is_admin_user && is_logged_in" :to="'/admin'">Admin</b-nav-item>
+            </b-nav>
+        </div>
+        <div style="position: absolute; left: 0; top: 0em">
+            <b-img src="../static/stone-three-mining-logo_2.png"></b-img>
+            <h1>S3 Label</h1>
+        </div>
+        <router-view></router-view>
     </div>
-    <div class="row justify-content-center">
-      <!-- <div class="col"></div> -->
-      <!-- <div class="col"> -->
-        <nav class="navbar">
-        <ul class="nav justify-content-center nav-justified">
-          <li v-if="!is_logged_in" class="nav-item ">
-            <router-link v-bind:to="'/login'" class="nav-link ">Login</router-link>
-          </li>
-          <li v-else class="nav-item ">
-            <router-link v-bind:to="'/logout'" class="nav-link ">Logout</router-link>
-          </li>
-          <li class="nav-item">
-            <router-link v-bind:to="'/label_tasks'" class="nav-link ">Label Tasks</router-link>
-          </li>
-          <li class="nav-item">
-            <router-link v-bind:to="'/image_labeler'" class="nav-link ">Labeler</router-link>
-          </li>
-          <li class="nav-item">
-            <router-link v-bind:to="'/image_grid'" class="nav-link ">Image Grid</router-link>
-          </li>
-          <li v-if="is_admin_user && is_logged_in" class="nav-item">
-            <router-link v-bind:to="'/admin'" class="nav-link ">Admin</router-link>
-          </li>
-        </ul>
-        </nav>
-      </div>
-      <!-- <div class="col"></div> -->
-    <!-- </div> -->
-    <!-- the router outlet, where all matched components will be viewed -->
-    <router-view></router-view>
-  </div>
+    </div>
 </template>
 
 <script>
@@ -52,6 +36,13 @@ export default {
 </script>
 
 <style>
+img { display: inline }
+h1 { display: inline }
+a { color: #000 }
+.nav { margin-bottom: 1.6em;
+       margin-top: 0.7em; }
+.nav-pills .nav-link.active, .nav-pills .show>.nav-link { color: #fff;
+                                                          background-color: black}
 /* #app {
   font-family: "Avenir", Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;

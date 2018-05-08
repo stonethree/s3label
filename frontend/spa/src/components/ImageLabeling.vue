@@ -473,6 +473,7 @@ export default {
 </script>
 
 <style>
+#drawing-tools { border:black }
 .modal-button { padding-top: 0.2em }
 /* .canvas-section div { padding-top: 2em } */
 /* #image_labeling {
