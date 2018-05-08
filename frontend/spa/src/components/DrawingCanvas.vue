@@ -4,12 +4,13 @@
             <label-status v-bind:label-id="label_id" v-bind:user-completed-toggle="label_status_toggler.user_complete" style="width:500px;height:350px; position:absolute; left:50%; top:-2em; transform: translate(-50%, 0);"></label-status>
         </div>
         <div id="canvasesdiv" style="position:relative;" @mousedown="mouseDownHandler" @mouseup="mouseUpHandler" @mousemove="mouseMoveHandler">
-            <!-- <div style="position:absolute; display: inline;">
-                <p>testing123</p>
-                </div> -->
+            
             <canvas id="canvas-fg" width="900" height="350" style="width:900px;height:350px; border: 1px solid #ccc; z-index: 3; position:absolute; left:50%; top:0px; transform: translate(-50%, 0);"></canvas>
             <canvas id="canvas-bg" width="900" height="350" style="width:900px;height:350px; border: 1px solid #ccc; z-index: 2; position:absolute; left:50%; top:0px; transform: translate(-50%, 0);"></canvas>
             <canvas id="canvas-pattern" width="900" height="350" style="width:900px;height:350px; border: 1px solid #ccc; z-index: 1; position:absolute; left:50%; top:0px; transform: translate(-50%, 0);"></canvas>
+            <span v-if="input_data_id == undefined" class="image-not-found">No more unlabeled images available for this label task. Thanks for the effort! 
+                <br>You may choose to label images from another <router-link v-bind:to="'/label_tasks'" >label task</router-link> if any are available.
+            </span>
         </div>
     </div>
 </template>
@@ -214,10 +215,8 @@ export default {
             this.setCanvasSize(canvas_bg, w, h, this.padX, this.padY);
             this.setCanvasSize(canvas_fg, w, h, this.padX, this.padY);
 
-            ctx2.fillStyle = "hsl(25, 80%, 80%)";
+            ctx2.fillStyle = "hsl(25, 40%, 100%)";
             ctx2.fillRect(this.padX, this.padY, w, h);
-            ctx2.fillStyle = "hsl(25, 80%, 10%)";
-            ctx2.fillText("No unlabeled images available for this label task", 200, 200);
 
             this.draw_pattern(w, h);
         },
@@ -429,7 +428,6 @@ export default {
             this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
             this.polygons = [];
             this.polygons_redo = [];
-            console.log('(CLEARING CANVAS)')
         },
 
         drawAllPolygons: function (context, polygon_list) {
@@ -588,7 +586,6 @@ export default {
         },
 
         delete: function() {
-            console.log('DELETE CALLED')
             console.log('num orig polys:', this.polygons.length, 'num redo polys:', this.polygons_redo.length)
             this.polygons_undo.push(...this.polygons.filter(poly => poly.selected));
             this.polygons = this.polygons.filter(poly => !poly.selected);
@@ -597,7 +594,6 @@ export default {
         },
         
         deselect: function() {
-            console.log('DESELECT CALLED')
             for (let i = 0; i < this.polygons.length; i++) {
                 this.polygons[i].selected = false;
             }
@@ -625,6 +621,13 @@ export default {
 
 <style>
 .canvas-section div { padding-top: 2em }
+.image-not-found { position:absolute; 
+                   left: 0; 
+                   text-align: center; 
+                   /* top: 0;  */
+                   transform: translate(0, 300%); 
+                   width: 100%; 
+                   z-index: 4 }
 /* #drawing_canvas {
   font-family: 'Avenir', Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
