@@ -80,7 +80,7 @@ def count_input_data_items_per_user_per_label_task(engine, label_task_id=None, u
     else:
         where_clause = ''
 
-    sql_query = """select * from item_counts {}""".format(where_clause)
+    sql_query = """select * from item_counts {} order by user_id, label_task_id""".format(where_clause)
 
     df = pd.read_sql_query(sql_query, engine, params={'label_task_id': label_task_id, 'user_id': user_id})
 
@@ -294,12 +294,17 @@ def get_latest_label(engine, user_id, label_task_id, input_data_id):
     :return:
     """
 
-    sql_query = """select * from latest_label_history
+    sql_query = """select *, label_serialised::text label_serialised_text from latest_label_history
         where user_id = %(user_id)s and label_task_id = %(label_task_id)s and input_data_id = %(input_data_id)s"""
 
     df = pd.read_sql_query(sql_query, engine, params={'user_id': user_id,
                                                       'label_task_id': label_task_id,
                                                       'input_data_id': input_data_id})
+
+    # use the text
+
+    df['label_serialised'] = df['label_serialised_text']
+    df.drop('label_serialised_text', axis=1, inplace=True)
 
     return df
 

@@ -12,7 +12,7 @@ def test_create_new_label_history(refresh_db_every_time, db_connection_sqlalchem
     engine = db_connection_sqlalchemy
     label_hist_id = sql_queries.create_new_label_history(engine,
                                                          label_id=1,
-                                                         serialised_label='{{unit_test_example: 1238}}')
+                                                         serialised_label='{"unit_test_example": 1238}')
 
     assert label_hist_id == 7
 

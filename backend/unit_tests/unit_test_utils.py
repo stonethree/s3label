@@ -8,6 +8,7 @@ def get_db_config():
     return {'username': 'postgres',
             'password': 'postgres',
             'ip': 'localhost',
+            'port': '5433',
             'database_name': 's3_label_test'}
 
 
@@ -16,6 +17,7 @@ def connect_to_db_psycopg():
     conn = psycopg2.connect(host=config['ip'],
                             database=config['database_name'],
                             user=config['username'],
+                            port=config['port'],
                             password=config['password'])
 
     return conn
@@ -23,10 +25,11 @@ def connect_to_db_psycopg():
 
 def connect_to_db_sqlalchemy():
     config = get_db_config()
-    engine = create_engine('postgresql://{}:{}@{}:5432/{}'.format(config['username'],
-                                                                  config['password'],
-                                                                  config['ip'],
-                                                                  config['database_name']))
+    engine = create_engine('postgresql://{}:{}@{}:{}/{}'.format(config['username'],
+                                                                config['password'],
+                                                                config['ip'],
+                                                                config['port'],
+                                                                config['database_name']))
 
     return engine
 

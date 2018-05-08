@@ -14,10 +14,11 @@ def create_app(db_config, image_folder):
     # pip install -U flask-cors
     CORS(app, resources={r"/*": {"origins": "*"}})
 
-    engine = create_engine('postgresql://{}:{}@{}:5432/{}'.format(db_config['username'],
-                                                                  db_config['password'],
-                                                                  db_config['ip'],
-                                                                  db_config['database_name']))
+    engine = create_engine('postgresql://{}:{}@{}:{}/{}'.format(db_config['username'],
+                                                                db_config['password'],
+                                                                db_config['ip'],
+                                                                db_config['port'],
+                                                                db_config['database_name']))
 
     print('Current database being used: ', db_config['database_name'])
 
