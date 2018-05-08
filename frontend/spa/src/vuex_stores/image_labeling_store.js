@@ -71,6 +71,8 @@ export const StoreImageLabeling = {
             console.log('leaving page')
             commit(CLEAR_INPUT_DATA_ID);
             commit(CLEAR_LABEL_ID);
+            commit(SET_UNLABELED_IMAGES_AVAILABLE, true);
+            commit(SET_PREVIOUS_IMAGES_AVAILABLE, true);
         },
 
         async previous_image ({ commit, getters, dispatch }, label_task_id) {

@@ -34,6 +34,8 @@ export const StoreLogin = {
         [LOGGED_OUT] (state) {
             state.is_logged_in = false;
             state.pending = false;
+            state.user_id = undefined;
+            state.user_type = NORMAL_USER;
         },
         [SET_USER_ID] (state, user_id) {
             state.user_id = user_id;
