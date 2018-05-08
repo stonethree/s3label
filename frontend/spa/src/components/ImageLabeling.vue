@@ -224,17 +224,21 @@ export default {
 
         // this.save_labels_toggler = !this.save_labels_toggler;
 
-        console.log('save now!')
-
         // get current polygons array from drawing canvas component (NB: this isn't the most elegant solution, but it will do for now)
-        var polygons = this.$refs.mySubComponent.fetch_polygons();
+        var tmp = this.$refs.mySubComponent.fetch_polygons();
+        var polygons = tmp.polygons;
+        var edited = tmp.edited;
 
-        var vm = this;
+        if (edited) {
+            console.log('save now!')
 
-        uploadLabels(this.input_data_id, this.label_task_id, polygons)  // upload the labels from the previous image
-        .then( function() {
-            vm.$store.dispatch('image_labeling/leave_page');
-        });
+            var vm = this;
+
+            uploadLabels(this.input_data_id, this.label_task_id, polygons)  // upload the labels from the previous image
+            .then( function() {
+                vm.$store.dispatch('image_labeling/leave_page');
+            });
+        }
 
         console.log('-----  leaving page')
 
@@ -242,6 +246,51 @@ export default {
     },
 
     methods: {
+        switch_image: async function (next_or_previous='next_image') {
+            // switch to next or previous image
+
+            if (next_or_previous != 'next_image' && next_or_previous != 'previous_image') {
+                throw Error('Unexpected next_ore_previous parameter. Unable to switch image.');
+                return -1;
+            }
+
+            var old_input_data_id = this.input_data_id;
+            var old_label_id = this.label_id;
+
+            // get current polygons array from drawing canvas component (NB: this isn't the most elegant solution, but it will do for now)
+            var tmp = this.$refs.mySubComponent.fetch_polygons();
+            var polygons = tmp.polygons;
+            var edited = tmp.edited;
+
+            var vm = this;
+
+            if (edited) {
+                await uploadLabels(this.input_data_id, this.label_task_id, polygons)  // upload the labels from the previous image
+                .catch(function(error) {
+                    console.log('error getting label ID:', error, vm.label_task_id, vm.input_data_id, vm.user_id);
+                })
+            }
+
+            await vm.$store.dispatch('image_labeling/' + next_or_previous, vm.label_task.label_task_id)    // switch to the next image
+            .then(function() {
+                console.log('should load labels now...............', vm.input_data_id, old_input_data_id, vm.label_id, old_label_id)
+                if (vm.input_data_id != old_input_data_id) {
+                    console.log('loading image labels for:', vm.input_data_id, vm.label_task_id, vm.user_id)
+                    
+                    // load the labels from the next image
+                    loadLabels(vm.input_data_id, vm.label_task_id)
+                    .then(function(polygons_new) {
+                        if (polygons_new != undefined) {
+                            console.log('setting polygons:', polygons_new)
+                            vm.$refs.mySubComponent.set_polygons(polygons_new);
+                        }
+                    });
+
+                }
+            });
+
+        },
+
         keyDownHandler: function(e) {
             var key_handled = false;
 
@@ -264,73 +313,13 @@ export default {
             }
             else if (e.code === "ArrowLeft") {
 
-                var old_input_data_id = this.input_data_id;
-
-                // get current polygons array from drawing canvas component (NB: this isn't the most elegant solution, but it will do for now)
-                var polygons = this.$refs.mySubComponent.fetch_polygons();
-
-                var vm = this;
-
-                uploadLabels(this.input_data_id, this.label_task_id, polygons)  // upload the labels from the previous image
-                .catch(function(error) {
-                    console.log('error getting label ID:', error, vm.label_task_id, vm.input_data_id, vm.user_id);
-                })
-                .then( function() {
-                    vm.$store.dispatch('image_labeling/previous_image', vm.label_task.label_task_id)    // switch to the previous image
-                    .then(function() {
-                    console.log('should load labels now...............', vm.input_data_id, old_input_data_id, vm.label_id, old_label_id)
-                    if (vm.input_data_id != old_input_data_id) {
-                        console.log('loading image labels for:', vm.input_data_id, vm.label_task_id, vm.user_id)
-                        
-                        // load the labels from the next image
-                        loadLabels(vm.input_data_id, vm.label_task_id)
-                        .then(function(polygons_new) {
-                            if (polygons_new != undefined) {
-                                console.log('setting polygons:', polygons_new)
-                                vm.$refs.mySubComponent.set_polygons(polygons_new);
-                            }
-                        });
-
-                    }
-                    });
-                });  
+                this.switch_image('previous_image');
                 
                 key_handled = true;
             }
             else if (e.code === "ArrowRight") {
-                var old_input_data_id = this.input_data_id;
-                var old_label_id = this.label_id;
 
-                // get current polygons array from drawing canvas component (NB: this isn't the most elegant solution, but it will do for now)
-                var polygons = this.$refs.mySubComponent.fetch_polygons();
-
-                var vm = this;
-
-                console.log('Arrow right. this.input_data_id:', this.input_data_id)
-
-                uploadLabels(this.input_data_id, this.label_task_id, polygons)  // upload the labels from the previous image
-                .catch(function(error) {
-                    console.log('error getting label ID:', error, vm.label_task_id, vm.input_data_id, vm.user_id);
-                })
-                .then( function() {
-                    vm.$store.dispatch('image_labeling/next_image', vm.label_task.label_task_id)    // switch to the next image
-                    .then(function() {
-                    console.log('should load labels now...............', vm.input_data_id, old_input_data_id, vm.label_id, old_label_id)
-                    if (vm.input_data_id != old_input_data_id) {
-                        console.log('loading image labels for:', vm.input_data_id, vm.label_task_id, vm.user_id)
-                        
-                        // load the labels from the next image
-                        loadLabels(vm.input_data_id, vm.label_task_id)
-                        .then(function(polygons_new) {
-                            if (polygons_new != undefined) {
-                                console.log('setting polygons:', polygons_new)
-                                vm.$refs.mySubComponent.set_polygons(polygons_new);
-                            }
-                        });
-
-                    }
-                    });
-                });
+                this.switch_image('next_image');
 
                 key_handled = true;
             }

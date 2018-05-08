@@ -95,6 +95,7 @@ export default {
     data: function() {
         return {
             isDrawing: false,
+            edited: false,
             currentPath: [],
             padX: 80,           // TODO: the coordinates in the polygons object must not depend on the padX and padY values
             padY: 80,
@@ -194,11 +195,14 @@ export default {
         set_polygons: function(polygons) {
             // the parent component can set the polygons using this method in order to load the labels from the backend
             this.polygons = polygons;
+            this.edited = false;
         },
 
         fetch_polygons: function() {
             // the parent component can fetch the polygons using this method in order to save the labels to the backend
-            return this.polygons;
+            return { polygons: this.polygons,
+                     edited: this.edited
+            };
         },
 
         draw_image_unavailable_placeholder: function() {
@@ -314,6 +318,7 @@ export default {
 
         processPolygon: function () {
             this.isDrawing = false;
+            this.edited = true;
 
             this.ctx.closePath();
             if (this.use_stroke) {
@@ -428,6 +433,7 @@ export default {
             this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
             this.polygons = [];
             this.polygons_redo = [];
+            this.edited = true;
         },
 
         drawAllPolygons: function (context, polygon_list) {
@@ -577,12 +583,14 @@ export default {
             else if (this.polygons.length > 0) {
                 this.polygons_redo.push(this.polygons.pop());
             }
+            this.edited = true;
         },
 
         redo: function() {
             if (this.polygons_redo.length > 0) {
                 this.polygons.push(this.polygons_redo.pop());
             }
+            this.edited = true;
         },
 
         delete: function() {
@@ -591,6 +599,7 @@ export default {
             this.polygons = this.polygons.filter(poly => !poly.selected);
             console.log('num final polys:', this.polygons.length, 'num redo polys:', this.polygons_redo.length)
             this.drawAllPolygons(this.ctx, this.polygons);
+            this.edited = true;
         },
         
         deselect: function() {
@@ -598,6 +607,7 @@ export default {
                 this.polygons[i].selected = false;
             }
             this.drawAllPolygons(this.ctx, this.polygons);
+            this.edited = true;
         },
 
     },
