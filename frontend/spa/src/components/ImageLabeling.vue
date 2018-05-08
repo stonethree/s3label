@@ -158,7 +158,6 @@ export default {
                 { key: 'Escape', action: 'Deselect all regions' },
                 { key: 'Delete', action: 'Delete selected region' },
                 { key: 'H', action: 'Temporarily hide labels<br><em>Useful for checking the edge of the label against the underlying image</em>' },
-                // { key: 'Ctrl+Enter', action: 'Mark/unmark image as "completed"<br><em>This will notify an admin user to check the labeled image</em>' },
             ]
         };
     },
@@ -247,10 +246,6 @@ export default {
         window.removeEventListener('keyup', this.keyUpHandler);
     },
     beforeRouteLeave (to, from, next) {
-        // notify drawing canvas to save image labels before navigating away
-
-        // this.save_labels_toggler = !this.save_labels_toggler;
-
         // get current polygons array from drawing canvas component (NB: this isn't the most elegant solution, but it will do for now)
         var tmp = this.$refs.mySubComponent.fetch_polygons();
         var polygons = tmp.polygons;
@@ -352,11 +347,6 @@ export default {
             else if (e.ctrlKey && e.code === "KeyY") {
                 console.log("Redo");
                 this.redo_event = !this.redo_event;
-
-                key_handled = true;
-            }
-            else if (e.ctrlKey && e.code === "Enter") {
-                // this.label_status_toggler.user_complete = !this.label_status_toggler.user_complete;
 
                 key_handled = true;
             }

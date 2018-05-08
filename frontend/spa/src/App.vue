@@ -11,7 +11,7 @@
                 <b-nav-item v-if="is_admin_user && is_logged_in" :to="'/admin'">Admin</b-nav-item>
             </b-nav>
         </div>
-        <div style="position: absolute; left: 0; top: 0em">
+        <div class="s3-logo">
             <b-img src="../static/stone-three-mining-logo_2.png"></b-img>
             <h1>S3 Label</h1>
         </div>
@@ -36,6 +36,9 @@ export default {
 </script>
 
 <style>
+.s3-logo { position: absolute; 
+           left: 0; 
+           top: 0.7em }
 img { display: inline }
 h1 { display: inline }
 a { color: #000 }
