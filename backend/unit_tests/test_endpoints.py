@@ -73,6 +73,23 @@ def test_get_datasets(auth, refresh_db_once):
     assert datasets[0]['dataset_description'] == 'This is a test. We want to segment rock images'
 
 
+def test_get_label_examples(auth, refresh_db_once):
+    auth.login()
+
+    rv_examples = auth.client.get(auth.base_url + '/examples/label_tasks/1', headers=auth.auth_header())
+
+    assert rv_examples.status_code == 200
+
+    examples = json_of_response(rv_examples)
+
+    assert len(examples) == 2
+    assert examples[0]['example_labeling_id'] == 1
+    assert examples[0]['title'] == 'Example of good labeling'
+    assert examples[0]['description'] == 'Here you can see a well labeled image'
+    # assert examples[0]['image_path'] == 'unit_test_data/example_1.jpg'
+    assert 'image_path' not in examples[0].keys()
+
+
 def test_count_input_data_items_per_user_per_label_task_as_non_admin(auth, refresh_db_once):
     auth.login()
 

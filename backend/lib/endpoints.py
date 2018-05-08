@@ -125,6 +125,24 @@ def get_image(input_image_id):
         return resp
 
 
+@ebp.route('/image_labeler/api/v1.0/example_images/<int:example_labeling_id>', methods=['GET'])
+# @fje.jwt_required
+def get_label_example_image(example_labeling_id):
+    engine = current_app.config['engine']
+    image_folder = current_app.config['image_folder']
+    im_path = sql_queries.get_example_image_path(engine, example_labeling_id)
+
+    im_path = os.path.abspath(os.path.join(image_folder, im_path))
+
+    if im_path is not None and os.path.exists(im_path):
+        return send_file(im_path)
+    else:
+        print('Could not find image: ', im_path)
+        resp = make_response(jsonify(error='Example labeled image not found'), 404)
+        resp.mimetype = "application/javascript"
+        return resp
+
+
 @ebp.route('/image_labeler/api/v1.0/labeled_data/label_tasks/<int:label_task_id>', methods=['GET'])
 @fje.jwt_required
 def get_next_or_preceding_input_data_item(label_task_id):
@@ -300,6 +318,30 @@ def get_all_user_input_data(label_task_id, user_id):
         return resp
     except Exception:
         resp = make_response(jsonify(error='No input data found for this user and/or label task'), 404)
+        resp.mimetype = "application/javascript"
+        return resp
+
+
+@ebp.route('/image_labeler/api/v1.0/examples/label_tasks/<int:label_task_id>', methods=['GET'])
+@fje.jwt_required
+def get_label_examples(label_task_id):
+    """
+    Get the example label images for this label task, to show user how to label
+
+    :param label_task_id:
+    :return:
+    """
+
+    engine = current_app.config['engine']
+
+    df_examples = sql_queries.get_example_labelings(engine, label_task_id)
+
+    if df_examples is not None:
+        resp = make_response(df_examples.to_json(orient='records'), 200)
+        resp.mimetype = "application/javascript"
+        return resp
+    else:
+        resp = make_response(jsonify(error='No example labels found'), 404)
         resp.mimetype = "application/javascript"
         return resp
 

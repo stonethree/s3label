@@ -52,8 +52,14 @@
                 <div id="clear_canvas_container" class="col">
                     <button type="submit" @click="clearCanvas">Clear canvas</button>
                 </div>
-                <div>
-                    <b-btn v-b-modal.hotkeyModal>Keyboard Shortcuts</b-btn>
+                <div class="col">
+                    <div class="row modal-button">
+                        <b-btn v-b-modal.hotkeyModal>Keyboard Shortcuts</b-btn>
+                    </div>
+                    <div class="row modal-button">
+                        <b-btn v-if="label_examples != undefined" v-b-modal.exampleLabelingsModal>Labeling Examples</b-btn>
+                        <b-btn v-else v-b-modal.exampleLabelingsModal disabled>Labeling Examples</b-btn>
+                    </div>
                 </div>
             </div>
             </div>
@@ -87,6 +93,18 @@
                 <span slot="action" slot-scope="data" v-html="data.value">     
                 </span>
             </b-table>
+        </b-modal>
+
+        <b-modal id="exampleLabelingsModal" title="Labeling Examples" ok-only size="lg">
+            <div>
+                <b-carousel id="examples-carousel" controls indicators img-width="800" img-height="600">
+                    <b-carousel-slide v-for="example in label_examples" 
+                                      :key="example.example_labeling_id"
+                                      :caption="example.title" 
+                                      :text="example.description" 
+                                      :img-src="baseUrl + '/example_images/' + example.example_labeling_id"></b-carousel-slide>
+                </b-carousel>
+            </div>
         </b-modal>
     </div>
 </template>
@@ -125,6 +143,8 @@ export default {
             deselect_event: false,
             undo_event: false,
             redo_event: false,
+            label_examples: undefined,
+            baseUrl: baseUrl,
             keyboard_shortcuts: [
                 { key: 'Left', action: 'Go to previous image' },
                 { key: 'Right', action: 'Go to next image or request new image to label' },
@@ -214,6 +234,10 @@ export default {
                 }
             });
         }
+
+        // get labeling examples to illustrate to user how to label for this task
+
+        this.get_label_examples();
     },
     beforeDestroy () {
         window.removeEventListener('keydown', this.keyDownHandler);
@@ -289,6 +313,28 @@ export default {
                 }
             });
 
+        },
+
+        get_label_examples: function() {
+            let access_token = localStorage.getItem("s3_access_token");
+
+            let config = {
+                headers: {
+                Authorization: "Bearer " + access_token
+                }
+            };
+
+            var vm = this;
+
+            axios
+            .get("examples/label_tasks/" + this.label_task_id, config)
+            .then(function(response) {
+                vm.label_examples = response.data;
+            })
+            .catch(function(error) {
+                console.log(error);
+                vm.label_examples = undefined;
+            });
         },
 
         keyDownHandler: function(e) {
@@ -414,6 +460,7 @@ export default {
 </script>
 
 <style>
+.modal-button { padding-top: 0.2em }
 /* .canvas-section div { padding-top: 2em } */
 /* #image_labeling {
   font-family: 'Avenir', Helvetica, Arial, sans-serif;

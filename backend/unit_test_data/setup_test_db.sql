@@ -28,11 +28,17 @@ create table label_tasks(
     description VARCHAR NOT NULL,
     type VARCHAR NOT NULL
         CHECK (type = 'semantic_segmentation' or type = 'instance_segmentation'),
-    example_labeling VARCHAR,
 	default_tool VARCHAR DEFAULT 'freehand' NOT NULL
 	    CHECK (default_tool = 'freehand' or default_tool = 'polygon' or default_tool = 'select'),
 	permit_overlap BOOLEAN DEFAULT false NOT NULL,
 	label_classes VARCHAR DEFAULT '[{"label_class": "foreground_object", "color": "[0,255,0]"}, {"label_class": "background", "color": "[0,0,255]"}]' NOT NULL);
+
+create table example_labeling(
+    example_labeling_id SERIAL PRIMARY KEY,
+    label_task_id INTEGER REFERENCES label_tasks(label_task_id) ON DELETE CASCADE,
+    image_path VARCHAR NOT NULL,
+    title VARCHAR NOT NULL,
+    description VARCHAR NOT NULL);
 
 create table input_data(
     input_data_id SERIAL PRIMARY KEY,
@@ -43,7 +49,6 @@ create table input_data(
 
 create table users(
     user_id SERIAL PRIMARY KEY,
-    user_code VARCHAR UNIQUE NOT NULL,
     password VARCHAR NOT NULL,
     first_name VARCHAR NOT NULL,
     last_name VARCHAR NOT NULL,
@@ -82,7 +87,7 @@ create table label_history(
     label_history_id SERIAL PRIMARY KEY,
     label_id INTEGER REFERENCES labels(label_id) ON DELETE CASCADE,
     timestamp_edit TIMESTAMPTZ,
-    label_serialised JSONB NOT NULL);     -- TODO: input_data's serialised_label field should be of type json
+    label_serialised JSONB NOT NULL);
 --    UNIQUE (label_id, timestamp_edit));
 ALTER TABLE label_history ALTER COLUMN timestamp_edit SET DEFAULT now();
 
@@ -178,6 +183,10 @@ INSERT INTO label_tasks(dataset_group_id, title, description, type) VALUES (3, '
 INSERT INTO label_tasks(dataset_group_id, title, description, type) VALUES (1, 'Rock particle segmentation: Initially unlabeled', 'Multi-instance segmentation for rock particles', 'instance_segmentation');
 INSERT INTO label_tasks(dataset_group_id, title, description, type) VALUES (4, 'No images associated', 'Multi-instance segmentation for rock particles', 'instance_segmentation');
 
+INSERT INTO example_labeling(label_task_id, image_path, title, description) VALUES (1, 'unit_test_data/example_labelings/example_1.jpg', 'Example of good labeling', 'Here you can see a well labeled image');
+INSERT INTO example_labeling(label_task_id, image_path, title, description) VALUES (1, 'unit_test_data/example_labelings/example_2.jpg', 'Example of bad labeling', 'Here you can see a <em>badly</em> labeled image');
+INSERT INTO example_labeling(label_task_id, image_path, title, description) VALUES (2, 'unit_test_data/example_labelings/example_1.jpg', 'Example of good labeling', 'Here you can see a well labeled image');
+
 INSERT INTO input_data(dataset_id, data_path, sha1_hash) VALUES (1, 'test_images/image.jpg', 'abc1');
 INSERT INTO input_data(dataset_id, data_path, sha1_hash) VALUES (1, 'test_images/image2.jpg', 'abc2');
 INSERT INTO input_data(dataset_id, data_path, sha1_hash) VALUES (2, 'test_images/image3.jpg', 'abc3');
@@ -185,10 +194,10 @@ INSERT INTO input_data(dataset_id, data_path, sha1_hash) VALUES (2, 'test_images
 INSERT INTO input_data(dataset_id, data_path, sha1_hash) VALUES (2, 'test_images/image_test.jpg', 'abc5');
 INSERT INTO input_data(dataset_id, data_path, sha1_hash) VALUES (3, 'test_images/froth_image.jpg', 'abc6');
 
-INSERT INTO users (user_code, password, first_name, last_name, email, is_admin) VALUES ('3Hx45', 'abc', 'Shaun', 'Irwin', 'shaun.irwin@stonethree.com', true);
-INSERT INTO users (user_code, password, first_name, last_name, email, is_admin) VALUES ('79ACF', 'def', 'Kristo', 'Botha', 'kristo.botha@stonethree.com', true);
-INSERT INTO users (user_code, password, first_name, last_name, email, is_admin) VALUES ('U34DA', 'ghi', 'Jimmy', 'Smith', 'test@gmail.com', false);
-INSERT INTO users (user_code, password, first_name, last_name, email, is_admin) VALUES ('E23ZG', 'jkl', 'Marcus', 'Octavius', 'test2@gmail.com', false);
+INSERT INTO users (password, first_name, last_name, email, is_admin) VALUES ('abc', 'Shaun', 'Irwin', 'shaun.irwin@stonethree.com', true);
+INSERT INTO users (password, first_name, last_name, email, is_admin) VALUES ('def', 'Kristo', 'Botha', 'kristo.botha@stonethree.com', true);
+INSERT INTO users (password, first_name, last_name, email, is_admin) VALUES ('ghi', 'Jimmy', 'Smith', 'test@gmail.com', false);
+INSERT INTO users (password, first_name, last_name, email, is_admin) VALUES ('jkl', 'Marcus', 'Octavius', 'test2@gmail.com', false);
 
 INSERT INTO users_label_tasks (user_id, label_task_id) VALUES (1, 1);
 INSERT INTO users_label_tasks (user_id, label_task_id) VALUES (1, 2);

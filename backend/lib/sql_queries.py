@@ -229,6 +229,26 @@ def get_input_data_path(engine, input_data_id):
         return None
 
 
+def get_example_image_path(engine, example_labeling_id):
+    """
+    Get the path to the example labeled image item on disk
+
+    :param engine: SQLAlchemy engine
+    :param example_labeling_id: ID of the example label image
+    :return: path to the data item
+    """
+
+    sql_query = 'SELECT image_path FROM example_labeling ' \
+                'WHERE example_labeling_id=%(example_labeling_id)s'
+
+    df = pd.read_sql_query(sql_query, engine, params={'example_labeling_id': example_labeling_id})
+
+    if len(df) > 0:
+        return df.values[0][0]
+    else:
+        return None
+
+
 def get_label_tasks(engine, user_id=None):
     """
     Get list of available label tasks
@@ -369,6 +389,26 @@ def get_label_by_id(engine, label_id):
     sql_query = """select * from labels where label_id = %(label_id)s"""
 
     df = pd.read_sql_query(sql_query, engine, params={'label_id': label_id})
+
+    if len(df) > 0:
+        return df
+    else:
+        return None
+
+
+def get_example_labelings(engine, label_task_id):
+    """
+    Get example labelings for this label task
+
+    :param engine:
+    :param label_task_id:
+    :return:
+    """
+
+    sql_query = """select example_labeling_id, title, description from example_labeling 
+        where label_task_id = %(label_task_id)s"""
+
+    df = pd.read_sql_query(sql_query, engine, params={'label_task_id': label_task_id})
 
     if len(df) > 0:
         return df

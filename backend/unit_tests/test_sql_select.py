@@ -264,7 +264,6 @@ def test_get_label_tasks(refresh_db_once, db_connection_sqlalchemy):
                      'title',
                      'description',
                      'type',
-                     'example_labeling',
                      'default_tool',
                      'permit_overlap',
                      'label_classes']
@@ -290,7 +289,6 @@ def test_get_label_tasks_for_specific_user(refresh_db_once, db_connection_sqlalc
                      'title',
                      'description',
                      'type',
-                     'example_labeling',
                      'default_tool',
                      'permit_overlap',
                      'label_classes']
@@ -312,7 +310,6 @@ def test_get_label_task(refresh_db_once, db_connection_sqlalchemy):
                      'title',
                      'description',
                      'type',
-                     'example_labeling',
                      'default_tool',
                      'permit_overlap',
                      'label_classes']
@@ -401,3 +398,20 @@ def test_get_latest_label(refresh_db_once, db_connection_sqlalchemy):
     assert_series_equal(df['input_data_id'], df_test['input_data_id'])
     assert_series_equal(df['in_progress'], df_test['in_progress'])
     assert_series_equal(df['label_serialised'], df_test['label_serialised'])
+
+
+def test_get_example_labelings(refresh_db_once, db_connection_sqlalchemy):
+    df_test = pd.DataFrame()
+    df_test['example_labeling_id'] = [1, 2]
+    df_test['title'] = ['Example of good labeling', 'Example of bad labeling']
+
+    engine = db_connection_sqlalchemy
+    df = sql_queries.get_example_labelings(engine, label_task_id=1)
+
+    expected_cols = ['example_labeling_id',
+                     'title',
+                     'description']
+
+    assert df.columns.tolist() == expected_cols
+    assert_series_equal(df['example_labeling_id'], df_test['example_labeling_id'])
+    assert_series_equal(df['title'], df_test['title'])
