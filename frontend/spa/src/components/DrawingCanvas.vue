@@ -194,13 +194,35 @@ export default {
     methods: {
         set_polygons: function(polygons) {
             // the parent component can set the polygons using this method in order to load the labels from the backend
-            this.polygons = polygons;
+
+            let polys = JSON.parse(JSON.stringify(polygons));     // deep copy
+
+            // subtract the padding from the left and top borders of the canvas, so that we don't include padding in the saved coordinates
+
+            for (let i = 0; i < polys.length; i++) {
+                for (let j = 0; j < polys[i].polygon.regions.length; j++) {
+                    polys[i].polygon.regions[j] = polys[i].polygon.regions[j].map(coords => [coords[0] + this.padX, coords[1] + this.padY]);
+                }
+            }
+
+            this.polygons = polys;
             this.edited = false;
         },
 
         fetch_polygons: function() {
             // the parent component can fetch the polygons using this method in order to save the labels to the backend
-            return { polygons: this.polygons,
+
+            let polys = JSON.parse(JSON.stringify(this.polygons));     // deep copy
+
+            // subtract the padding from the left and top borders of the canvas, so that we don't include padding in the saved coordinates
+
+            for (let i = 0; i < polys.length; i++) {
+                for (let j = 0; j < polys[i].polygon.regions.length; j++) {
+                    polys[i].polygon.regions[j] = polys[i].polygon.regions[j].map(coords => [coords[0] - this.padX, coords[1] - this.padY]);
+                }
+            }
+
+            return { polygons: polys,
                      edited: this.edited
             };
         },
