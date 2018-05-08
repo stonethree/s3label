@@ -199,43 +199,9 @@ export default {
             this.active_label = this.labels[0].label_class;
         }
 
-        var old_input_data_id = this.input_data_id;
-        var vm = this;
+        // display first image and its label, if available
 
-        if (this.input_data_id_start != undefined) {
-            // an initial image is specified, so load this image
-            this.$store.dispatch('image_labeling/set_initial_image', this.input_data_id_start)
-            .then(function() {
-                if (vm.input_data_id != old_input_data_id) {
-
-                    // load the labels from the next image
-                    loadLabels(vm.input_data_id, vm.label_task_id)
-                    .then(function(polygons_new) {
-                        if (polygons_new != undefined) {
-                            console.log('setting polygons:', polygons_new)
-                            vm.$refs.mySubComponent.set_polygons(polygons_new);
-                        }
-                    });
-                }
-            });
-        }
-        else {
-            // no initial image specified. Request a new unlabeled image
-            this.$store.dispatch('image_labeling/next_image', this.label_task.label_task_id)
-            .then(function() {
-                if (vm.input_data_id != old_input_data_id) {
-
-                    // load the labels from the next image
-                    loadLabels(vm.input_data_id, vm.label_task_id)
-                    .then(function(polygons_new) {
-                        if (polygons_new != undefined) {
-                            console.log('setting polygons:', polygons_new)
-                            vm.$refs.mySubComponent.set_polygons(polygons_new);
-                        }
-                    });
-                }
-            });
-        }
+        this.set_first_image();
 
         // get labeling examples to illustrate to user how to label for this task
 
@@ -261,6 +227,9 @@ export default {
                 vm.$store.dispatch('image_labeling/leave_page');
             });
         }
+        else {
+            this.$store.dispatch('image_labeling/leave_page');
+        }
 
         console.log('-----  leaving page')
 
@@ -268,6 +237,43 @@ export default {
     },
 
     methods: {
+        set_first_image: async function () {
+            var old_input_data_id = this.input_data_id;
+            var vm = this;
+
+            if (this.input_data_id_start != undefined) {
+                // an initial image is specified, so load this image
+                await this.$store.dispatch('image_labeling/set_initial_image', this.input_data_id_start);
+
+                console.log('^^^^^^^^^^^ deciding if to load labels', vm.input_data_id, old_input_data_id)
+
+                if (vm.input_data_id != old_input_data_id) {
+                    // load the labels from the next image
+                    let polygons_new = await loadLabels(vm.input_data_id, vm.label_task_id);
+
+                    if (polygons_new != undefined) {
+                        console.log('setting polygons:', polygons_new)
+                        vm.$refs.mySubComponent.set_polygons(polygons_new);
+                    }
+                }
+            }
+            else {
+                // no initial image specified. Request a new unlabeled image
+                await this.$store.dispatch('image_labeling/next_image', this.label_task.label_task_id);
+
+                if (vm.input_data_id != old_input_data_id) {
+                    console.log('^^^^^^^^^^^loading labels2')
+                    // load the labels from the next image
+                    let polygons_new = await loadLabels(vm.input_data_id, vm.label_task_id);
+
+                    if (polygons_new != undefined) {
+                        console.log('^^^^^^^^^^^ setting polygons:', polygons_new)
+                        vm.$refs.mySubComponent.set_polygons(polygons_new);
+                    }
+                }
+            }
+        },
+
         switch_image: async function (next_or_previous='next_image') {
             // switch to next or previous image
 
