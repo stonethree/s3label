@@ -81,6 +81,7 @@
                             v-bind:deselect_event="deselect_event"
                             v-bind:undo_event="undo_event"
                             v-bind:redo_event="redo_event"
+                            v-bind:hide_polygons="hide_polygons"
                             ref="mySubComponent"
                             class="row"
                             ></drawing-canvas>
@@ -143,6 +144,7 @@ export default {
             deselect_event: false,
             undo_event: false,
             redo_event: false,
+            hide_polygons: false,
             label_examples: undefined,
             baseUrl: baseUrl,
             keyboard_shortcuts: [
@@ -155,6 +157,7 @@ export default {
                 { key: 'Ctrl+Y', action: 'Redo' },
                 { key: 'Escape', action: 'Deselect all regions' },
                 { key: 'Delete', action: 'Delete selected region' },
+                { key: 'H', action: 'Temporarily hide labels<br><em>Useful for checking the edge of the label against the underlying image</em>' },
                 // { key: 'Ctrl+Enter', action: 'Mark/unmark image as "completed"<br><em>This will notify an admin user to check the labeled image</em>' },
             ]
         };
@@ -387,6 +390,11 @@ export default {
 
                 key_handled = true;
             }
+            else if (e.code === 'KeyH') {
+                this.hide_polygons = true;
+
+                key_handled = true;
+            }
             else if (e.code.startsWith('Shift')) {
                 if (this.previous_mode === undefined && !this.isDrawing) {
                     this.previous_mode = this.active_mode;
@@ -421,6 +429,11 @@ export default {
                     this.active_tool = this.previous_tool;
                     this.previous_tool = undefined;
                 }
+
+                key_handled = true;
+            }
+            else if (e.code === 'KeyH') {
+                this.hide_polygons = false;
 
                 key_handled = true;
             }

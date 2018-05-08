@@ -91,13 +91,18 @@ export default {
             type: Boolean,
             default: false
         },
+        hide_polygons: {
+            required: false,
+            type: Boolean,
+            default: false
+        },
     },
     data: function() {
         return {
             isDrawing: false,
             edited: false,
             currentPath: [],
-            padX: 80,           // TODO: the coordinates in the polygons object must not depend on the padX and padY values
+            padX: 80,
             padY: 80,
             ctx: undefined,
             ctx_bg: undefined,
@@ -189,6 +194,10 @@ export default {
         redo_event: function() {
             this.redo();
             console.log('redo event occured')
+        },
+
+        hide_polygons: function() {
+            this.drawAllPolygons(this.ctx, this.polygons);
         }
     },
     methods: {
@@ -462,8 +471,10 @@ export default {
             context.lineWidth = this.stroke_thickness;
             context.clearRect(0, 0, context.canvas.width, context.canvas.height);
 
-            for (let i = 0; i < polygon_list.length; i++) {
-                this.drawPolygon(context, polygon_list[i]);
+            if (!this.hide_polygons) {
+                for (let i = 0; i < polygon_list.length; i++) {
+                    this.drawPolygon(context, polygon_list[i]);
+                }
             }
         },
 
