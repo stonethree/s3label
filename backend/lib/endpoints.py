@@ -348,7 +348,7 @@ def get_label_examples(label_task_id):
 
 @ebp.route('/image_labeler/api/v1.0/labels/input_data/<int:input_data_id>/label_tasks/<int:label_task_id>', methods=['GET'])
 @fje.jwt_required
-def get_latest_label_history(input_data_id, label_task_id):
+def get_latest_label_history_for_logged_in_user(input_data_id, label_task_id):
     """
     Get the latest label history item for a particular user/label task/input data item combination
 
@@ -361,6 +361,43 @@ def get_latest_label_history(input_data_id, label_task_id):
 
     user_identity = fje.get_jwt_identity()
     user_id = ua.get_user_id_from_token(user_identity)
+
+    df_latest_label = sql_queries.get_latest_label(engine, user_id, label_task_id, input_data_id)
+
+    if df_latest_label is not None:
+        resp = make_response(df_latest_label.to_json(orient='records'), 200)
+        resp.mimetype = "application/javascript"
+        return resp
+    else:
+        resp = make_response(jsonify(error='No label found'), 404)
+        resp.mimetype = "application/javascript"
+        return resp
+
+
+@ebp.route('/image_labeler/api/v1.0/labels/input_data/<int:input_data_id>/label_tasks/<int:label_task_id>/users/<user_id>', methods=['GET'])
+@fje.jwt_required
+def get_latest_label_history_for_specified_user(input_data_id, label_task_id, user_id):
+    """
+    Get the latest label history item for a particular user/label task/input data item combination
+
+    :param input_data_id:
+    :param label_task_id:
+    :param user_id:
+    :return:
+    """
+
+    engine = current_app.config['engine']
+
+    user_identity = fje.get_jwt_identity()
+    user_id_from_auth = ua.get_user_id_from_token(user_identity)
+
+    if user_id != user_id_from_auth:
+        is_admin = sql_queries_admin.is_user_an_admin(engine, user_id_from_auth)
+
+        if is_admin is None or not is_admin:
+            resp = make_response(jsonify(error='Not permitted to view this content. Must be an admin user.'), 403)
+            resp.mimetype = "application/javascript"
+            return resp
 
     df_latest_label = sql_queries.get_latest_label(engine, user_id, label_task_id, input_data_id)
 

@@ -430,7 +430,7 @@ export default {
             var vm = this;
 
             axios
-                .get("labels/input_data/" + input_data_id + "/label_tasks/" + this.label_task_id, config)
+                .get("labels/input_data/" + input_data_id + "/label_tasks/" + this.label_task_id + "/users/" + this.user_id, config)
                 .then(function(response) {
                     if (response.data.length == 1) {
                         console.log("Label found for this image: attempting to apply it in the view")
@@ -446,18 +446,20 @@ export default {
                             vm.drawAllPolygons(vm.ctx, vm.polygons);
                         }
                         else {
-                            console.log('Serialised label has wrong format:', polygons)
+                            throw Error('Serialised label has wrong format:' + polygons)
                         }
                     }
                     else if (response.data.length == 0) {
-                        console.log("No label found for this image")
+                        throw Error("No label found for this image")
                     }
                     else {
-                        console.log("Error: expected at most one label for this image!")
+                        throw Error("Error: expected at most one label for this image!")
                     }
                 })
                 .catch(function(error) {
                     console.log(error);
+                    vm.polygons = [];
+                    vm.drawAllPolygons(vm.ctx, vm.polygons);
                 });
         },
     }

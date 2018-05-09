@@ -57,6 +57,66 @@ def test_get_label(auth, refresh_db_once):
     assert label['admin_complete'] is False
 
 
+def test_get_latest_label_history_for_logged_in_user(auth, refresh_db_once):
+    auth.login(email='shaun.irwin@stonethree.com', password='abc')
+
+    rv_label = auth.client.get(auth.base_url + '/labels/input_data/3/label_tasks/1', headers=auth.auth_header())
+
+    assert rv_label.status_code == 200
+
+    label = json_of_response(rv_label)
+
+    assert label[0]['label_id'] == 3
+    assert label[0]['label_serialised'] == '[{"test": 4}]'
+    assert label[0]['input_data_id'] == 3
+    assert label[0]['label_task_id'] == 1
+    assert label[0]['user_id'] == 1
+
+
+def test_get_latest_label_history_for_different_logged_in_user(auth, refresh_db_once):
+    auth.login(email='kristo.botha@stonethree.com', password='def')
+
+    rv_label = auth.client.get(auth.base_url + '/labels/input_data/3/label_tasks/1', headers=auth.auth_header())
+
+    assert rv_label.status_code == 200
+
+    label = json_of_response(rv_label)
+
+    assert label[0]['label_id'] == 5
+    assert label[0]['label_serialised'] == '[{"test": 6}]'
+    assert label[0]['input_data_id'] == 3
+    assert label[0]['label_task_id'] == 1
+    assert label[0]['user_id'] == 2
+
+
+def test_get_latest_label_history_for_specified_user(auth, refresh_db_once):
+    auth.login(email='shaun.irwin@stonethree.com', password='abc')
+
+    rv_label = auth.client.get(auth.base_url + '/labels/input_data/3/label_tasks/1/users/1', headers=auth.auth_header())
+
+    assert rv_label.status_code == 200
+
+    label = json_of_response(rv_label)
+
+    assert label[0]['label_id'] == 3
+    assert label[0]['label_serialised'] == '[{"test": 4}]'
+    assert label[0]['input_data_id'] == 3
+    assert label[0]['label_task_id'] == 1
+    assert label[0]['user_id'] == 1
+
+    rv_label = auth.client.get(auth.base_url + '/labels/input_data/3/label_tasks/1/users/2', headers=auth.auth_header())
+
+    assert rv_label.status_code == 200
+
+    label = json_of_response(rv_label)
+
+    assert label[0]['label_id'] == 5
+    assert label[0]['label_serialised'] == '[{"test": 6}]'
+    assert label[0]['input_data_id'] == 3
+    assert label[0]['label_task_id'] == 1
+    assert label[0]['user_id'] == 2
+
+
 def test_get_datasets(auth, refresh_db_once):
     auth.login()
 
