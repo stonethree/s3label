@@ -1,4 +1,4 @@
-from .unit_test_utils import json_of_response, nans_to_nones
+from .unit_test_utils import json_of_response, nans_to_nones, AuthActions
 
 import pandas as pd
 import json
@@ -181,11 +181,11 @@ def test_count_input_data_items_per_user_per_label_task_as_admin(auth, refresh_d
     df_item_counts = pd.DataFrame(item_counts)
     df_item_counts = nans_to_nones(df_item_counts)
 
-    assert df_item_counts['user_id'].tolist() == [1, 1, 1, 1, 2, 2, 3, None, None]
-    assert df_item_counts['label_task_id'].tolist() == [1, 2, 3, 5, 1, 2, 1, 4, 6]
-    assert df_item_counts['total_items'].tolist() == [5, 3, 1, 5, 5, 2, 1, 1, 1]
-    assert df_item_counts['num_unlabeled'].tolist() == [2, 2, 1, 5, 4, 2, 0, 1, 1]
-    assert df_item_counts['num_labeled'].tolist() == [3, 1, 0, 0, 1, 0, 1, 0, 0]
+    assert df_item_counts['user_id'].tolist() == [1, 1, 1, 1, 2, 2, 2, 3, None, None]
+    assert df_item_counts['label_task_id'].tolist() == [1, 2, 3, 5, 1, 2, 5, 1, 4, 6]
+    assert df_item_counts['total_items'].tolist() == [5, 3, 1, 5, 5, 2, 5, 1, 1, 1]
+    assert df_item_counts['num_unlabeled'].tolist() == [2, 2, 1, 5, 4, 2, 5, 0, 1, 1]
+    assert df_item_counts['num_labeled'].tolist() == [3, 1, 0, 0, 1, 0, 0, 1, 0, 0]
 
 
 def test_get_next_unlabeled_image(auth, refresh_db_every_time):
@@ -255,6 +255,87 @@ def test_get_next_unlabeled_image(auth, refresh_db_every_time):
 
     rv_next_im = auth.client.get(auth.base_url + '/unlabeled_images/label_tasks/5?shuffle=false&limit=1',
                                  headers=auth.auth_header())
+
+    assert rv_next_im.status_code == 404
+
+
+def test_get_next_unlabeled_image_for_multiple_users_labeling_same_label_task(client, refresh_db_every_time):
+    auth_1 = AuthActions(client)
+    auth_2 = AuthActions(client)
+    auth_1.login(email='shaun.irwin@stonethree.com', password='abc')
+    auth_2.login(email='kristo.botha@stonethree.com', password='def')
+
+    # request first image (user 1)
+
+    rv_next_im = auth_1.client.get(auth_1.base_url + '/unlabeled_images/label_tasks/5?shuffle=false&limit=1',
+                                   headers=auth_1.auth_header())
+
+    assert rv_next_im.status_code == 200
+
+    next_im = json_of_response(rv_next_im)
+
+    assert next_im['input_data_id'] == 1
+    assert next_im['label_id'] == 7
+
+    # request second image (user 1)
+
+    rv_next_im = auth_1.client.get(auth_1.base_url + '/unlabeled_images/label_tasks/5?shuffle=false&limit=1',
+                                   headers=auth_1.auth_header())
+
+    assert rv_next_im.status_code == 200
+
+    next_im = json_of_response(rv_next_im)
+
+    assert next_im['input_data_id'] == 2
+    assert next_im['label_id'] == 8
+
+    # request third image (user 2)
+
+    rv_next_im = auth_2.client.get(auth_2.base_url + '/unlabeled_images/label_tasks/5?shuffle=false&limit=1',
+                                   headers=auth_2.auth_header())
+
+    assert rv_next_im.status_code == 200
+
+    next_im = json_of_response(rv_next_im)
+
+    assert next_im['input_data_id'] == 3
+    assert next_im['label_id'] == 9
+
+    # request fourth image (user 2)
+
+    rv_next_im = auth_2.client.get(auth_2.base_url + '/unlabeled_images/label_tasks/5?shuffle=false&limit=1',
+                                   headers=auth_2.auth_header())
+
+    assert rv_next_im.status_code == 200
+
+    next_im = json_of_response(rv_next_im)
+
+    assert next_im['input_data_id'] == 4
+    assert next_im['label_id'] == 10
+
+    # request fifth image (user 2)
+
+    rv_next_im = auth_2.client.get(auth_2.base_url + '/unlabeled_images/label_tasks/5?shuffle=false&limit=1',
+                                   headers=auth_2.auth_header())
+
+    assert rv_next_im.status_code == 200
+
+    next_im = json_of_response(rv_next_im)
+
+    assert next_im['input_data_id'] == 5
+    assert next_im['label_id'] == 11
+
+    # request sixth image (user 2)
+
+    rv_next_im = auth_2.client.get(auth_2.base_url + '/unlabeled_images/label_tasks/5?shuffle=false&limit=1',
+                                   headers=auth_2.auth_header())
+
+    assert rv_next_im.status_code == 404
+
+    # request sixth image (user 2)
+
+    rv_next_im = auth_1.client.get(auth_1.base_url + '/unlabeled_images/label_tasks/5?shuffle=false&limit=1',
+                                   headers=auth_1.auth_header())
 
     assert rv_next_im.status_code == 404
 

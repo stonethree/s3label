@@ -87,23 +87,22 @@ def count_input_data_items_per_user_per_label_task(engine, label_task_id=None, u
     return df
 
 
-def get_next_unlabeled_input_data_item(engine, label_task_id, user_id, shuffle=True, n=1):
+def get_next_unlabeled_input_data_item(engine, label_task_id, shuffle=True, n=1):
     """
     Get the highest priority input data item for the specified label task that has not yet been labeled and is not
     currently being labeled by another user
 
     :param engine:
     :param label_task_id:
-    :param user_id:
     :param shuffle: if True, shuffle the data before sorting by priority
     :param n: number of items to return. If None, return all
     :return:
     """
 
     if shuffle:
-        apply_shuffle = 'random(),'
+        order_by = 'order by random(), priority desc'
     else:
-        apply_shuffle = ''
+        order_by = 'order by priority desc, input_data_id'
 
     if n is None:
         max_limit = ''
@@ -111,14 +110,15 @@ def get_next_unlabeled_input_data_item(engine, label_task_id, user_id, shuffle=T
         max_limit = 'limit {}'.format(int(n))
 
     sql_query = """
-        select * from latest_label_history_per_input_item
-        where user_id = %(user_id)s and label_task_id = %(label_task_id)s
-        and unlabeled = true
-        order by {apply_shuffle} priority desc
-        {max_limit}""".format(apply_shuffle=apply_shuffle, max_limit=max_limit)
+        with unlabeled_items as (
+            select * from labels_per_input_data_item
+            where label_task_id = %(label_task_id)s and label_id isnull and not input_data_id isnull
+        )
+        select * from unlabeled_items
+        {order_by}
+        {max_limit}""".format(order_by=order_by, max_limit=max_limit)
 
-    df = pd.read_sql_query(sql_query, engine, params={'label_task_id': label_task_id,
-                                                      'user_id': user_id})
+    df = pd.read_sql_query(sql_query, engine, params={'label_task_id': label_task_id})
 
     if len(df) > 0:
         return df

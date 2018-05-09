@@ -667,10 +667,10 @@ def get_unlabeled_image_id(label_task_id):
         shuffle = False
 
     try:
-        df_unlabeled = sql_queries.get_next_unlabeled_input_data_item(engine, label_task_id, user_id, shuffle=shuffle,
+        df_unlabeled = sql_queries.get_next_unlabeled_input_data_item(engine, label_task_id, shuffle=shuffle,
                                                                       n=1)
 
-        if df_unlabeled is None:
+        if df_unlabeled is None or df_unlabeled['input_data_id'][0] is None:
             resp = make_response(jsonify(error='No unlabeled input data found for this label task'), 404)
             resp.mimetype = "application/javascript"
             return resp

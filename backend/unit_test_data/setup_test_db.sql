@@ -205,6 +205,7 @@ INSERT INTO users_label_tasks (user_id, label_task_id) VALUES (1, 3);
 INSERT INTO users_label_tasks (user_id, label_task_id) VALUES (1, 5);
 INSERT INTO users_label_tasks (user_id, label_task_id) VALUES (2, 1);
 INSERT INTO users_label_tasks (user_id, label_task_id) VALUES (2, 2);
+INSERT INTO users_label_tasks (user_id, label_task_id) VALUES (2, 5);
 
 INSERT INTO labels (input_data_id, label_task_id, user_id, in_progress) VALUES (1, 1, 1, true);
 INSERT INTO labels (input_data_id, label_task_id, user_id) VALUES (2, 1, 1);

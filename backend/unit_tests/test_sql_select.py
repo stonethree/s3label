@@ -41,11 +41,11 @@ def test_get_user_info_for_non_existant_user(refresh_db_once, db_connection_sqla
 
 def test_count_input_data_items_for_all_users_and_label_tasks(refresh_db_once, db_connection_sqlalchemy):
     df_test = pd.DataFrame()
-    df_test['user_id'] = [1, 1, 1, 1, 2, 2, 3, None, None]
-    df_test['label_task_id'] = [1, 2, 3, 5, 1, 2, 1, 4, 6]
-    df_test['total_items'] = [5, 3, 1, 5, 5, 2, 1, 1, 1]
-    df_test['num_unlabeled'] = [2, 2, 1, 5, 4, 2, 0, 1, 1]
-    df_test['num_labeled'] = [3, 1, 0, 0, 1, 0, 1, 0, 0]
+    df_test['user_id'] = [1, 1, 1, 1, 2, 2, 2, 3, None, None]
+    df_test['label_task_id'] = [1, 2, 3, 5, 1, 2, 5, 1, 4, 6]
+    df_test['total_items'] = [5, 3, 1, 5, 5, 2, 5, 1, 1, 1]
+    df_test['num_unlabeled'] = [2, 2, 1, 5, 4, 2, 5, 0, 1, 1]
+    df_test['num_labeled'] = [3, 1, 0, 0, 1, 0, 0, 1, 0, 0]
 
     engine = db_connection_sqlalchemy
     df = sql_queries.count_input_data_items_per_user_per_label_task(engine, label_task_id=None, user_id=None)
@@ -185,28 +185,7 @@ def test_get_next_user_data_item_if_input_data_id_not_found(refresh_db_once, db_
 
 def test_get_next_unlabeled_input_data_item(refresh_db_once, db_connection_sqlalchemy):
     engine = db_connection_sqlalchemy
-    df_unlabeled = sql_queries.get_next_unlabeled_input_data_item(engine, label_task_id=1, user_id=1, shuffle=False,
-                                                                  n=None)
-
-    assert len(df_unlabeled) == 2
-    assert df_unlabeled['input_data_id'][0] == 4
-    assert df_unlabeled['input_data_id'][1] == 5
-
-
-def test_get_next_unlabeled_input_data_item_with_limit(refresh_db_once, db_connection_sqlalchemy):
-    engine = db_connection_sqlalchemy
-    df_unlabeled = sql_queries.get_next_unlabeled_input_data_item(engine, label_task_id=1, user_id=1, shuffle=False,
-                                                                  n=1)
-
-    assert len(df_unlabeled) == 1
-    assert df_unlabeled['input_data_id'][0] == 4
-
-
-def test_get_next_unlabeled_input_data_item_when_all_images_unlabeled_for_a_label_task(refresh_db_once,
-                                                                                       db_connection_sqlalchemy):
-    engine = db_connection_sqlalchemy
-    df_unlabeled = sql_queries.get_next_unlabeled_input_data_item(engine, label_task_id=5, user_id=1, shuffle=False,
-                                                                  n=None)
+    df_unlabeled = sql_queries.get_next_unlabeled_input_data_item(engine, label_task_id=5, shuffle=False, n=None)
 
     assert len(df_unlabeled) == 5
     assert df_unlabeled['input_data_id'][0] == 1
@@ -216,10 +195,27 @@ def test_get_next_unlabeled_input_data_item_when_all_images_unlabeled_for_a_labe
     assert df_unlabeled['input_data_id'][4] == 5
 
 
+def test_get_next_unlabeled_input_data_item_with_limit(refresh_db_once, db_connection_sqlalchemy):
+    engine = db_connection_sqlalchemy
+    df_unlabeled = sql_queries.get_next_unlabeled_input_data_item(engine, label_task_id=5, shuffle=False, n=2)
+
+    assert len(df_unlabeled) == 2
+    assert df_unlabeled['input_data_id'][0] == 1
+    assert df_unlabeled['input_data_id'][1] == 2
+
+
+def test_get_next_unlabeled_input_data_item_when_some_images_already_labeled_for_a_label_task(refresh_db_once,
+                                                                                              db_connection_sqlalchemy):
+    engine = db_connection_sqlalchemy
+    df_unlabeled = sql_queries.get_next_unlabeled_input_data_item(engine, label_task_id=1, shuffle=False, n=None)
+
+    assert len(df_unlabeled) == 1
+    assert df_unlabeled['input_data_id'][0] == 5
+
+
 def test_get_next_unlabeled_input_data_item_when_no_images_available(refresh_db_once, db_connection_sqlalchemy):
     engine = db_connection_sqlalchemy
-    df_unlabeled = sql_queries.get_next_unlabeled_input_data_item(engine, label_task_id=6, user_id=1, shuffle=False,
-                                                                  n=None)
+    df_unlabeled = sql_queries.get_next_unlabeled_input_data_item(engine, label_task_id=6, shuffle=False, n=None)
 
     assert df_unlabeled is None
 
