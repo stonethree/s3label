@@ -39,6 +39,7 @@ function convertPolygonToPaths(polygon) {
     return polygon.regions;
 }
 
+import { addPaddingOffset } from '../../static/PolygonOperations'
 import LabelStatus from './LabelStatus'
 
 
@@ -443,6 +444,9 @@ export default {
                         if (polygons.length > 0 && polygons[0].polygon != undefined) {
                             console.log('Applied serialised label to image')
                             vm.polygons = polygons;
+
+                            vm.polygons = addPaddingOffset(vm.polygons, vm.padX, vm.padY);
+
                             vm.drawAllPolygons(vm.ctx, vm.polygons);
                         }
                         else {

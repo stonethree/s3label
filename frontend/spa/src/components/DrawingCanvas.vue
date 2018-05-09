@@ -31,7 +31,9 @@ import { convertPolygonToPaths,
          convertPathToPolygon, 
          isPointInPolygon, 
          getSelectedPolygonIndex, 
-         isPolygonLargeEnough } from '../../static/PolygonOperations'
+         isPolygonLargeEnough, 
+         addPaddingOffset, 
+         removePaddingOffset } from '../../static/PolygonOperations'
 
 import LabelStatus from './LabelStatus'
 import { extractColor, formatColor } from '../../static/color_utilities'
@@ -206,15 +208,10 @@ export default {
 
             let polys = JSON.parse(JSON.stringify(polygons));     // deep copy
 
-            // subtract the padding from the left and top borders of the canvas, so that we don't include padding in the saved coordinates
+            // add the padding from the left and top borders of the canvas, so that we include padding in the displayed coordinates
 
-            for (let i = 0; i < polys.length; i++) {
-                for (let j = 0; j < polys[i].polygon.regions.length; j++) {
-                    polys[i].polygon.regions[j] = polys[i].polygon.regions[j].map(coords => [coords[0] + this.padX, coords[1] + this.padY]);
-                }
-            }
+            this.polygons = addPaddingOffset(polys, this.padX, this.padY);
 
-            this.polygons = polys;
             this.edited = false;
         },
 
@@ -225,13 +222,7 @@ export default {
 
             // subtract the padding from the left and top borders of the canvas, so that we don't include padding in the saved coordinates
 
-            for (let i = 0; i < polys.length; i++) {
-                for (let j = 0; j < polys[i].polygon.regions.length; j++) {
-                    polys[i].polygon.regions[j] = polys[i].polygon.regions[j].map(coords => [coords[0] - this.padX, coords[1] - this.padY]);
-                }
-            }
-
-            return { polygons: polys,
+            return { polygons: removePaddingOffset(polys, this.padX, this.padY),
                      edited: this.edited
             };
         },

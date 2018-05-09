@@ -62,3 +62,29 @@ export function isPolygonLargeEnough(path) {
         return true;
     }
 }
+
+
+export function addPaddingOffset(polygons, padX, padY) {
+    // add the padding from the left and top borders of the canvas, so that we include padding in the displayed coordinates
+
+    for (let i = 0; i < polygons.length; i++) {
+        for (let j = 0; j < polygons[i].polygon.regions.length; j++) {
+            polygons[i].polygon.regions[j] = polygons[i].polygon.regions[j].map(coords => [coords[0] - padX, coords[1] - padY]);
+        }
+    }
+
+    return polygons;
+}
+
+
+export function removePaddingOffset(polygons, padX, padY) {
+    // subtract the padding from the left and top borders of the canvas, so that we don't include padding in the saved coordinates
+
+    for (let i = 0; i < polygons.length; i++) {
+        for (let j = 0; j < polygons[i].polygon.regions.length; j++) {
+            polygons[i].polygon.regions[j] = polygons[i].polygon.regions[j].map(coords => [coords[0] + padX, coords[1] + padY]);
+        }
+    }
+
+    return polygons;
+}
