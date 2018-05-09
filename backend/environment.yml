@@ -1,0 +1,13 @@
+name: flask_env
+dependencies:
+- python=3.6
+- numpy
+- pandas=0.20
+- psycopg2
+- sqlalchemy
+- pip
+- pytest
+- pip:
+  - flask
+  - flask-cors
+  - flask-jwt-extended
