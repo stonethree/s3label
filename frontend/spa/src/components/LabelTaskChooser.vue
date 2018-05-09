@@ -18,6 +18,10 @@
                     </div>
                 </div>
             </div>
+            <div v-if="label_tasks.length==0" class="row justify-content-center no-label-tasks">
+                <span>No label tasks available. <br></span>
+                <span>Please contact us and we will add label tasks for you.</span>
+            </div>
         </div>
 
         <!-- <div class="col"></div> -->
@@ -57,7 +61,8 @@ export default {
     methods: {
         ...mapMutations('label_task_store', [
             'set_label_tasks',
-            'select_label_task'
+            'select_label_task',
+            'clear_label_tasks'
         ]),
         get_label_task_list: function() {
             // get list of label tasks from the backend
@@ -84,6 +89,7 @@ export default {
                     })
                     .catch(function(error) {
                     console.log(error);
+                    vm.clear_label_tasks();
                     });
             }
         },
@@ -108,6 +114,8 @@ export default {
 </script>
 
 <style>
+.no-label-tasks { padding-top: 6em }
+.no-label-tasks span { display: block }
 /* #label_task_chooser {
     font-family: "Avenir", Helvetica, Arial, sans-serif;
     -webkit-font-smoothing: antialiased;

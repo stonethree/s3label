@@ -11,7 +11,7 @@
                 </div>
                 <div v-else class="no-images-labeled">
                     <h6>No images labeled yet.</h6>
-                    <h6>Click the "Labeler" tab to begin labeling images for this label task.</h6>
+                    <h6>Click the <router-link v-bind:to="'/image_labeler'" >Labeler</router-link> tab to begin labeling images for this label task.</h6>
                 </div>
 
               </div>

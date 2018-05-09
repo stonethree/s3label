@@ -13,6 +13,10 @@ export const StoreLabelTask = {
         select_label_task(state, idx) {
             state.label_task_id = idx;
         },
+        clear_label_tasks(state) {
+            state.label_tasks = [];
+            label_task_id: -1;
+        },
     },
     getters: {
         label_tasks: state => {
