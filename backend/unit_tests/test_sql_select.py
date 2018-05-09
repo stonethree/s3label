@@ -43,8 +43,8 @@ def test_count_input_data_items_for_all_users_and_label_tasks(refresh_db_once, d
     df_test = pd.DataFrame()
     df_test['user_id'] = [1, 1, 1, 1, 2, 2, 3, None, None]
     df_test['label_task_id'] = [1, 2, 3, 5, 1, 2, 1, 4, 6]
-    df_test['total_items'] = [5, 3, 1, 5, 1, 4, 1, 1, 1]
-    df_test['num_unlabeled'] = [2, 2, 1, 5, 0, 4, 0, 1, 1]
+    df_test['total_items'] = [5, 3, 1, 5, 5, 2, 1, 1, 1]
+    df_test['num_unlabeled'] = [2, 2, 1, 5, 4, 2, 0, 1, 1]
     df_test['num_labeled'] = [3, 1, 0, 0, 1, 0, 1, 0, 0]
 
     engine = db_connection_sqlalchemy
