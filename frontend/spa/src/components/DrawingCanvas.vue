@@ -128,6 +128,9 @@ export default {
             // 'input_data_id',
             'label_id'
         ]),
+        drawingPermitted: function() {
+            return this.input_data_id != undefined;
+        }
     },
     mounted() {
         var el = document.getElementById('canvas-fg');

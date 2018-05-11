@@ -1,6 +1,6 @@
 <template>
     <div class="container">
-        <div class="row justify-content-center">
+        <div class="row justify-content-center email-form">
             <label for="user_email"><b>Email</b></label>
             <input type="email" placeholder="Enter email address" name="user_email" required v-model="email">
 
@@ -9,7 +9,7 @@
 
             <button type="submit" v-on:click="logUserIn">Login</button>
         </div>
-        <div id="auth_error_msg" class="row">
+        <div id="auth_error_msg" class="row justify-content-center">
             <p v-if="authentication_error">Error authenticating user. Please re-enter log in details.</p>
         </div>
     </div>
@@ -62,6 +62,10 @@ export default {
 </script>
 
 <style>
+.email-form { padding-top: 3em }
+.email-form label { padding-left: 1.5em }
+.email-form label { padding-right: 0.5em }
+#auth_error_msg { padding-top: 3em }
 /* #login {
   font-family: "Avenir", Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
