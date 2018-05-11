@@ -116,11 +116,16 @@ def get_image(input_image_id):
 
     im_path = os.path.abspath(os.path.join(image_folder, im_path))
 
-    if im_path is not None and os.path.exists(im_path):
-        return send_file(im_path)
-    else:
-        print('Could not find image: ', im_path)
-        resp = make_response(jsonify(error='Input data item not found'), 404)
+    try:
+        if im_path is not None and os.path.exists(im_path) and os.path.isfile(im_path):
+            return send_file(im_path)
+        else:
+            print('Could not find image: ', im_path)
+            resp = make_response(jsonify(error='Input data item not found'), 404)
+            resp.mimetype = "application/javascript"
+            return resp
+    except:
+        resp = make_response(jsonify(error='Unkown error while retrieving image'), 400)
         resp.mimetype = "application/javascript"
         return resp
 
