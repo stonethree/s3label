@@ -278,7 +278,7 @@ export default {
             // switch to next or previous image
 
             if (next_or_previous != 'next_image' && next_or_previous != 'previous_image') {
-                throw Error('Unexpected next_ore_previous parameter. Unable to switch image.');
+                console.error('Error: Unexpected next_ore_previous parameter. Unable to switch image.');
                 return -1;
             }
 

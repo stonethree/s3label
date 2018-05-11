@@ -288,7 +288,7 @@ export default {
 
         validateResponse: function (response) {
             if (!response.ok) {
-                throw Error(response.statusText);
+                console.error(response.statusText);
             }
             return response;
         },
@@ -404,7 +404,7 @@ export default {
                 return rgb;
             }
             else {
-                throw TypeError('Color string must have 3 RGB elements specified');
+                console.error('Color string must have 3 RGB elements specified');
             }
         },
 
@@ -450,14 +450,14 @@ export default {
                             vm.drawAllPolygons(vm.ctx, vm.polygons);
                         }
                         else {
-                            throw Error('Serialised label has wrong format:' + polygons)
+                            console.error('Serialised label has wrong format:' + polygons)
                         }
                     }
                     else if (response.data.length == 0) {
-                        throw Error("No label found for this image")
+                        console.error("No label found for this image")
                     }
                     else {
-                        throw Error("Error: expected at most one label for this image!")
+                        console.error("Error: expected at most one label for this image!")
                     }
                 })
                 .catch(function(error) {

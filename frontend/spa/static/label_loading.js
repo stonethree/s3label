@@ -150,7 +150,7 @@ export async function uploadLabels(input_data_id, label_task_id, polygons) {
     console.log('uploading label with label task ID', label_task_id, 'and input data ID', input_data_id)
 
     if (label_task_id == undefined || input_data_id == undefined) {
-        throw Error("Input fields must all be defined in order to upload label:" + label_task_id + input_data_id)
+        console.log("Error: Input fields must all be defined in order to upload label:" + label_task_id + input_data_id)
     }
     else {
         var data = {label_serialised: polygons}
@@ -169,7 +169,7 @@ export async function uploadLabels(input_data_id, label_task_id, polygons) {
                 console.log('saved label:', label_task_id, input_data_id, response)
             })
             .catch(function(error) {
-                throw Error('error saving label:' + error + ', input_data_id:' + input_data_id + ', label_task_id:' + label_task_id + ', polygons:' + polygons);
+                console.error('error saving label:' + error + ', input_data_id:' + input_data_id + ', label_task_id:' + label_task_id + ', polygons:' + polygons);
             });
     }
 }
@@ -179,7 +179,7 @@ export async function loadLabels(input_data_id, label_task_id) {
     console.log('getting image labels with label task ID', label_task_id, 'and input data ID', input_data_id)
 
     if (label_task_id == undefined || input_data_id == undefined) {
-        throw Error("Input fields must all be defined in order to load label")
+        console.error("Input fields must all be defined in order to load label")
     }
     else {
 
@@ -211,18 +211,18 @@ export async function loadLabels(input_data_id, label_task_id) {
                         return polygons;
                     }
                     else {
-                        throw Error('Serialised label has wrong format:' + polygons)
+                        console.error('Serialised label has wrong format:' + polygons)
                     }
                 }
                 else if (response.data.length == 0) {
-                    throw Error("No label found for this image")
+                    console.error("No label found for this image")
                 }
                 else {
-                    throw Error("Error: expected at most one label for this image!")
+                    console.error("Error: expected at most one label for this image!")
                 }
             })
             .catch(function(error) {
-                console.log(error);
+                console.error(error);
                 return undefined;
             });
     }
@@ -232,7 +232,7 @@ export async function getLabelId(label_task_id, input_data_id, user_id) {
     // get the label ID, given user ID, label task ID and input data ID
 
     if (label_task_id == undefined || input_data_id == undefined || user_id == undefined) {
-        throw Error("Input fields must all be defined in order to get the label ID")
+        console.error("Input fields must all be defined in order to get the label ID")
     }
     else {
         let access_token = localStorage.getItem("s3_access_token");

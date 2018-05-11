@@ -6,7 +6,7 @@ export function extractColor(rgb_string) {
         return rgb;
     }
     else {
-        throw TypeError('Color string must have 3 RGB elements specified');
+        console.error('Color string must have 3 RGB elements specified');
     }
 }
 

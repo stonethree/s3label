@@ -80,7 +80,7 @@ export default {
                         vm.label_id = label_id;
                     })
                     .catch(function(error) {
-                        throw Error('error getting label ID:', error, vm.label_task_id, this.userLabeledData.input_data_id, vm.user_id);
+                        console.error('Error getting label ID:', error, vm.label_task_id, this.userLabeledData.input_data_id, vm.user_id);
                     });
         },
 
@@ -88,7 +88,7 @@ export default {
 
         validateResponse: function (response) {
             if (!response.ok) {
-                throw Error(response.statusText);
+                console.error('Error displaying image:', response.statusText);
             }
             return response;
         },

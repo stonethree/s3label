@@ -161,7 +161,7 @@ export default {
                         console.log(label, vm.status.user_complete, vm.status.needs_improvement, vm.status.admin_complete, vm.status.paid)
                     })
                     .catch(function(error) {
-                        throw Error('Could not get label status values for label_ID: ' + vm.labelId, error);
+                        console.error('Could not get label status values for label_ID: ' + vm.labelId + '. Error' + error);
                     });
             }
         },

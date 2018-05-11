@@ -218,7 +218,7 @@ export default {
 
         validateResponse: function (response) {
             if (!response.ok) {
-                throw Error(response.statusText);
+                 console.error(response.statusText);
             }
             return response;
         },

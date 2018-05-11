@@ -521,7 +521,7 @@ export default {
 
         validateResponse: function (response) {
             if (!response.ok) {
-                throw Error(response.statusText);
+                console.log('error displaying image:', response.statusText);
             }
             return response;
         },
