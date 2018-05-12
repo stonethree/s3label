@@ -5,9 +5,9 @@
             <b-nav pills>
                 <b-nav-item v-if="!is_logged_in" :to="'/login'" >Login</b-nav-item>
                 <b-nav-item v-else :to="'/logout'">Logout</b-nav-item>
-                <b-nav-item :to="'/label_tasks'" variant="secondary">Label Tasks</b-nav-item>
-                <b-nav-item :to="'/image_labeler'">Labeler</b-nav-item>
-                <b-nav-item :to="'/image_grid'">Image Grid</b-nav-item>
+                <b-nav-item :to="'/label_tasks'" variant="secondary" :disabled="!is_logged_in">Label Tasks</b-nav-item>
+                <b-nav-item :to="'/image_labeler'" :disabled="label_task_id==undefined || !is_logged_in">Labeler</b-nav-item>
+                <b-nav-item :to="'/image_grid'" :disabled="label_task_id==undefined || !is_logged_in">Image Grid</b-nav-item>
                 <b-nav-item v-if="is_admin_user && is_logged_in" :to="'/admin'">Admin</b-nav-item>
             </b-nav>
         </div>
@@ -30,7 +30,10 @@ export default {
         ...mapGetters('user_login', [
             'is_logged_in',
             'is_admin_user'
-        ])
+        ]),
+        ...mapGetters('label_task_store', [
+            'label_task_id'
+        ]),
     },
 };
 </script>

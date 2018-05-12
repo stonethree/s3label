@@ -88,7 +88,7 @@ export default {
 
         set_placeholder_image: function () {
             let canvas_bg = document.getElementById(this.canvas_bg_id);
-            this.setCanvasSize(canvas_bg, this.im_height_max, this.im_height_max, this.padX, this.padY);
+            this.setCanvasSize(canvas_bg, this.im_height_max * 1.4, this.im_height_max, this.padX, this.padY);
         },
 
         validateResponse: function (response) {
