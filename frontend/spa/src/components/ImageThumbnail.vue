@@ -86,9 +86,14 @@ export default {
 
         // image displaying functions
 
+        set_placeholder_image: function () {
+            let canvas_bg = document.getElementById(this.canvas_bg_id);
+            this.setCanvasSize(canvas_bg, this.im_height_max, this.im_height_max, this.padX, this.padY);
+        },
+
         validateResponse: function (response) {
             if (!response.ok) {
-                console.error('Error displaying image:', response.statusText);
+                throw Error.error('Error displaying image:', response.statusText);
             }
             return response;
         },
@@ -115,13 +120,10 @@ export default {
             var vm = this;
 
             img.onload = function () {
-                // var f = 4;
                 var new_dims = chooseImageDimensions(img.width, img.height, vm.im_height_max);
 
                 vm.setCanvasSize(canvas_bg, new_dims['new_w'], new_dims['new_h'], vm.padX, vm.padY);
-                // vm.setCanvasSize(canvas_bg, img.width/f, image_height, vm.padX, vm.padY);
                 ctx2.drawImage(img, vm.padX, vm.padY, new_dims['new_w'], new_dims['new_h']);
-                // ctx2.drawImage(img, vm.padX, vm.padY, img.width/f, image_height);
             }
             img.src = imgUrl;
         },
@@ -131,13 +133,15 @@ export default {
             console.log('fetching im')
             
             // let access_token = localStorage.getItem("s3_access_token");
+            var vm = this;
 
             fetch(pathToResource)
                 .then(this.validateResponse)
                 .then(this.readResponseAsBlob)
                 .then(this.showImage)
                 .catch(function(error) {
-                    console.log(error);
+                    console.log(error, 'setting placeholder image');
+                    vm.set_placeholder_image();
                 });
         },
     }
