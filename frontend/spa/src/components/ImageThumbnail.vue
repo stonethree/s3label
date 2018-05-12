@@ -93,7 +93,7 @@ export default {
 
         validateResponse: function (response) {
             if (!response.ok) {
-                throw Error.error('Error displaying image:', response.statusText);
+                throw Error('Error displaying image:', response.statusText);
             }
             return response;
         },

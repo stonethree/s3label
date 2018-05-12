@@ -144,8 +144,8 @@ def get_all_user_input_data(engine, user_id, label_task_id, n):
     else:
         n = int(n)
 
-    fields = 'label_id, input_data_id, label_task_id, user_id, user_complete, admin_complete, paid, user_comment, ' \
-             'admin_comment'
+    fields = 'label_id, input_data_id, label_task_id, user_id, user_complete, needs_improvement, admin_complete, ' \
+             'paid, user_comment, admin_comment'
 
     sql_query = """
     SELECT {fields} FROM latest_label_history WHERE user_id=%(user_id)s AND label_task_id=%(label_task_id)s 
