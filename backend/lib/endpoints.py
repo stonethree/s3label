@@ -2,6 +2,7 @@ from flask import jsonify, request, send_file, make_response, current_app, Bluep
 import flask_jwt_extended as fje
 import json
 import os
+from io import BytesIO
 
 from backend.lib import sql_queries, sql_queries_admin, user_authentication as ua
 from backend.lib import data_upload as du
@@ -116,9 +117,38 @@ def get_image(input_image_id):
 
     im_path = os.path.abspath(os.path.join(image_folder, im_path))
 
+    # check if user is requesting a specific image width or height
+
+    width = request.args.get('width', None)
+    height = request.args.get('height', None)
+
+    try:
+        if width is not None:
+            width = int(width)
+        if height is not None:
+            height = int(height)
+    except (ValueError, TypeError):
+        resp = make_response(jsonify(error='"width" and/or "height" parameter is wrong format. Must be an integer.'),
+                             400)
+        resp.mimetype = "application/javascript"
+        return resp
+
     try:
         if im_path is not None and os.path.exists(im_path) and os.path.isfile(im_path):
-            return send_file(im_path)
+
+            # check if a resized image has been requested
+
+            if height is None and width is None:
+                return send_file(im_path)
+            else:
+                im = du.get_thumbnail(im_path, width=width, height=height)
+
+                byte_io = BytesIO()
+                im.save(byte_io, 'JPEG')
+                byte_io.seek(0)
+
+                return send_file(byte_io, mimetype='image/jpeg')
+
         else:
             print('Could not find image: ', im_path)
             resp = make_response(jsonify(error='Input data item not found'), 404)

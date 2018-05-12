@@ -2,6 +2,8 @@ from .unit_test_utils import json_of_response, nans_to_nones, AuthActions
 
 import pandas as pd
 import json
+from PIL import Image
+import io
 
 
 def test_server_exists(client, refresh_db_once):
@@ -552,3 +554,48 @@ def test_upload_new_input_data_item(auth, refresh_db_every_time):
     response = json_of_response(rv)
 
     assert response['input_data_id'] == 8
+
+
+def test_get_image(auth, refresh_db_once):
+    auth.login()
+
+    rv_image = auth.client.get(auth.base_url + '/input_images/2', headers=auth.auth_header())
+
+    assert rv_image.status_code == 200
+    assert rv_image.mimetype == 'image/jpeg'
+
+    im = Image.open(io.BytesIO(rv_image.data))
+
+    assert im.width == 640
+    assert im.height == 480
+    assert im.layers == 3
+
+
+def test_get_image_low_resolution_specifying_height(auth, refresh_db_once):
+    auth.login()
+
+    rv_image = auth.client.get(auth.base_url + '/input_images/2?height=150', headers=auth.auth_header())
+
+    assert rv_image.status_code == 200
+    assert rv_image.mimetype == 'image/jpeg'
+
+    im = Image.open(io.BytesIO(rv_image.data))
+
+    assert im.width == 200
+    assert im.height == 150
+    assert im.layers == 3
+
+
+def test_get_image_low_resolution_specifying_width(auth, refresh_db_once):
+    auth.login()
+
+    rv_image = auth.client.get(auth.base_url + '/input_images/2?width=200', headers=auth.auth_header())
+
+    assert rv_image.status_code == 200
+    assert rv_image.mimetype == 'image/jpeg'
+
+    im = Image.open(io.BytesIO(rv_image.data))
+
+    assert im.width == 200
+    assert im.height == 150
+    assert im.layers == 3

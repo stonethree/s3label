@@ -37,3 +37,26 @@ def test_get_images_in_folder_recursive():
     assert im_paths[1] == r'test_images/froth_image.jpg'
     assert im_paths[2] == r'test_images/image.jpg'
 
+
+def test_get_thumbnail():
+    im = du.get_thumbnail('test_images/image2.jpg', width=None, height=None)
+
+    assert im.size == (640, 480)
+
+    im = du.get_thumbnail('test_images/image2.jpg', width=None, height=150)
+
+    assert im.size == (200, 150)
+
+    im = du.get_thumbnail('test_images/image2.jpg', width=200, height=None)
+
+    assert im.size == (200, 150)
+
+    im = du.get_thumbnail('test_images/image2.jpg', width=200, height=150)
+
+    assert im.size == (200, 150)
+
+
+def test_get_thumbnail_returns_same_image_size_if_requested_size_larger_than_original():
+    im = du.get_thumbnail('test_images/image2.jpg', width=1280, height=None)
+
+    assert im.size == (640, 480)

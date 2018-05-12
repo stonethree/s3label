@@ -56,7 +56,7 @@ export default {
             return 'canvas-fg-' + this.userLabeledData.input_data_id;
         },
         image_request_path: function () {
-            return baseUrl + "/input_images/" + this.userLabeledData.input_data_id;
+            return baseUrl + "/input_images/" + this.userLabeledData.input_data_id + "?height=" + this.im_height_max;
         },
         tooltip_text: function() {
             return 'Label ID: ' + this.label_id;
