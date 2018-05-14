@@ -32,7 +32,7 @@
                     </form>
                 </div>
                 <div id="semantic_labels" class="col border-right">
-                    <span>Semantic Labels</span>
+                    <span>Label Classes</span>
                     <form>
                         <div v-for="label in labels" :key="label.label_class">
                             <input type="radio" class="radio-button" name="semantic_label" :value="label.label_class" v-model="active_label"> {{ label.label_class }} <br>
@@ -158,6 +158,7 @@ export default {
                 { key: 'Escape', action: 'Deselect all regions' },
                 { key: 'Delete', action: 'Delete selected region' },
                 { key: 'H', action: 'Temporarily hide labels<br><em>Useful for checking the edge of the label against the underlying image</em>' },
+                { key: '1, 2, ...', action: 'Select label class' },
             ]
         };
     },
@@ -406,6 +407,20 @@ export default {
                 }
 
                 key_handled = true;
+            }
+            if ((e.keyCode >= 48 && e.keyCode <= 57) || (e.keyCode >= 96 && e.keyCode <= 105)) { 
+                // 0-9 only
+
+                let label_index = e.keyCode - 48;
+
+                if (label_index >= 1 && label_index <= this.labels.length) {
+                    try {
+                        this.active_label = this.labels[label_index - 1].label_class;
+                    }
+                    catch (err) {
+                        console.log('Error switching active label:', err);
+                    }
+                }
             }
             else {
                 // console.log('key not found (down):', e.code);
