@@ -55,8 +55,9 @@ def test_get_label(auth, refresh_db_once):
 
     assert label['user_id'] == 3
     assert label['in_progress'] is True
-    assert label['user_complete'] is False
-    assert label['admin_complete'] is False
+    assert label['user_complete'] is True
+    assert label['admin_complete'] is True
+    assert label['paid'] is False
 
 
 def test_get_latest_label_history_for_logged_in_user(auth, refresh_db_once):
@@ -169,6 +170,10 @@ def test_count_input_data_items_per_user_per_label_task_as_non_admin(auth, refre
     assert df_item_counts['total_items'].tolist() == [1]
     assert df_item_counts['num_unlabeled'].tolist() == [0]
     assert df_item_counts['num_labeled'].tolist() == [1]
+    assert df_item_counts['num_user_complete'].tolist() == [1]
+    assert df_item_counts['num_needs_improvement'].tolist() == [0]
+    assert df_item_counts['num_admin_complete'].tolist() == [1]
+    assert df_item_counts['num_paid'].tolist() == [0]
 
 
 def test_count_input_data_items_per_user_per_label_task_as_admin(auth, refresh_db_once):

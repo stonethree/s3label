@@ -154,7 +154,11 @@ select user_id, label_task_id,
     sum(case when unlabeled = true then 1 else 0 end) as num_unlabeled,
     sum(case when unlabeled = false then 1 else 0 end) as num_labeled,
     sum(case when in_progress = false and unlabeled = true then 1 else 0 end) as in_progress_unlabeled,
-    sum(case when in_progress = false and unlabeled = false then 1 else 0 end) as in_progress_labeled
+    sum(case when in_progress = false and unlabeled = false then 1 else 0 end) as in_progress_labeled,
+    sum(case when user_complete = true then 1 else 0 end) as num_user_complete,
+    sum(case when needs_improvement = true then 1 else 0 end) as num_needs_improvement,
+    sum(case when admin_complete = true then 1 else 0 end) as num_admin_complete,
+    sum(case when paid = true then 1 else 0 end) as num_paid
 from latest_label_history_per_input_item
 group by user_id, label_task_id;
 
@@ -212,7 +216,7 @@ INSERT INTO labels (input_data_id, label_task_id, user_id) VALUES (2, 1, 1);
 INSERT INTO labels (input_data_id, label_task_id, user_id) VALUES (3, 1, 1);
 INSERT INTO labels (input_data_id, label_task_id, user_id) VALUES (3, 2, 1);
 INSERT INTO labels (input_data_id, label_task_id, user_id) VALUES (3, 1, 2);
-INSERT INTO labels (input_data_id, label_task_id, user_id, in_progress) VALUES (4, 1, 3, true);
+INSERT INTO labels (input_data_id, label_task_id, user_id, in_progress, user_complete, admin_complete) VALUES (4, 1, 3, true, true, true);
 
 INSERT INTO label_history (label_id, label_serialised) VALUES (2, '[{"test": 123}]');
 INSERT INTO label_history (label_id, label_serialised) VALUES (2, '[{"test": 1234}]');
