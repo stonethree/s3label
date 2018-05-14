@@ -60,7 +60,9 @@ create table users(
 create table users_label_tasks(
     user_label_task_id SERIAL PRIMARY KEY,
     user_id INTEGER REFERENCES users(user_id) ON DELETE CASCADE,
-    label_task_id INTEGER REFERENCES label_tasks(label_task_id) ON DELETE CASCADE);
+    label_task_id INTEGER REFERENCES label_tasks(label_task_id) ON DELETE CASCADE,
+    receive_new_unlabeled_data BOOLEAN DEFAULT TRUE);
+    COMMENT ON COLUMN users_label_tasks.receive_new_unlabeled_data is 'User is permitted to receive new unlabeled input data items to label';
 
 create table labels(
     label_id SERIAL PRIMARY KEY,
