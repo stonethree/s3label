@@ -33,7 +33,7 @@
 import axios from "axios";
 import { mapMutations, mapGetters } from 'vuex';
 
-axios.defaults.baseURL = "http://127.0.0.1:5000/image_labeler/api/v1.0/";
+axios.defaults.baseURL = process.env.API_ADDR;
 
 export default {
     name: "label_task_chooser",

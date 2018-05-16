@@ -32,7 +32,7 @@
 <script>
 import axios from "axios";
 
-var baseUrl = "http://127.0.0.1:5000/image_labeler/api/v1.0";
+var baseUrl = process.env.API_ADDR;
 axios.defaults.baseURL = baseUrl;
 
 function convertPolygonToPaths(polygon) {

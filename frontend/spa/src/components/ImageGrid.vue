@@ -58,7 +58,7 @@ import ImageThumbnail from './ImageThumbnail'
 import axios from "axios";
 import { mapGetters } from 'vuex';
 
-axios.defaults.baseURL = "http://127.0.0.1:5000/image_labeler/api/v1.0/";
+axios.defaults.baseURL = process.env.API_ADDR;
 
 function paginate (array, page_size, page_number) {
     --page_number; // because pages logically start with 1, but technically with 0
