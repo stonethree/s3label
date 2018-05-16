@@ -1,0 +1,128 @@
+stages:
+  - update
+  - build
+  - test
+  - deploy
+
+# Update jobs #
+###############
+
+backend:update_requirements:
+  stage: update
+  cache:
+    paths:
+      - frontend/spa/node_modules/
+      - venv/
+  script:
+    -  .\ci\build\update_back_dependencies.ps1
+
+frontend:update_requirements:
+  stage: update
+  cache:
+    paths:
+      - frontend/spa/node_modules/
+      - venv/
+  script:
+    -  .\ci\build\update_front_dependencies.ps1
+
+# Build jobs #
+###############
+
+backend:build_zip:
+  stage: build
+  cache:
+    paths:
+      - frontend/spa/node_modules/
+      - venv/
+  artifacts:
+    paths:
+      - '*.7z'
+  script:
+    -  .\ci\build\backend_zip.ps1
+
+frontend:build_zip:
+  stage: build
+  artifacts:
+    paths:
+      - '*.7z'
+  cache:
+    paths:
+      - frontend/spa/node_modules/
+      - venv/
+  script:
+    -  .\ci\build\frontend_zip.ps1
+
+# Test jobs #
+###############
+
+backend:run_tests:
+  stage: test
+  cache:
+    paths:
+      - frontend/spa/node_modules/
+      - venv/
+  script:
+    - ./venv/Scripts/pytest -vs
+
+# Deploy jobs #
+###############
+
+backend:deploy:prod:
+  stage: deploy
+  cache:
+    paths:
+      - frontend/spa/node_modules/
+      - venv/
+  script:
+    - pscp backend.7z ubuntu@s3label.stonethree.com:/opt/s3label/
+    - ./venv/bin/fab deploy:host=ubuntu@s3label,branch=$CI_COMMIT_REF_NAME
+  environment:
+    name: production
+    url: http://s3label.stonethree.com
+  only:
+  - master
+
+backend:deploy:prod:manual:
+  stage: deploy
+  when: manual
+  cache:
+    paths:
+      - frontend/spa/node_modules/
+      - venv/
+  script:
+    - ls
+    - pscp backend.7z ubuntu@s3label.stonethree.com:/opt/s3label/
+    - ./venv/Scripts/fab deploy_backend:host=ubuntu@s3label
+  environment:
+    name: production
+    url: http://s3label.stonethree.com
+
+frontend:deploy:prod:
+  stage: deploy
+  cache:
+    paths:
+      - frontend/spa/node_modules/
+      - venv/
+  script:
+    - pscp frontend.7z ubuntu@s3label.stonethree.com:/opt/s3label/
+    - ./venv/Scripts/fab deploy_frontend:host=ubuntu@s3label
+  environment:
+    name: production
+    url: http://s3label.stonethree.com
+  only:
+  - master
+
+frontend:deploy:prod:manual:
+  stage: deploy
+  when: manual
+  cache:
+    paths:
+      - frontend/spa/node_modules/
+      - venv/
+  script:
+    - ls
+    - pscp frontend.7z ubuntu@s3label.stonethree.com:/opt/s3label/
+    - ./venv/Scripts/fab deploy_frontend:host=ubuntu@s3label
+  environment:
+    name: production
+    url: http://s3label.stonethree.com

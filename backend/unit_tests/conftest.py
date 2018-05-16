@@ -30,7 +30,7 @@ def app():
     config = {'username': 'postgres',
               'password': 'postgres',
               'ip': 'localhost',
-              'port': '5433',
+              'port': '5432',
               'database_name': 's3_label_test'}
 
     test_app = create_app(config, '.')
