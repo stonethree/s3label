@@ -152,6 +152,9 @@ export async function uploadLabels(input_data_id, label_task_id, polygons) {
     if (label_task_id == undefined || input_data_id == undefined) {
         console.log("Error: Input fields must all be defined in order to upload label:" + label_task_id + input_data_id)
     }
+    else if (polygons.length == 0) {
+        console.error('Polygons object should (probably) not be empty when uploading! Not uploading item.');
+    }
     else {
         var data = {label_serialised: polygons}
 
