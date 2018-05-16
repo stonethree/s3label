@@ -162,7 +162,7 @@ export default {
         input_data_id: function (new_input_data_id, old_input_data_id) {
             console.log('switching image...')
 
-            this.clearCanvas();
+            // this.clearCanvas();
 
             if (new_input_data_id != undefined) {
                 this.fetchAndDisplayImage(baseUrl + '/input_images/' + new_input_data_id);
@@ -214,6 +214,8 @@ export default {
             // add the padding from the left and top borders of the canvas, so that we include padding in the displayed coordinates
 
             this.polygons = addPaddingOffset(polys, this.padX, this.padY);
+
+            console.log('polygons set to: ', this.polygons);
 
             this.edited = false;
         },

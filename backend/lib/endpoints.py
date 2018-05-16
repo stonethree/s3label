@@ -3,12 +3,15 @@ import flask_jwt_extended as fje
 import json
 import os
 from io import BytesIO
+import logging
 
 from backend.lib import sql_queries, sql_queries_admin, user_authentication as ua
 from backend.lib import data_upload as du
 
 # create a "blueprint" for the endpoints in this file
 ebp = Blueprint('endpoints', __name__)
+
+logger = logging.getLogger(__name__)
 
 # ---------------  GET requests ---------------
 
@@ -117,10 +120,12 @@ def get_image(input_image_id):
 
     im_path = os.path.abspath(os.path.join(image_folder, im_path))
 
-    # check if user is requesting a specific image width or height
+    # check if user is requesting a specific image width or heightCurrent database being used
 
     width = request.args.get('width', None)
     height = request.args.get('height', None)
+
+    logger.debug('im_path: {} width: {} height: {} image_folder: {}'.format(im_path, width, height, image_folder))
 
     try:
         if width is not None:

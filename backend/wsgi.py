@@ -8,4 +8,7 @@ config = {
     'database_name': 's3_label_live'
 }
 
-app = create_app(config, image_folder=".")
+app = create_app(config,
+                 image_folder=".",
+                 log_folder='/var/logs/uwsgi/app/',
+                 log_file_name='s3label_python_logs.log')
