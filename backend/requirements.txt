@@ -1,0 +1,11 @@
+numpy
+pandas
+psycopg2
+sqlalchemy
+pytest
+cython
+flask
+flask-cors
+flask-jwt-extended
+fabric3
+pillow
