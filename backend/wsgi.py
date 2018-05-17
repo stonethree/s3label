@@ -10,5 +10,5 @@ config = {
 
 app = create_app(config,
                  image_folder=".",
-                 log_folder='/var/logs/uwsgi/app/',
+                 log_folder='/var/log/uwsgi/app/',
                  log_file_name='s3label_python_logs.log')
