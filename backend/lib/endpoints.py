@@ -144,7 +144,10 @@ def get_image(input_image_id):
             # check if a resized image has been requested
 
             if height is None and width is None:
-                return send_file(im_path)
+                # give mime type in the form 'image/bmp', not 'image/x-ms-bmp' which send_file sometimes does
+                _, extension = os.path.splitext(im_path)
+
+                return send_file(im_path, mimetype='image/{}'.format(extension[1:]))
             else:
                 im = du.get_thumbnail(im_path, width=width, height=height)
 
