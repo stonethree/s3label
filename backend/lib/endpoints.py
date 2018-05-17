@@ -162,7 +162,8 @@ def get_image(input_image_id):
             resp = make_response(jsonify(error='Input data item not found'), 404)
             resp.mimetype = "application/javascript"
             return resp
-    except:
+    except Exception as e:
+        logger.error(e)
         resp = make_response(jsonify(error='Unkown error while retrieving image'), 400)
         resp.mimetype = "application/javascript"
         return resp
@@ -245,7 +246,8 @@ def get_next_or_preceding_input_data_item(label_task_id):
         resp = make_response(df_input_data.to_json(orient='records'), 200)
         resp.mimetype = "application/javascript"
         return resp
-    except Exception:
+    except Exception as e:
+        logger.error(e)
         resp = make_response(jsonify(error='No labeled data found for this user and/or label task'), 404)
         resp.mimetype = "application/javascript"
         return resp
@@ -359,7 +361,8 @@ def get_all_user_input_data(label_task_id, user_id):
         resp = make_response(df_input_data.to_json(orient='records'), 200)
         resp.mimetype = "application/javascript"
         return resp
-    except Exception:
+    except Exception as e:
+        logger.error(e)
         resp = make_response(jsonify(error='No input data found for this user and/or label task'), 404)
         resp.mimetype = "application/javascript"
         return resp
@@ -498,7 +501,8 @@ def get_label_id(user_id, label_task_id, input_data_id):
             resp = make_response(jsonify(label_id=label_id), 200)
             resp.mimetype = "application/javascript"
             return resp
-    except Exception:
+    except Exception as e:
+        logger.error(e)
         resp = make_response(jsonify(error='Bad request'), 400)
         resp.mimetype = "application/javascript"
         return resp
@@ -546,7 +550,8 @@ def get_label(label_id):
                 resp = make_response(jsonify(error='Not permitted to view this content. Must be an admin user.'), 403)
                 resp.mimetype = "application/javascript"
                 return resp
-    except Exception:
+    except Exception as e:
+        logger.error(e)
         resp = make_response(jsonify(error='Bad request'), 400)
         resp.mimetype = "application/javascript"
         return resp
@@ -720,7 +725,8 @@ def get_unlabeled_image_id(label_task_id):
         else:
             try:
                 input_data_id = int(df_unlabeled['input_data_id'][0])
-            except:
+            except Exception as e:
+                logger.error(e)
                 resp = make_response(jsonify(error='Error retrieving unlabeled input_data_id'), 500)
                 resp.mimetype = "application/javascript"
                 return resp
@@ -740,7 +746,8 @@ def get_unlabeled_image_id(label_task_id):
                     resp.mimetype = "application/javascript"
                     return resp
 
-    except Exception:
+    except Exception as e:
+        logger.error(e)
         resp = make_response(jsonify(error='Bad request'), 400)
         resp.mimetype = "application/javascript"
         return resp
@@ -808,7 +815,8 @@ def store_label(label_task_id, input_data_id):
                 resp = make_response(jsonify(label_id=label_id, label_hist_pks=label_hist_id), 200)
                 resp.mimetype = "application/javascript"
                 return resp
-    except Exception:
+    except Exception as e:
+        logger.error(e)
         resp = make_response(jsonify(error='Bad request'), 400)
         resp.mimetype = "application/javascript"
         return resp
@@ -856,7 +864,8 @@ def upload_input_data_item():
 
     try:
         dataset_id = int(dataset_id)
-    except:
+    except Exception as e:
+        logger.error(e)
         resp = make_response(jsonify(error='dataset_id must be an integer'), 400)
         resp.mimetype = "application/javascript"
         return resp
@@ -886,7 +895,8 @@ def upload_input_data_item():
             resp = make_response(jsonify(input_data_id=input_data_id), 200)
             resp.mimetype = "application/javascript"
             return resp
-    except Exception:
+    except Exception as e:
+        logger.error(e)
         resp = make_response(jsonify(error='Bad request'), 400)
         resp.mimetype = "application/javascript"
         return resp
