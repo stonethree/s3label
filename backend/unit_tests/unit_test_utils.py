@@ -4,16 +4,8 @@ import json
 import pandas as pd
 
 
-def get_db_config():
-    return {'username': 'postgres',
-            'password': 'postgres',
-            'ip': 'localhost',
-            'port': '5432',
-            'database_name': 's3_label_test'}
+def connect_to_db_psycopg(config):
 
-
-def connect_to_db_psycopg():
-    config = get_db_config()
     conn = psycopg2.connect(host=config['ip'],
                             database=config['database_name'],
                             user=config['username'],
@@ -23,8 +15,8 @@ def connect_to_db_psycopg():
     return conn
 
 
-def connect_to_db_sqlalchemy():
-    config = get_db_config()
+def connect_to_db_sqlalchemy(config):
+
     engine = create_engine('postgresql://{}:{}@{}:{}/{}'.format(config['username'],
                                                                 config['password'],
                                                                 config['ip'],
@@ -34,8 +26,14 @@ def connect_to_db_sqlalchemy():
     return engine
 
 
-def reset_db_contents():
-    connection = connect_to_db_psycopg()
+def reset_db_contents(config):
+    """
+
+    :param config: Dictionary of database config parameters
+    :return:
+    """
+
+    connection = connect_to_db_psycopg(config)
 
     connection.autocommit = True
 
