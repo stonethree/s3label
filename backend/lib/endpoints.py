@@ -144,18 +144,15 @@ def get_image(input_image_id):
             # check if a resized image has been requested
 
             if height is None and width is None:
-                # give mime type in the form 'image/bmp', not 'image/x-ms-bmp' which send_file sometimes does
-                _, extension = os.path.splitext(im_path)
-
-                return send_file(im_path, mimetype='image/{}'.format(extension[1:]))
+                im = du.convert_to_jpeg(im_path)
             else:
                 im = du.get_thumbnail(im_path, width=width, height=height)
 
-                byte_io = BytesIO()
-                im.save(byte_io, 'JPEG')
-                byte_io.seek(0)
+            byte_io = BytesIO()
+            im.save(byte_io, 'JPEG')
+            byte_io.seek(0)
 
-                return send_file(byte_io, mimetype='image/jpeg')
+            return send_file(byte_io, mimetype='image/jpeg')
 
         else:
             print('Could not find image: ', im_path)

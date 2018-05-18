@@ -86,3 +86,16 @@ def get_thumbnail(image_path, width=None, height=None):
         return im
     else:
         return im
+
+
+def convert_to_jpeg(image_path):
+    """
+    Read image from disk and returns jpeg version
+
+    :param image_path:
+    :return:
+    """
+
+    im = Image.open(image_path)
+
+    return im.convert('RGB')
