@@ -566,6 +566,10 @@ export default {
                 // add checkerboard pattern around image
 
                 vm.draw_pattern(img.width, img.height);
+
+                // redraw polygon labels
+
+                vm.drawAllPolygons(vm.ctx, vm.polygons);
             }
             img.src = imgUrl;
         },
