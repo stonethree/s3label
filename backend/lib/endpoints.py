@@ -709,10 +709,15 @@ def get_unlabeled_image_id(label_task_id):
 
     # check if data must be shuffled before sorting by priority
 
-    if request.is_json:
-        shuffle = request.json.get('shuffle', False)
-    else:
-        shuffle = False
+    shuffle = request.args.get('shuffle', 'true')
+
+    try:
+        shuffle = shuffle != 'false'
+    except (ValueError, TypeError):
+        resp = make_response(jsonify(error='"shuffle" parameter is wrong format. Must be a "true" or "false".'),
+                             400)
+        resp.mimetype = "application/javascript"
+        return resp
 
     try:
         df_unlabeled = sql_queries.get_next_unlabeled_input_data_item(engine, label_task_id, shuffle=shuffle,
