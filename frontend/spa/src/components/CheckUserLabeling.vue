@@ -326,6 +326,9 @@ export default {
                 vm.setCanvasSize(canvas_fg, img.width, img.height, vm.padX, vm.padY);
                 vm.setCanvasSize(canvas_bg, img.width, img.height, vm.padX, vm.padY);
                 ctx2.drawImage(img, vm.padX, vm.padY);
+
+                // redraw the polygons, since we have just resized the canvas and so lost any currently displayed polygons
+                vm.drawAllPolygons(vm.ctx, vm.polygons);
             }
             img.src = imgUrl;
         },
