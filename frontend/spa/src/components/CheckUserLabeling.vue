@@ -15,7 +15,7 @@
                 </b-collapse>
                 <div class="row">
                     <h3>Labeled data</h3>
-                    <b-table class="tables" responsive="md" hover :items="labeled_input_data" :fields="fields_labeled_input_data" small @row-clicked="select_label"></b-table>
+                    <b-table class="tables" responsive="md" hover :items="labeled_input_data" :fields="fields_labeled_input_data" small @row-clicked="select_label" v-model="labels_table_data"></b-table>
                 </div>
             </div>
 
@@ -64,6 +64,7 @@ export default {
             opacity: 0.3,
             stroke_thickness: 2,
             use_stroke: true,
+            labels_table_data: undefined
         };
     },
 
@@ -73,6 +74,10 @@ export default {
 
     beforeMount() {
         this.get_users();
+        window.addEventListener('keydown', this.keyDownHandler);
+    },
+    beforeDestroy () {
+        window.removeEventListener('keydown', this.keyDownHandler);
     },
 
     computed: {
@@ -468,6 +473,64 @@ export default {
                     vm.polygons = [];
                     vm.drawAllPolygons(vm.ctx, vm.polygons);
                 });
+        },
+
+        keyDownHandler: function(e) {
+            var key_handled = false;
+
+            if (e.code === "ArrowUp") {
+
+                // get index if currently highlighted row in the labels table
+                let k = this.labels_table_data.findIndex(k => k._rowVariant=='active');
+
+                if (k > 0) {
+                    // set label ID to the above row's label ID
+                    this.label_id = this.labels_table_data[k-1].label_id;
+                    this.input_data_id = this.labels_table_data[k-1].input_data_id;
+
+                    // highlight that row and unhighlight the current row
+                    this.$set(this.labels_table_data[k], '_rowVariant', undefined);
+                    this.$set(this.labels_table_data[k-1], '_rowVariant', 'active');
+                }
+                
+                key_handled = true;
+            }
+            else if (e.code === "ArrowDown") {
+
+                // get index if currently highlighted row in the labels table
+                let k = this.labels_table_data.findIndex(k => k._rowVariant=='active');
+
+                if (k >= 0 && k < this.labels_table_data.length - 1) {
+                    // set label ID to the above row's label ID
+                    this.label_id = this.labels_table_data[k+1].label_id;
+                    this.input_data_id = this.labels_table_data[k+1].input_data_id;
+
+                    // highlight that row and unhighlight the current row
+                    this.$set(this.labels_table_data[k], '_rowVariant', undefined);
+                    this.$set(this.labels_table_data[k+1], '_rowVariant', 'active');
+                }
+
+                key_handled = true;
+            }
+
+            if (key_handled) {
+                e.stopPropagation();
+                e.preventDefault();
+            }
+
+            // this.input_data_id = item.input_data_id;
+            // this.label_id = item.label_id;
+
+            // // highlight selected row
+
+            // for (var i = 0; i < this.labeled_input_data.length; i++) {
+            //     if (this.labeled_input_data[i].input_data_id == this.input_data_id) {
+            //         this.$set(this.labeled_input_data[i], '_rowVariant', 'active');
+            //     }
+            //     else {
+            //         this.$set(this.labeled_input_data[i], '_rowVariant', undefined);
+            //     }
+            // }
         },
     }
 };
