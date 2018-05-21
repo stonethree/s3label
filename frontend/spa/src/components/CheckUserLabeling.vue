@@ -2,14 +2,17 @@
     <div class="container-fluid">
         <div class="row">
             <div class="col small not-inlined">
-                <div class="row">
-                    <h3>Users</h3>
-                    <b-table class="tables" responsive="md" hover :items="users" :fields="fields_users" small @row-clicked="select_user"></b-table>
-                </div>
-                <div class="row">
-                    <h3>Label tasks for user</h3>
-                    <b-table class="tables" responsive="md" hover :items="label_tasks" :fields="fields_label_tasks" small @row-clicked="select_label_task"></b-table>
-                </div>
+                <b-btn v-b-toggle.collapse1 variant="primary">Toggle Collapse</b-btn>
+                <b-collapse id="collapse1" class="mt-2" visible>
+                    <div class="row">
+                        <h3>Users</h3>
+                        <b-table class="tables" responsive="md" hover :items="users" :fields="fields_users" small @row-clicked="select_user"></b-table>
+                    </div>
+                    <div class="row">
+                        <h3>Label tasks for user</h3>
+                        <b-table class="tables" responsive="md" hover :items="label_tasks" :fields="fields_label_tasks" small @row-clicked="select_label_task"></b-table>
+                    </div>
+                </b-collapse>
                 <div class="row">
                     <h3>Labeled data</h3>
                     <b-table class="tables" responsive="md" hover :items="labeled_input_data" :fields="fields_labeled_input_data" small @row-clicked="select_label"></b-table>
