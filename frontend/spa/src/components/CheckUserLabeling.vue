@@ -64,7 +64,8 @@ export default {
             opacity: 0.3,
             stroke_thickness: 2,
             use_stroke: true,
-            labels_table_data: undefined
+            labels_table_data: undefined,
+            hide_polygons: false
         };
     },
 
@@ -75,9 +76,11 @@ export default {
     beforeMount() {
         this.get_users();
         window.addEventListener('keydown', this.keyDownHandler);
+        window.addEventListener('keyup', this.keyUpHandler);
     },
     beforeDestroy () {
         window.removeEventListener('keydown', this.keyDownHandler);
+        window.removeEventListener('keyup', this.keyUpHandler);
     },
 
     computed: {
@@ -354,8 +357,10 @@ export default {
             context.lineWidth = this.stroke_thickness;
             context.clearRect(0, 0, context.canvas.width, context.canvas.height);
 
-            for (let i = 0; i < polygon_list.length; i++) {
-                this.drawPolygon(context, polygon_list[i]);
+            if (!this.hide_polygons) {
+                for (let i = 0; i < polygon_list.length; i++) {
+                    this.drawPolygon(context, polygon_list[i]);
+                }
             }
         },
 
@@ -515,25 +520,35 @@ export default {
 
                 key_handled = true;
             }
+            else if (e.code === 'KeyH') {
+                this.hide_polygons = true;
+                this.drawAllPolygons(this.ctx, this.polygons);
+
+                key_handled = true;
+            }
 
             if (key_handled) {
                 e.stopPropagation();
                 e.preventDefault();
             }
+        },
 
-            // this.input_data_id = item.input_data_id;
-            // this.label_id = item.label_id;
+        keyUpHandler: function(e) {
+            var key_handled = false;
 
-            // // highlight selected row
+            if (e.code === 'KeyH') {
+                this.hide_polygons = false;
+                this.drawAllPolygons(this.ctx, this.polygons);
 
-            // for (var i = 0; i < this.labeled_input_data.length; i++) {
-            //     if (this.labeled_input_data[i].input_data_id == this.input_data_id) {
-            //         this.$set(this.labeled_input_data[i], '_rowVariant', 'active');
-            //     }
-            //     else {
-            //         this.$set(this.labeled_input_data[i], '_rowVariant', undefined);
-            //     }
-            // }
+                key_handled = true;
+
+                console.log('H up')
+            }
+
+            if (key_handled) {
+                e.stopPropagation();
+                e.preventDefault();
+            }
         },
     }
 };
