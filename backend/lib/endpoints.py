@@ -1071,6 +1071,8 @@ def generate_ground_truth_images(label_task_id):
 
         if output_folder is not None:
             try:
+                output_folder = os.path.abspath(output_folder)
+
                 if not os.path.exists(output_folder):
                     os.makedirs(output_folder)
             except PermissionError as e:
@@ -1118,7 +1120,7 @@ def generate_ground_truth_images(label_task_id):
 
                 return jsonify({"msg": "Generated {num_written}/{total} binary ground truth images and wrote them "
                                        "to '{folder}'.".
-                               format(num_written=count, total=len(df), folder=output_folder),
+                               format(num_written=count, total=len(df), folder=os.path.abspath(output_folder)),
                                 'num_ground_truth_images': count,
                                 'total_labels_found': len(df),
                                 'output_folder': output_folder}), 200
