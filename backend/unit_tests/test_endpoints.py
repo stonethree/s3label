@@ -1,9 +1,11 @@
 from .unit_test_utils import json_of_response, nans_to_nones, AuthActions
+from backend.lib import data_download as dd
 
 import pandas as pd
 import json
 from PIL import Image
 import io
+import os
 
 
 def test_server_exists(client, refresh_db_once):
@@ -86,7 +88,9 @@ def test_get_latest_label_history_for_different_logged_in_user(auth, refresh_db_
     label = json_of_response(rv_label)
 
     assert label[0]['label_id'] == 5
-    assert label[0]['label_serialised'] == '[{"test": 6}]'
+    assert label[0]['label_serialised'] == '[{"type": "freehand", "label": "foreground_object", ' \
+                                           '"polygon": {"regions": [[[100.2, 200.1], [130.4, 205.1], ' \
+                                           '[132.2, 270.1], [102.1, 268.7]]], "inverted": false}, "selected": true}]'
     assert label[0]['input_data_id'] == 3
     assert label[0]['label_task_id'] == 1
     assert label[0]['user_id'] == 2
@@ -114,7 +118,9 @@ def test_get_latest_label_history_for_specified_user(auth, refresh_db_once):
     label = json_of_response(rv_label)
 
     assert label[0]['label_id'] == 5
-    assert label[0]['label_serialised'] == '[{"test": 6}]'
+    assert label[0]['label_serialised'] == '[{"type": "freehand", "label": "foreground_object", ' \
+                                           '"polygon": {"regions": [[[100.2, 200.1], [130.4, 205.1], ' \
+                                           '[132.2, 270.1], [102.1, 268.7]]], "inverted": false}, "selected": true}]'
     assert label[0]['input_data_id'] == 3
     assert label[0]['label_task_id'] == 1
     assert label[0]['user_id'] == 2
@@ -604,3 +610,28 @@ def test_get_image_low_resolution_specifying_width(auth, refresh_db_once):
     assert im.width == 200
     assert im.height == 150
     assert im.layers == 3
+
+
+def test_download_ground_truth_images_to_disk(auth, refresh_db_every_time):
+    auth.login(email='shaun.irwin@stonethree.com', password='abc')
+
+    rv = auth.client.put(auth.base_url + '/label_images/label_task_id/1',
+                         headers=auth.auth_header(),
+                         data=json.dumps({'output_folder': 'tmp/ground_truth_images',
+                                          'prefix': 'im_',
+                                          'suffix': '_gt2'}),
+                         content_type='application/json')
+
+    assert rv.status_code == 200
+
+    response = json_of_response(rv)
+
+    assert response['total_labels_found'] == 2
+    assert response['num_ground_truth_images'] == 1
+
+    assert os.path.exists('tmp/ground_truth_images/im_input_data_id_3_label_id_5_gt2.png')
+    assert not os.path.exists('tmp/ground_truth_images/im_input_data_id_4_label_id_6_gt2.png')
+
+    assert dd.get_image_dims('tmp/ground_truth_images/im_input_data_id_3_label_id_5_gt2.png') == (640, 428)
+
+    assert os.path.exists('tmp/ground_truth_images/labels_info.csv')

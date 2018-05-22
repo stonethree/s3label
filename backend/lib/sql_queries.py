@@ -396,6 +396,40 @@ def get_label_by_id(engine, label_id):
         return None
 
 
+def get_all_completed_labels(engine, label_task_id, dataset_id=None):
+    """
+    Get latest label history entries for all completed (approved) labels
+
+    :param engine:
+    :param label_task_id:
+    :param dataset_id: optionally specify a dataset ID to only return labels for this dataset
+    :return:
+    """
+
+    if dataset_id is None:
+        dataset_clause = ''
+    else:
+        dataset_clause = 'where dataset_id=%(dataset_id)s'
+
+    sql_query = """
+    with t as (
+        select *, label_serialised::text label_serialised_text from latest_label_history
+            where label_task_id = %(label_task_id)s and admin_complete
+    )
+    select t.*, dataset_id, data_path from t inner join input_data using (input_data_id) {dataset_clause}
+    """.format(dataset_clause=dataset_clause)
+
+    df = pd.read_sql_query(sql_query, engine, params={'label_task_id': label_task_id,
+                                                      'dataset_id': dataset_id})
+
+    # use the text
+
+    df['label_serialised'] = df['label_serialised_text']
+    df.drop('label_serialised_text', axis=1, inplace=True)
+
+    return df
+
+
 def get_example_labelings(engine, label_task_id):
     """
     Get example labelings for this label task

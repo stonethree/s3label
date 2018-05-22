@@ -9,3 +9,4 @@ flask-cors
 flask-jwt-extended
 fabric3
 pillow
+opencv-python-headless>=3.4

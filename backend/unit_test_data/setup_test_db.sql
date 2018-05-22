@@ -217,7 +217,7 @@ INSERT INTO labels (input_data_id, label_task_id, user_id, in_progress) VALUES (
 INSERT INTO labels (input_data_id, label_task_id, user_id) VALUES (2, 1, 1);
 INSERT INTO labels (input_data_id, label_task_id, user_id) VALUES (3, 1, 1);
 INSERT INTO labels (input_data_id, label_task_id, user_id) VALUES (3, 2, 1);
-INSERT INTO labels (input_data_id, label_task_id, user_id) VALUES (3, 1, 2);
+INSERT INTO labels (input_data_id, label_task_id, user_id, admin_complete) VALUES (3, 1, 2, true);
 INSERT INTO labels (input_data_id, label_task_id, user_id, in_progress, user_complete, admin_complete) VALUES (4, 1, 3, true, true, true);
 
 INSERT INTO label_history (label_id, label_serialised) VALUES (2, '[{"test": 123}]');
@@ -225,7 +225,7 @@ INSERT INTO label_history (label_id, label_serialised) VALUES (2, '[{"test": 123
 INSERT INTO label_history (label_id, label_serialised) VALUES (1, '[{"test": 1}]');
 INSERT INTO label_history (label_id, label_serialised) VALUES (3, '[{"test": 4}]');
 INSERT INTO label_history (label_id, label_serialised) VALUES (4, '[{"test": 5}]');
-INSERT INTO label_history (label_id, label_serialised) VALUES (5, '[{"test": 6}]');
+INSERT INTO label_history (label_id, label_serialised) VALUES (5, '[{"type": "freehand", "label": "foreground_object", "polygon": {"regions": [[[100.2, 200.1], [130.4, 205.1], [132.2, 270.1], [102.1, 268.7]]], "inverted": false}, "selected": true}]');
 
 INSERT INTO priorities(input_data_id, label_task_id, priority) VALUES (1, 1, 1);
 INSERT INTO priorities(input_data_id, label_task_id, priority) VALUES (2, 1, 5);

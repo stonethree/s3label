@@ -4,9 +4,13 @@ import json
 import os
 from io import BytesIO
 import logging
+import cv2
+from shutil import copyfile
+import pathlib
 
 from backend.lib import sql_queries, sql_queries_admin, user_authentication as ua
 from backend.lib import data_upload as du
+from backend.lib import data_download as dd
 
 # create a "blueprint" for the endpoints in this file
 ebp = Blueprint('endpoints', __name__)
@@ -1006,3 +1010,123 @@ def update_label_fields(label_id):
     else:
         return jsonify({"msg": "No field(s) to update. Check that you have specified valid field names and value "
                                "types"}), 400
+
+
+# ---------------  PUT requests ---------------
+
+
+@ebp.route('/image_labeler/api/v1.0/label_images/label_task_id/<int:label_task_id>', methods=['PUT'])
+@fje.jwt_required
+def generate_ground_truth_images(label_task_id):
+    engine = current_app.config['engine']
+
+    user_identity = fje.get_jwt_identity()
+    user_id_from_auth = ua.get_user_id_from_token(user_identity)
+
+    is_admin = sql_queries_admin.is_user_an_admin(engine, user_id_from_auth)
+
+    if is_admin is None or not is_admin:
+        resp = make_response(jsonify(error='Not permitted to perform this operation. Must be an admin user.'), 403)
+        resp.mimetype = "application/javascript"
+        return resp
+
+    # get the label data
+
+    df = sql_queries.get_all_completed_labels(engine, label_task_id=label_task_id, dataset_id=None)
+
+    if len(df) > 0:
+        # create the folder to write the ground truth images to
+
+        if not request.json:
+            resp = make_response(jsonify(error='Must use JSON format'), 400)
+            resp.mimetype = "application/javascript"
+            return resp
+
+        if 'prefix' in request.json:
+            prefix = request.json['prefix']
+        else:
+            prefix = ''
+
+        if 'suffix' in request.json:
+            suffix = request.json['suffix']
+        else:
+            suffix = '_gt'
+
+        if 'prefix_input' in request.json:
+            prefix_input = request.json['prefix_input']
+        else:
+            prefix_input = ''
+
+        if 'suffix_input' in request.json:
+            suffix_input = request.json['suffix_input']
+        else:
+            suffix_input = ''
+
+        if 'output_folder' not in request.json:
+            resp = make_response(jsonify(error='Requires output_folder to be specified'), 400)
+            resp.mimetype = "application/javascript"
+            return resp
+
+        output_folder = request.json['output_folder']
+
+        if output_folder is not None:
+            try:
+                if not os.path.exists(output_folder):
+                    os.makedirs(output_folder)
+            except PermissionError as e:
+                logger.error('Could not create folder to save ground truth images to', e)
+                resp = make_response(
+                    jsonify(error='Permission denied while trying to create folder to save images to'), 401)
+                resp.mimetype = "application/javascript"
+                return resp
+            else:
+                # write a CSV file containing the input data IDs and label IDs
+
+                df[['label_id', 'input_data_id', 'data_path']].to_csv(os.path.join(output_folder, 'labels_info.csv'))   # TODO: should also provide a key to describe what the label colours in the images represent
+
+                # generate ground truth images from the label data and write them to disk
+
+                image_paths = df['data_path'].tolist()
+                input_data_ids = df['input_data_id'].tolist()
+                label_ids = df['label_id'].tolist()
+                labels_serialised = df['label_serialised'].tolist()
+
+                count = 0
+
+                for im_path, label_id, input_data_id, label_ser in \
+                        zip(image_paths, label_ids, input_data_ids, labels_serialised):
+                    if label_ser is not None:
+                        im_w, im_h = dd.get_image_dims(im_path)
+                        label = dd.get_polygon_regions_from_serialised_label(label_ser)
+
+                        im_gt = dd.binary_im_from_polygon_label(label, im_w, im_h)
+
+                        im_name = '{prefix}input_data_id_{input_data_id}_label_id_{label_id}{suffix}.png'.\
+                            format(label_id=label_id, input_data_id=input_data_id, prefix=prefix, suffix=suffix)
+
+                        cv2.imwrite(os.path.join(output_folder, im_name), im_gt)
+                        count += 1
+
+                # copy input images to same folder and rename them. Keep same file type.
+
+                for im_path, input_data_id in zip(image_paths, input_data_ids):
+                    p = pathlib.PurePath(im_path)
+                    im_name = '{prefix_input}input_data_id_{input_data_id}{suffix_input}'.\
+                        format(prefix_input=prefix_input, input_data_id=input_data_id, suffix_input=suffix_input)
+                    pp = pathlib.PurePath(p.name).with_name(im_name).with_suffix(p.suffix)
+                    copyfile(im_path, os.path.join(output_folder, str(pp)))
+
+                return jsonify({"msg": "Generated {num_written}/{total} binary ground truth images and wrote them "
+                                       "to '{folder}'.".
+                               format(num_written=count, total=len(df), folder=output_folder),
+                                'num_ground_truth_images': count,
+                                'total_labels_found': len(df),
+                                'output_folder': output_folder}), 200
+        else:
+            resp = make_response(jsonify(error='Output folder must be specified.'), 400)
+            resp.mimetype = "application/javascript"
+            return resp
+    else:
+        resp = make_response(jsonify(error='No admin-approved labels found for this label task.'), 404)
+        resp.mimetype = "application/javascript"
+        return resp

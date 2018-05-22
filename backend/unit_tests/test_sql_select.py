@@ -411,3 +411,21 @@ def test_get_example_labelings(refresh_db_once, db_connection_sqlalchemy):
     assert df.columns.tolist() == expected_cols
     assert_series_equal(df['example_labeling_id'], df_test['example_labeling_id'])
     assert_series_equal(df['title'], df_test['title'])
+
+
+def test_get_all_completed_labels(refresh_db_once, db_connection_sqlalchemy):
+    engine = db_connection_sqlalchemy
+    df = sql_queries.get_all_completed_labels(engine, label_task_id=1, dataset_id=None)
+
+    assert len(df) == 2
+    assert df['admin_complete'][0]
+    assert df['label_task_id'][0] == 1
+    assert df['input_data_id'][0] == 3
+    assert 'label_serialised' in df.columns
+
+
+def test_get_all_completed_labels_when_specifying_dataset_id(refresh_db_once, db_connection_sqlalchemy):
+    engine = db_connection_sqlalchemy
+    df = sql_queries.get_all_completed_labels(engine, label_task_id=1, dataset_id=3)
+
+    assert len(df) == 0
