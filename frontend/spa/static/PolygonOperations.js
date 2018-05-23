@@ -69,7 +69,7 @@ export function addPaddingOffset(polygons, padX, padY) {
 
     for (let i = 0; i < polygons.length; i++) {
         for (let j = 0; j < polygons[i].polygon.regions.length; j++) {
-            polygons[i].polygon.regions[j] = polygons[i].polygon.regions[j].map(coords => [coords[0] - padX, coords[1] - padY]);
+            polygons[i].polygon.regions[j] = polygons[i].polygon.regions[j].map(coords => [coords[0] + padX, coords[1] + padY]);
         }
     }
 
@@ -82,7 +82,7 @@ export function removePaddingOffset(polygons, padX, padY) {
 
     for (let i = 0; i < polygons.length; i++) {
         for (let j = 0; j < polygons[i].polygon.regions.length; j++) {
-            polygons[i].polygon.regions[j] = polygons[i].polygon.regions[j].map(coords => [coords[0] + padX, coords[1] + padY]);
+            polygons[i].polygon.regions[j] = polygons[i].polygon.regions[j].map(coords => [coords[0] - padX, coords[1] - padY]);
         }
     }
 
