@@ -1,31 +1,31 @@
 
-import 'bootstrap/dist/css/bootstrap.min.css'
-import 'bootstrap-vue/dist/bootstrap-vue.css'
-import 'font-awesome/css/font-awesome.css'
+import 'bootstrap/dist/css/bootstrap.min.css';
+import 'bootstrap-vue/dist/bootstrap-vue.css';
+import 'font-awesome/css/font-awesome.css';
 
-import Vue from 'vue'
-import Vuex from "vuex";
-import App from './App'
-import VueRouter from 'vue-router'
-import BootstrapVue from 'bootstrap-vue'
+import Vue from 'vue';
+import Vuex from 'vuex';
+import App from './App';
+import VueRouter from 'vue-router';
+import BootstrapVue from 'bootstrap-vue';
 
-import Login from './components/Login'
-import Logout from './components/Logout'
-import LabelTaskChooser from './components/LabelTaskChooser'
-import ImageLabeler from './components/ImageLabeling'
-import ImageGrid from './components/ImageGrid'
-import Admin from './components/Admin'
+import Login from './components/Login';
+import Logout from './components/Logout';
+import LabelTaskChooser from './components/LabelTaskChooser';
+import ImageLabeler from './components/ImageLabeling';
+import ImageGrid from './components/ImageGrid';
+import Admin from './components/Admin';
 
-import { StoreLogin } from './vuex_stores/login_store'
-import { StoreLabelTask } from './vuex_stores/label_task_store'
-import { StoreImageLabeling } from './vuex_stores/image_labeling_store'
+import { StoreLogin } from './vuex_stores/login_store';
+import { StoreLabelTask } from './vuex_stores/label_task_store';
+import { StoreImageLabeling } from './vuex_stores/image_labeling_store';
 
 
-Vue.use(VueRouter)
-Vue.use(Vuex)
-Vue.use(BootstrapVue)
+Vue.use(VueRouter);
+Vue.use(Vuex);
+Vue.use(BootstrapVue);
 
-Vue.config.productionTip = false
+Vue.config.productionTip = false;
 
 
 const store = new Vuex.Store({
@@ -34,7 +34,7 @@ const store = new Vuex.Store({
         label_task_store: StoreLabelTask,
         image_labeling: StoreImageLabeling
     }
-})
+});
 
 const routes = [
     { path: '/', component: Login },
@@ -46,10 +46,10 @@ const routes = [
         beforeEnter: (to, from, next) => {
             // redirect to label task chooser if no label task yet specified
             if (store.getters['label_task_store/label_task'] == undefined) {
-                next('/label_tasks')
+                next('/label_tasks');
             }
             else {
-                next()
+                next();
             }
         }
     },
@@ -58,32 +58,32 @@ const routes = [
         beforeEnter: (to, from, next) => {
             // redirect to label task chooser if no label task yet specified
             if (store.getters['label_task_store/label_task'] == undefined) {
-                next('/label_tasks')
+                next('/label_tasks');
             }
             else {
-                next()
+                next();
             }
         }
     },
     { path: '/admin', component: Admin }
-]
+];
 
 const router = new VueRouter({
     routes, // short for routes: routes
     mode: 'history'
-})
+});
 
 
 // reroute user to login page if not currently logged in
 
 router.beforeEach((to, from, next) => {
     if (store.getters['user_login/is_logged_in'] || to.path == '/login') {
-        next()
+        next();
     }
     else {
-        next('/login')
+        next('/login');
     }
-})
+});
 
 /* eslint-disable no-new */
 new Vue({
@@ -93,4 +93,4 @@ new Vue({
     store,
     router,
     render: h => h(App)
-}).$mount('#app')       // mount the router on the app
+}).$mount('#app');       // mount the router on the app
