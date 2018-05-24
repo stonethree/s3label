@@ -20,11 +20,27 @@
                     <h4>Files available for upload</h4>
                     <button type="submit" @click="select_all">Select All</button>
                     <button type="submit" @click="select_none">Select None</button>
-                    <b-table class="tables" responsive="md" hover :items="image_paths" :fields="image_fields" small @row-clicked="select_image">
+                    <span>{{ num_selected }}/{{ totalRows }} images selected</span>
+                    <b-table 
+                        class="tables" 
+                        responsive="md" 
+                        hover 
+                        :items="image_paths" 
+                        :fields="image_fields" 
+                        small 
+                        @row-clicked="select_image" 
+                        :current-page="currentPage"
+                        :per-page="perPage">
+
                         <template slot="is_selected" slot-scope="row">
                             <b-form-checkbox v-model="row.item.selected"></b-form-checkbox>
                         </template>
                     </b-table>
+
+                    <b-col md="6" class="my-1">
+                        <b-pagination :total-rows="totalRows" :per-page="perPage" v-model="currentPage" class="my-0" />
+                    </b-col>
+
                     <button type="submit" @click="upload_images">Upload selected images</button>
                 </div>
             </div>
@@ -63,8 +79,36 @@ export default {
             image_fields: [{key: 'is_selected', label: 'Selected'},
                            'input_data_path'],
             datasets: [],
-            dataset_id: undefined
+            dataset_id: undefined,
+            perPage: 10,
+            currentPage: 1
         };
+    },
+
+    computed: {
+        totalRows: function() {
+            if (this.image_paths != undefined) {
+                return this.image_paths.length;
+            }
+            else {
+                return 0;
+            }
+        },
+        num_selected: function() {
+            if (this.image_paths != undefined) {
+                let n = 0;
+                for (var i = 0; i < this.image_paths.length; i++) {
+                    if (this.image_paths[i].selected) {
+                        n += 1;
+                    }
+                }
+
+                return n;
+            }
+            else {
+                return 0;
+            }
+        },
     },
 
     watch: {
