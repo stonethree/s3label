@@ -33,6 +33,8 @@
 </template>
 
 <script>
+// import moment from 'moment';
+var moment = require('moment');
 import axios from "axios";
 
 var baseUrl = process.env.API_ADDR;
@@ -132,6 +134,7 @@ export default {
         user_id: function () {
             this.get_label_tasks_for_user(this.user_id);
             this.get_labeled_input_data(this.label_task_id, this.user_id);
+            // this.format_datestamps();
         },
 
         label_task_id: function () {
@@ -232,11 +235,25 @@ export default {
                         console.log(response.data)
 
                         vm.labeled_input_data = response.data;
+                        vm.format_datestamps();
                     })
                     .catch(function(error) {
                         console.log(error);
                         vm.labeled_input_data = undefined;
                     });
+            }
+        },
+
+        format_datestamps: function () {
+            // convert from Unix timestamps to a comprehensible format for displaying in table
+            console.log('labeled_input_data:', this.labeled_input_data)
+
+            if (this.labeled_input_data != undefined) {
+                for (let i = 0; i < this.labeled_input_data.length; i++) {
+                    let timestamp = this.labeled_input_data[i].timestamp_edit / 1000;
+                    this.labeled_input_data[i].timestamp_edit = moment.unix(timestamp).format("MMM DD YYYY, HH:mm:ss");
+                }
+                console.log('finished converting dates', this.labeled_input_data[0].timestamp_edit)
             }
         },
 
