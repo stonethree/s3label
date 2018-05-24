@@ -94,3 +94,11 @@ def test_insert_new_input_data_item(refresh_db_every_time, db_connection_sqlalch
                                                                  sha1_hash='abcdef')
 
     assert input_data_id == 7
+
+
+def test_get_missing_input_data(refresh_db_once, db_connection_sqlalchemy):
+    engine = db_connection_sqlalchemy
+    df_paths = sql_queries_admin.get_missing_input_data(engine)
+
+    assert len(df_paths) == 7
+    assert df_paths['data_path'].tolist()[0] == 'test_images/image.jpg'

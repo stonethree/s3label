@@ -637,6 +637,39 @@ def get_label_tasks_for_user(user_id):
         return resp
 
 
+@ebp.route('/image_labeler/api/v1.0/missing_input_data', methods=['GET'])
+@fje.jwt_required
+def find_missing_input_data():
+    engine = current_app.config['engine']
+
+    user_identity = fje.get_jwt_identity()
+    user_id_from_auth = ua.get_user_id_from_token(user_identity)
+
+    # check if user is an admin user
+
+    is_admin = sql_queries_admin.is_user_an_admin(engine, user_id_from_auth)
+
+    if is_admin is None or not is_admin:
+        resp = make_response(jsonify(error='Not permitted to view this content. Must be an admin user.'), 403)
+        resp.mimetype = "application/javascript"
+        return resp
+
+    df_paths = sql_queries_admin.get_missing_input_data(engine)
+
+    if df_paths is not None:
+        paths = df_paths['data_path'].tolist()
+
+        missing_paths = [p for p in paths if not os.path.exists(p)]
+
+        resp = make_response(jsonify(num_paths_total=len(paths), num_missing_paths=len(missing_paths)), 200)
+        resp.mimetype = "application/javascript"
+        return resp
+    else:
+        resp = make_response(jsonify(error='No label task found'), 404)
+        resp.mimetype = "application/javascript"
+        return resp
+
+
 # ---------------  POST requests ---------------
 
 

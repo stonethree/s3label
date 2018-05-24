@@ -33,6 +33,21 @@ def test_login_logout(auth, refresh_db_once):
     assert rv_label_tasks.status_code == 200
 
 
+def test_find_missing_input_data(auth, refresh_db_once):
+    auth.login(email='shaun.irwin@stonethree.com', password='abc')
+
+    rv = auth.client.get(auth.base_url + '/missing_input_data',
+                         headers=auth.auth_header(),
+                         content_type='application/json')
+
+    assert rv.status_code == 200
+
+    response = json_of_response(rv)
+
+    assert response['num_paths_total'] == 6
+    assert response['num_missing_paths'] == 0
+
+
 def test_get_label_tasks(auth, refresh_db_once):
     auth.login()
 

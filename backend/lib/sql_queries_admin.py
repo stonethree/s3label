@@ -134,3 +134,20 @@ def create_new_dataset_group(engine, dataset_ids, description):
     """
 
     pass
+
+
+def get_missing_input_data(engine):
+    """
+    Get list of input data items that are missing from disk
+
+    :return:
+    """
+
+    sql_query = """select data_path from input_data"""
+
+    df = pd.read_sql_query(sql_query, engine)
+
+    if len(df) > 0:
+        return df
+    else:
+        return None
