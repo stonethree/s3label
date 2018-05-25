@@ -15,8 +15,19 @@
                 </b-collapse>
                 <div class="row">
                     <h3>Labeled data</h3>
-                    <b-table class="tables" responsive="md" hover :items="labeled_input_data" :fields="fields_labeled_input_data" small @row-clicked="select_label" v-model="labels_table_data"></b-table>
+                    <b-table class="tables" 
+                        responsive="md" 
+                        hover 
+                        :items="labeled_input_data" 
+                        :fields="fields_labeled_input_data" 
+                        small @row-clicked="select_label" 
+                        v-model="labels_table_data" 
+                        :current-page="currentPageLabel" 
+                        :per-page="perPageLabel"></b-table>
                 </div>
+                <b-col md="6" class="my-1">
+                    <b-pagination :total-rows="totalRowsLabel" :per-page="perPageLabel" v-model="currentPageLabel" class="my-0" />
+                </b-col>
             </div>
 
             <div class="col">
@@ -67,7 +78,9 @@ export default {
             stroke_thickness: 2,
             use_stroke: true,
             labels_table_data: undefined,
-            hide_polygons: false
+            hide_polygons: false,
+            perPageLabel: 10,
+            currentPageLabel: 1
         };
     },
 
@@ -127,7 +140,15 @@ export default {
         },
         fields_labeled_input_data: function() {
             return this.create_sortable_column_fields(this.labeled_input_data)
-        }
+        },
+        totalRowsLabel: function() {
+            if (this.labeled_input_data != undefined) {
+                return this.labeled_input_data.length;
+            }
+            else {
+                return 0;
+            }
+        },
     },
 
     watch: {
