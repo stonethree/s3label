@@ -38,7 +38,14 @@ def binary_im_from_polygon_label(polygons, w, h):
 
     for poly in polygons:
         for region in poly['polygon']['regions']:
-            cv2.fillPoly(mask, [np.array(region, dtype=np.int32)], (255.0,), 16, 0)
+            # TODO: apply padding offset here (temporary solution: must fix properly)
+
+            coords = [np.array(region, dtype=np.int32)]
+
+            offset = 2 * np.array([80, 80])
+            coords = np.subtract(coords, offset)
+
+            cv2.fillPoly(mask, coords, (255.0,), 16, 0)
 
     return mask
 
