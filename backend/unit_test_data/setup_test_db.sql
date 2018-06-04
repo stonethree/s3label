@@ -164,6 +164,59 @@ select user_id, label_task_id,
 from latest_label_history_per_input_item
 group by user_id, label_task_id;
 
+-- show which datasets belong to which dataset groups
+create view all_datasets as
+with t as (
+	select dataset_group_id, d.dataset_id, site, sensor, dataset_description from datasets d
+	full outer join dataset_group_lists dgl using(dataset_id)
+)
+select dg.dataset_group_id, dg.name, dg.description, t.dataset_id, t.site, t.sensor, t.dataset_description from t
+full outer join dataset_groups dg using (dataset_group_id);
+
+-- show how many items have been labeled per label task and how many have been approved, paid for, etc
+create view label_task_counts as
+with t_labeled_counts as (
+	select label_task_id, count(*) as labels_used
+	from labels
+	group by label_task_id
+),
+t_user_complete as (
+	select label_task_id, count(*) AS user_complete
+	from labels
+	where user_complete = true
+		group by label_task_id
+),
+t_admin_complete as (
+	select label_task_id, count(*) AS admin_complete
+	from labels
+	where admin_complete = true
+		group by label_task_id
+),
+t_needs_improvement as (
+	select label_task_id, count(*) AS needs_improvement
+	from labels
+	where needs_improvement = true
+		group by label_task_id
+),
+t_paid as (
+	select label_task_id, count(*) AS paid
+	from labels
+	where paid = true
+		group by label_task_id
+),
+t_totals as (
+	select label_task_id, count(*) AS total_items
+	from input_data_per_label_task
+	group by label_task_id
+)
+select * from t_totals
+full outer join t_labeled_counts using (label_task_id)
+full outer join t_user_complete using (label_task_id)
+full outer join t_admin_complete using (label_task_id)
+full outer join t_needs_improvement using (label_task_id)
+full outer join t_paid using (label_task_id);
+
+
 -- add data
 
 INSERT INTO datasets(site, sensor, dataset_description) VALUES ('test_site_1', 'test_lynxx', 'This is a test. We want to segment rock images');
