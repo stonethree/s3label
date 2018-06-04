@@ -20,7 +20,7 @@ def get_polygon_regions_from_serialised_label(label_string):
     return json.loads(label_string)
 
 
-def binary_im_from_polygon_label(polygons, w, h):
+def binary_im_from_polygon_label(polygons, w, h, mode='filled_polygon'):
     """
     Create a binary image from a list of polygons, each of which can have one or more path regions.
 
@@ -29,8 +29,12 @@ def binary_im_from_polygon_label(polygons, w, h):
     :param polygons:
     :param w:
     :param h:
+    :param mode: what type of binary image to generate (filled_polygon, polygon_edge, center_dot)
     :return:
     """
+
+    if mode not in ['filled_polygon', 'polygon_edge', 'center_dot']:
+        raise ValueError('Mode must be one of the accepted types. Received: {}'.format(mode))
 
     mask = np.zeros((h, w), dtype=np.float32)
 
@@ -45,7 +49,13 @@ def binary_im_from_polygon_label(polygons, w, h):
             offset = 2 * np.array([80, 80])
             coords = np.subtract(coords, offset)
 
-            cv2.fillPoly(mask, coords, (255.0,), 16, 0)
+            if mode == 'filled_polygon':
+                cv2.fillPoly(mask, coords, (255.0,), 16, 0)
+            elif mode == 'polygon_edge':
+                cv2.polylines(mask, coords, True, (255.,))
+            elif mode == 'center_dot':
+                center = np.mean(coords[0], axis=0)
+                mask[int(center[1]), int(center[0])] = 255.
 
     return mask
 
