@@ -29,18 +29,16 @@ def binary_im_from_polygon_label(polygons, w, h, mode='filled_polygon'):
     :param polygons:
     :param w:
     :param h:
-    :param mode: what type of binary image to generate (filled_polygon, polygon_edge, center_dot)
+    :param mode: what type of binary image to generate (filled_polygon, polygon_edge, center_dot,
+        unit_vectors_from_edges)
     :return:
     """
-
-    if mode not in ['filled_polygon', 'polygon_edge', 'center_dot']:
-        raise ValueError('Mode must be one of the accepted types. Received: {}'.format(mode))
 
     mask = np.zeros((h, w), dtype=np.float32)
 
     logger.debug('')
 
-    for poly in polygons:
+    for i, poly in enumerate(polygons):
         for region in poly['polygon']['regions']:
             # TODO: apply padding offset here (temporary solution: must fix properly)
 
@@ -56,6 +54,10 @@ def binary_im_from_polygon_label(polygons, w, h, mode='filled_polygon'):
             elif mode == 'center_dot':
                 center = np.mean(coords[0], axis=0)
                 mask[int(center[1]), int(center[0])] = 255.
+            elif mode == 'filled_polygon_instances':
+                cv2.fillPoly(mask, coords, ((i + 1)*1.,), 16, 0)
+            else:
+                raise NotImplementedError('Mode is not defined')
 
     return mask
 

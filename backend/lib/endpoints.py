@@ -1102,6 +1102,16 @@ def generate_ground_truth_images(label_task_id):
 
         output_folder = request.json['output_folder']
 
+        if 'gt_mode' not in request.json:
+            gt_mode = 'filled_polygon'
+        else:
+            gt_mode = request.json['gt_mode']
+
+        if gt_mode not in ['filled_polygon', 'polygon_edge', 'center_dot', 'filled_polygon_instances']:
+            resp = make_response(jsonify(error='Unexpected mode received: "{}"'.format(gt_mode)), 400)
+            resp.mimetype = "application/javascript"
+            return resp
+
         if output_folder is not None:
             try:
                 output_folder = os.path.abspath(output_folder)
@@ -1134,7 +1144,7 @@ def generate_ground_truth_images(label_task_id):
                         im_w, im_h = dd.get_image_dims(im_path)
                         label = dd.get_polygon_regions_from_serialised_label(label_ser)
 
-                        im_gt = dd.binary_im_from_polygon_label(label, im_w, im_h)
+                        im_gt = dd.binary_im_from_polygon_label(label, im_w, im_h, mode=gt_mode)
 
                         im_name = '{prefix}input_data_id_{input_data_id}_label_id_{label_id}{suffix}.png'.\
                             format(label_id=label_id, input_data_id=input_data_id, prefix=prefix, suffix=suffix)
