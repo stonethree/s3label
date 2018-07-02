@@ -1063,17 +1063,25 @@ def generate_ground_truth_images(label_task_id):
         resp.mimetype = "application/javascript"
         return resp
 
+    if not request.json:
+        resp = make_response(jsonify(error='Must use JSON format'), 400)
+        resp.mimetype = "application/javascript"
+        return resp
+
+    if 'label_status' in request.json and request.json['label_status'] == 'user_complete':
+        label_status = 'user_complete'
+    else:
+        label_status = 'admin_complete'
+
     # get the label data
 
-    df = sql_queries.get_all_completed_labels(engine, label_task_id=label_task_id, dataset_id=None)
+    df = sql_queries.get_all_completed_labels(engine,
+                                              label_task_id=label_task_id,
+                                              dataset_id=None,
+                                              label_status=label_status)
 
     if len(df) > 0:
         # create the folder to write the ground truth images to
-
-        if not request.json:
-            resp = make_response(jsonify(error='Must use JSON format'), 400)
-            resp.mimetype = "application/javascript"
-            return resp
 
         if 'prefix' in request.json:
             prefix = request.json['prefix']

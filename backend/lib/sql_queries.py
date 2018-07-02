@@ -396,7 +396,7 @@ def get_label_by_id(engine, label_id):
         return None
 
 
-def get_all_completed_labels(engine, label_task_id, dataset_id=None):
+def get_all_completed_labels(engine, label_task_id, dataset_id=None, label_status="admin_complete"):
     """
     Get latest label history entries for all completed (approved) labels
 
@@ -414,10 +414,10 @@ def get_all_completed_labels(engine, label_task_id, dataset_id=None):
     sql_query = """
     with t as (
         select *, label_serialised::text label_serialised_text from latest_label_history
-            where label_task_id = %(label_task_id)s and admin_complete
+            where label_task_id = %(label_task_id)s and {label_status}
     )
     select t.*, dataset_id, data_path from t inner join input_data using (input_data_id) {dataset_clause}
-    """.format(dataset_clause=dataset_clause)
+    """.format(dataset_clause=dataset_clause, label_status=label_status)
 
     df = pd.read_sql_query(sql_query, engine, params={'label_task_id': label_task_id,
                                                       'dataset_id': dataset_id})
