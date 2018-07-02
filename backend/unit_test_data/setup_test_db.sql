@@ -85,6 +85,9 @@ create table labels(
 	COMMENT ON COLUMN labels.user_comment is 'User can communicate to admins via this field, to indicate issues with data item';
 	COMMENT ON COLUMN labels.admin_comment is 'Admins can communicate to users via this field, to respond to user comments or their labeling quality';
 
+ALTER TABLE labels ADD COLUMN payment_date TIMESTAMPTZ DEFAULT NULL;
+	COMMENT ON COLUMN labels.payment_date is 'Date at which this label item is scheduled for payment';
+
 create table label_history(
     label_history_id SERIAL PRIMARY KEY,
     label_id INTEGER REFERENCES labels(label_id) ON DELETE CASCADE,
@@ -153,10 +156,7 @@ select *, (not in_progress or in_progress isnull) and label_serialised isnull an
 create view item_counts as
 select user_id, label_task_id,
     count(*) as total_items,
-    sum(case when unlabeled = true then 1 else 0 end) as num_unlabeled,
     sum(case when unlabeled = false then 1 else 0 end) as num_labeled,
-    sum(case when in_progress = false and unlabeled = true then 1 else 0 end) as in_progress_unlabeled,
-    sum(case when in_progress = false and unlabeled = false then 1 else 0 end) as in_progress_labeled,
     sum(case when user_complete = true then 1 else 0 end) as num_user_complete,
     sum(case when needs_improvement = true then 1 else 0 end) as num_needs_improvement,
     sum(case when admin_complete = true then 1 else 0 end) as num_admin_complete,
@@ -215,6 +215,21 @@ full outer join t_user_complete using (label_task_id)
 full outer join t_admin_complete using (label_task_id)
 full outer join t_needs_improvement using (label_task_id)
 full outer join t_paid using (label_task_id);
+
+-- display number of images per user and label task that are due for payment
+create view payments_owed as
+with t as (
+	select user_id, label_task_id,
+	    sum(case when user_complete = true then 1 else 0 end) as num_user_complete,
+	    sum(case when admin_complete = true then 1 else 0 end) as num_admin_complete,
+	    sum(case when paid = true then 1 else 0 end) as num_paid
+	from latest_label_history_per_input_item
+	group by user_id, label_task_id
+)
+select first_name, last_name, email, organisation, t.*, (num_admin_complete-num_paid) as num_payment_owed from t
+inner join users using (user_id)
+where num_user_complete > 0
+order by user_id, label_task_id;
 
 
 -- add data
