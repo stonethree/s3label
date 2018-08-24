@@ -145,7 +145,7 @@ def get_all_user_input_data(engine, user_id, label_task_id, n):
         n = int(n)
 
     fields = 'label_id, input_data_id, label_task_id, label_history_id, user_id, user_complete, needs_improvement, ' \
-             'admin_complete, paid, user_comment, admin_comment, timestamp_edit'
+             'admin_complete, paid, include_in_test_set, user_comment, admin_comment, timestamp_edit'
 
     sql_query = """
     SELECT {fields} FROM latest_label_history WHERE user_id=%(user_id)s AND label_task_id=%(label_task_id)s 

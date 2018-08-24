@@ -87,6 +87,8 @@ create table labels(
 
 ALTER TABLE labels ADD COLUMN payment_date TIMESTAMPTZ DEFAULT NULL;
 	COMMENT ON COLUMN labels.payment_date is 'Date at which this label item is scheduled for payment';
+ALTER TABLE labels ADD COLUMN include_in_test_set BOOLEAN DEFAULT FALSE NOT NULL;
+	COMMENT ON COLUMN labels.include_in_test_set is 'Include this image in the test set, not training or validation';
 
 create table label_history(
     label_history_id SERIAL PRIMARY KEY,
