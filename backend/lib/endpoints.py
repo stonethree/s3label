@@ -1073,8 +1073,8 @@ def generate_ground_truth_images(label_task_id):
     else:
         label_status = 'admin_complete'
 
-    if 'include_in_test_set' in request.json:
-        if request.json['include_in_test_set'].lower() == 'true':
+    if 'test_images' in request.json:
+        if request.json['test_images'].lower() == 'true':
             label_status += ' AND include_in_test_set'
         else:
             label_status += ' AND NOT include_in_test_set'
