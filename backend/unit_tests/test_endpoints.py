@@ -189,7 +189,6 @@ def test_count_input_data_items_per_user_per_label_task_as_non_admin(auth, refre
     assert df_item_counts['user_id'].tolist() == [3]
     assert df_item_counts['label_task_id'].tolist() == [1]
     assert df_item_counts['total_items'].tolist() == [1]
-    assert df_item_counts['num_unlabeled'].tolist() == [0]
     assert df_item_counts['num_labeled'].tolist() == [1]
     assert df_item_counts['num_user_complete'].tolist() == [1]
     assert df_item_counts['num_needs_improvement'].tolist() == [0]
@@ -212,7 +211,6 @@ def test_count_input_data_items_per_user_per_label_task_as_admin(auth, refresh_d
     assert df_item_counts['user_id'].tolist() == [1, 1, 1, 1, 2, 2, 2, 3, None, None]
     assert df_item_counts['label_task_id'].tolist() == [1, 2, 3, 5, 1, 2, 5, 1, 4, 6]
     assert df_item_counts['total_items'].tolist() == [5, 3, 1, 5, 5, 2, 5, 1, 1, 1]
-    assert df_item_counts['num_unlabeled'].tolist() == [2, 2, 1, 5, 4, 2, 5, 0, 1, 1]
     assert df_item_counts['num_labeled'].tolist() == [3, 1, 0, 0, 1, 0, 0, 1, 0, 0]
 
 

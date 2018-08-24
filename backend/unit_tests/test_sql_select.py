@@ -53,14 +53,7 @@ def test_count_input_data_items_for_all_users_and_label_tasks(refresh_db_once, d
     assert_series_equal(df['user_id'], df_test['user_id'])
     assert_series_equal(df['label_task_id'], df_test['label_task_id'])
     assert_series_equal(df['total_items'], df_test['total_items'])
-    assert_series_equal(df['num_unlabeled'], df_test['num_unlabeled'])
     assert_series_equal(df['num_labeled'], df_test['num_labeled'])
-
-    # sanity check
-
-    df['summed'] = df['num_unlabeled'] + df['num_labeled']
-
-    assert df['total_items'].tolist() == df['summed'].tolist()
 
 
 def test_get_all_input_data_items(refresh_db_once, db_connection_sqlalchemy):
