@@ -1073,6 +1073,12 @@ def generate_ground_truth_images(label_task_id):
     else:
         label_status = 'admin_complete'
 
+    if 'include_in_test_set' in request.json:
+        if request.json['include_in_test_set'].lower() == 'true':
+            label_status += ' AND include_in_test_set'
+        else:
+            label_status += ' AND NOT include_in_test_set'
+
     # get the label data
 
     df = sql_queries.get_all_completed_labels(engine,

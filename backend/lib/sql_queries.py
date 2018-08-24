@@ -403,6 +403,7 @@ def get_all_completed_labels(engine, label_task_id, dataset_id=None, label_statu
     :param engine:
     :param label_task_id:
     :param dataset_id: optionally specify a dataset ID to only return labels for this dataset
+    :param label_status: specify whether to only get images that have "admin_complete" or "user_complete" set
     :return:
     """
 
