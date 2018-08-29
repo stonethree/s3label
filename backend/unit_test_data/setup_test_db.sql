@@ -233,6 +233,13 @@ inner join users using (user_id)
 where num_user_complete > 0
 order by user_id, label_task_id;
 
+-- display duplicate input data items
+create view duplicate_input_data as 
+with t_duplicates as (
+	select sha1_hash, count(*) from input_data group by sha1_hash having count(*) > 1
+)
+select * from input_data inner join t_duplicates using (sha1_hash);
+
 
 -- add data
 
