@@ -47,6 +47,10 @@ create table input_data(
     sha1_hash VARCHAR NOT NULL);
     COMMENT ON COLUMN input_data.sha1_hash is 'SHA-1 hash of the file content. Useful for checking files are unique in database and for checking file identity when they are moved to other drives or folders in the future.';
 
+ALTER TABLE input_data ADD COLUMN timestamp_upload TIMESTAMPTZ DEFAULT NULL;
+	COMMENT ON COLUMN input_data.timestamp_upload is 'Date when input data item was uploaded';
+ALTER TABLE input_data ALTER COLUMN timestamp_upload SET DEFAULT now();
+
 create table users(
     user_id SERIAL PRIMARY KEY,
     password VARCHAR NOT NULL,
