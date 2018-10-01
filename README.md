@@ -1,5 +1,7 @@
 # README
 
+## How to generate ground truth labels and dump them to disk
+
 Use the following API call to generate ground truth image data:
 
 ~~~
@@ -12,7 +14,8 @@ curl -X PUT \
 	"output_folder": "/tmp/ground_truth_images/label_task_5_test",
 	"suffix": "_gt4",
 	"gt_mode": "filled_polygon_instances",
-	"test_images": "true"
+	"test_images": "true",
+  "label_status": "admin_complete"
 }'
 ~~~
 
@@ -25,13 +28,20 @@ curl -X PUT \
 | center_dot                | Not yet tested, but it should generate a single dot at the centroid of each instance  |
 | filled_polygon_instances  | Generate filled polygons, where each instance has a different integer value           |
 
-*test_images* can be set to "true", "false" or the field can be omitted (default)
+*test_images* can be set to "true", "false" or the field can be omitted (default):
 
 | test_images       |                                                                                       |
 | -------------     |:-------------                                                                         |
 | true              | Only generate ground truth images for data marked as "test data"                      |
 | false             | Only generate ground truth images for data *not* marked as "test data"                |
 | (omitted)         | Generate ground truth data for all matching data                                      |
+
+*label_status* can be set to "admin_complete" (default) or "user_complete":
+
+| label_status    |                                                                                       |
+| -------------   |:-------------                                                                         |
+| admin_complete  | Only generate ground truth images for data marked as "admin_complete" (i.e. admin user has approved this image)   |
+| user_complete   | Only generate ground truth images for data marked as "user_complete" (i.e. user has marked this image as complete, but admin user has not necessarily approved the labeling yet)                |
 
 ## Useful SQL queries
 
