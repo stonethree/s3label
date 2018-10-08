@@ -19,6 +19,12 @@ curl -X PUT \
 }'
 ~~~
 
+Powershell:
+
+~~~
+curl -Method Put -Uri "https://label.stonethree.com/image_labeler/api/v1.0/label_images/label_task_id/5" -ContentType "application/json"
+~~~
+
 *gt_mode* can be one of the following:
 
 | gt_mode                   |                                                                                       |
