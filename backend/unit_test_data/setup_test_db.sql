@@ -135,12 +135,15 @@ full outer join labels using (input_data_id, label_task_id);
 
 -- show most recent label history for each label
 create view latest_label_history as
-select distinct on (label_id) * from
-(
-	select * from labels
-	left outer join label_history using (label_id)
-) as tmp
-order by label_id, timestamp_edit desc;
+with t as (
+	select distinct on (label_id) * from
+	(
+		select * from labels
+		left outer join label_history using (label_id)
+	) as tmp
+	order by label_id, timestamp_edit desc
+)
+select t.*, json_array_length(label_serialised::json) as num_objects_labeled from t;
 
 -- combine most recent label history with input data info
 create view latest_label_history_per_input_item as
@@ -228,11 +231,12 @@ with t as (
 	select user_id, label_task_id,
 	    sum(case when user_complete = true then 1 else 0 end) as num_user_complete,
 	    sum(case when admin_complete = true then 1 else 0 end) as num_admin_complete,
-	    sum(case when paid = true then 1 else 0 end) as num_paid
+	    sum(case when paid = true then 1 else 0 end) as num_paid,
+	    sum(num_objects_labeled) as total_objects_labeled
 	from latest_label_history_per_input_item
 	group by user_id, label_task_id
 )
-select first_name, last_name, email, organisation, t.*, (num_admin_complete-num_paid) as num_payment_owed from t
+select first_name, last_name, email, organisation, t.*, round(total_objects_labeled * 1.0 / num_user_complete, 2) as mean_objects_per_image, (num_admin_complete-num_paid) as num_payment_owed from t
 inner join users using (user_id)
 where num_user_complete > 0
 order by user_id, label_task_id;
