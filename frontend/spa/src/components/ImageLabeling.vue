@@ -52,11 +52,11 @@
                 <div id="image_settings"  class="col border-right">
                     <div id="brightness_slider_container">
                         <span>Brightness</span>
-                        <input id="brightness_slider" type="range" min="-80" max="80" class="slider" v-model="brightness_slider_value">
+                        <input id="brightness_slider" type="range" min="-100" max="100" class="slider" v-model="brightness_slider_value">
                     </div>
                     <div id="contrast_slider_container">
                         <span>Contrast</span>
-                        <input id="contrast_slider" type="range" min="-80" max="80" class="slider" v-model="contrast_slider_value">
+                        <input id="contrast_slider" type="range" min="-100" max="100" class="slider" v-model="contrast_slider_value">
                     </div>
                 </div>
                 <div id="clear_canvas_container" class="col">
@@ -150,8 +150,8 @@ export default {
             active_label: undefined,
             stroke_slider_value: "2",
             opacity_slider_value: "50",
-            brightness_slider_value: "50",
-            contrast_slider_value: "50",
+            brightness_slider_value: "0",
+            contrast_slider_value: "0",
             clear_canvas_event: false,
             delete_event: false,
             clear_canvas_event: false,
