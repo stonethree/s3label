@@ -39,7 +39,7 @@
                         </div>
                     </form>
                 </div>
-                <div id="graphics_settings" class="col">
+                <div id="graphics_settings"  class="col border-right">
                     <div id="stroke_slider_container">
                         <span>Stroke thickness</span>
                         <input id="stroke_thickness_slider" type="range" min="0" max="10" class="slider" v-model="stroke_slider_value">
@@ -47,6 +47,16 @@
                     <div id="opacity_slider_container">
                         <span>Opacity</span>
                         <input id="opacity_slider" type="range" min="0" max="100" class="slider" v-model="opacity_slider_value">
+                    </div>
+                </div>
+                <div id="image_settings"  class="col border-right">
+                    <div id="brightness_slider_container">
+                        <span>Brightness</span>
+                        <input id="brightness_slider" type="range" min="-80" max="80" class="slider" v-model="brightness_slider_value">
+                    </div>
+                    <div id="contrast_slider_container">
+                        <span>Contrast</span>
+                        <input id="contrast_slider" type="range" min="-80" max="80" class="slider" v-model="contrast_slider_value">
                     </div>
                 </div>
                 <div id="clear_canvas_container" class="col">
@@ -76,6 +86,8 @@
                             v-bind:stroke_thickness="stroke_thickness"
                             v-bind:use_stroke="use_stroke"
                             v-bind:opacity="opacity"
+                            v-bind:brightness="brightness"
+                            v-bind:contrast="contrast"
                             v-bind:clear_canvas_event="clear_canvas_event"
                             v-bind:delete_event="delete_event"
                             v-bind:deselect_event="deselect_event"
@@ -138,6 +150,8 @@ export default {
             active_label: undefined,
             stroke_slider_value: "2",
             opacity_slider_value: "50",
+            brightness_slider_value: "50",
+            contrast_slider_value: "50",
             clear_canvas_event: false,
             delete_event: false,
             clear_canvas_event: false,
@@ -186,6 +200,12 @@ export default {
         },
         opacity: function() {
             return parseFloat(this.opacity_slider_value) / 100.;
+        },
+        brightness: function() {
+            return parseFloat(this.brightness_slider_value) / 100.;
+        },
+        contrast: function() {
+            return parseFloat(this.contrast_slider_value) / 100.;
         },
 
     },

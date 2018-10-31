@@ -68,6 +68,14 @@ export default {
             required: true,
             type: Number
         },
+        brightness: {
+            required: true,
+            type: Number
+        },
+        contrast: {
+            required: true,
+            type: Number
+        },
         clear_canvas_event: {
             required: false,
             type: Boolean,
@@ -106,6 +114,7 @@ export default {
             currentPath: [],
             padX: 80,
             padY: 80,
+            responseAsBlob: undefined,
             ctx: undefined,
             ctx_bg: undefined,
             label_status_toggler: {user_complete: false},
@@ -159,10 +168,20 @@ export default {
         opacity: function () {
             this.drawAllPolygons(this.ctx, this.polygons);
         },
+        brightness: function () {
+            if (this.responseAsBlob != undefined) {
+                this.showImage(this.responseAsBlob);
+            }
+        },
+        contrast: function () {
+            if (this.responseAsBlob != undefined) {
+                this.showImage(this.responseAsBlob);
+            }
+        },
         input_data_id: function (new_input_data_id, old_input_data_id) {
             console.log('switching image...')
 
-            // this.clearCanvas();
+            // this.clearCanvas();  
 
             if (new_input_data_id != undefined) {
                 this.fetchAndDisplayImage(baseUrl + '/input_images/' + new_input_data_id);
@@ -547,8 +566,13 @@ export default {
             let canvas_bg = document.getElementById("canvas-bg");
             let ctx2 = canvas_bg.getContext("2d");
 
+            this.responseAsBlob = responseAsBlob;
+
             let img = new Image();
             let imgUrl = URL.createObjectURL(responseAsBlob);
+
+            // this.width = img.width;
+            // this.height = img.height;
 
             var vm = this;
 
@@ -562,6 +586,37 @@ export default {
                 ctx2.shadowColor = "hsla(2, 0%, 0%, 0.46)";
 
                 ctx2.drawImage(img, vm.padX, vm.padY);
+
+                // apply brightness and contrast adjustments
+
+                function adjustImageContrast(imgData, contrast){  //input range [-100..100]
+                    var d = imgData.data;
+                    contrast = (contrast / 100) + 1;  //convert to decimal & shift range: [0..2] 
+                    var intercept = 128 * (1 - contrast);
+                    for(var i = 0; i < d.length; i += 4) {   //r,g,b,a
+                        d[i] = d[i]*contrast + intercept;
+                        d[i+1] = d[i+1]*contrast + intercept;
+                        d[i+2] = d[i+2]*contrast + intercept;
+                    }
+                    return imgData;
+                }
+
+                function adjustImageBrightness(imgData, brightness){  //input range [-100..100]
+                    var d = imgData.data;
+                    for (var i = 0; i < d.length; i += 4) {
+                        d[i] += brightness;
+                        d[i+1] += brightness;
+                        d[i+2] += brightness;
+                    }
+                    return imgData;
+                }
+                
+                var imgData = ctx2.getImageData(vm.padX, vm.padY, img.width, img.height);
+
+                var imgDataAdjusted = adjustImageContrast(imgData, vm.contrast * 100);
+                var imgDataAdjusted = adjustImageBrightness(imgDataAdjusted, vm.brightness * 100);
+
+                ctx2.putImageData(imgDataAdjusted, vm.padX, vm.padY);
 
                 // add checkerboard pattern around image
 
