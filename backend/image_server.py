@@ -6,15 +6,18 @@ from backend.lib.create_app import create_app
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Run backend server for the S3 Label web app')
     parser.add_argument('--image_folder', action='store', default='.', help='Folder path of images')
+    parser.add_argument('--username', action='store', default='postgres', help='Username for connecting to database')
+    parser.add_argument('--password', action='store', default='postgres', help='Password for connecting to database')
+    parser.add_argument('--host', action='store', default='localhost', help='IP address of postgres server')
     parser.add_argument('--port', action='store', default='5432', help='Port number')
     parser.add_argument('--database_name', action='store', default='s3_label', help='Database to connect to')
     parser.add_argument('--log_folder', action='store', default=None, help='Folder to log to')
     parser.add_argument('--log_file_name', action='store', default=None, help='File name of log file')
     args = parser.parse_args()
 
-    config = {'username': 'postgres',
-              'password': 'postgres',
-              'ip': 'localhost',
+    config = {'username': args.username,
+              'password': args.password,
+              'ip': args.host,
               'port': args.port,
               'database_name': args.database_name}
 
