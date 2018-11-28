@@ -39,7 +39,8 @@ def reset_db_contents(config):
 
     with connection as conn:
         with conn.cursor() as cursor:
-            cursor.execute(open('unit_test_data/setup_test_db.sql', 'r').read())
+            cursor.execute(open('unit_test_data/create_db_tables.sql', 'r').read())
+            cursor.execute(open('unit_test_data/init_unit_test_data.sql', 'r').read())
 
 
 def json_of_response(response):
