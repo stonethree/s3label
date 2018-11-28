@@ -1,65 +1,53 @@
 # README
 
-## How to generate ground truth labels and dump them to disk
+## Contents
 
-Use the following API call to generate ground truth image data:
+1.  Installation
+2.  [Importing Labels](./docs/import_label.md)
+3.  [Exporting Labels](./docs/export_label.md)
+4.  [Labels]()
+5.  [Features](./docs/features.md)
+6.  [Troubleshooting](./docs/troubleshoot.md)
 
+## Installation
+
+### Backend Setup
+Download and install PostgreSQL (ver. 10 or later)
+
+Download and install [Miniconda](https://conda.io/miniconda.html) using Python 3.7 (dependencies)
+
+Using Anaconda Prompt, switch to the backend directory and create an environmental file
 ~~~
-curl -X PUT \
-  https://label.stonethree.com/image_labeler/api/v1.0/label_images/label_task_id/5 \
-  -H 'Authorization: Bearer <token>' \
-  -H 'Cache-Control: no-cache' \
-  -H 'Content-Type: application/json' \
-  -d '{
-	"output_folder": "/tmp/ground_truth_images/label_task_5_test",
-	"suffix": "_gt4",
-	"gt_mode": "filled_polygon_instances",
-	"test_images": "true",
-  "label_status": "admin_complete"
-}'
+cd <PATH>
+conda env update
 ~~~
-
-Powershell:
-
+Generate a database called s3_label
 ~~~
-curl -Method Put -Uri "https://label.stonethree.com/image_labeler/api/v1.0/label_images/label_task_id/5" -ContentType "application/json"
+createdb -h <host> -p <port> -U <username> <database_name>
 ~~~
-
-*gt_mode* can be one of the following:
-
-| gt_mode                   |                                                                                       |
-| -------------             |:-------------                                                                         |
-| filled_polygon            | Generate filled polygons, all having the same fill value                              |
-| polygon_edge              | Draw the edges of all polygons                                                        |
-| center_dot                | Not yet tested, but it should generate a single dot at the centroid of each instance  |
-| filled_polygon_instances  | Generate filled polygons, where each instance has a different integer value           |
-
-*test_images* can be set to "true", "false" or the field can be omitted (default):
-
-| test_images       |                                                                                       |
-| -------------     |:-------------                                                                         |
-| true              | Only generate ground truth images for data marked as "test data"                      |
-| false             | Only generate ground truth images for data *not* marked as "test data"                |
-| (omitted)         | Generate ground truth data for all matching data                                      |
-
-*label_status* can be set to "admin_complete" (default) or "user_complete":
-
-| label_status    |                                                                                       |
-| -------------   |:-------------                                                                         |
-| admin_complete  | Only generate ground truth images for data marked as "admin_complete" (i.e. admin user has approved this image)   |
-| user_complete   | Only generate ground truth images for data marked as "user_complete" (i.e. user has marked this image as complete, but admin user has not necessarily approved the labeling yet)                |
-
-## Useful SQL queries
-
-Delete duplicate input_data items from a particular dataset that has just been uploaded:
-
+Run scripts to create database tables and populate it with unit test data
 ~~~
-BEGIN;
+psql -U <username> -d <database_name> -f <filename>
 
-delete from input_data i using duplicate_input_data d where i.input_data_id = d.input_data_id and i.dataset_id = 17 and i.timestamp_upload is not null;
+SQL file to create database tables:
+create_db_tables.sql
 
-select * from input_data where dataset_id = 17;
-
---rollback, so that we can test the query before executing (i.e. perform a dry run)
-ROLLBACK;
+SQL file to populate with unit test data:
+init_unit_test_data.sql
+~~~
+In IDE, create a new Python run configuration called main and then run main configuration. Ensure the following paths and settings are correct:
+~~~
+script path: <PATH to main.py in backend directory>
+Python interpreter: Python 3.5 (s3_label)
+working directory: <PATH to backend directory>
+~~~
+### Frontend Setup
+From spa folder of the frontend directory, install dependencies.
+~~~
+cd <PATH>
+npm install
+~~~
+Compile and run the application. Application will then be running at http://localhost.8080
+~~~
+npm run dev
 ~~~
