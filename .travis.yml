@@ -1,0 +1,35 @@
+language: python
+
+# sudo false implies containerized builds
+sudo: false
+
+addons:
+  postgresql: "9.6"
+  apt:
+    packages:
+    - postgresql-9.6
+    - postgresql-client-9.6
+services:
+  - postgresql
+env:
+  global:
+  - PGPORT=5432
+
+before_script:
+# Here we download miniconda and install the dependencies
+- export MINICONDA=$HOME/miniconda
+- export PATH="$MINICONDA/bin:$PATH"
+- hash -r
+- wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
+- bash miniconda.sh -b -f -p $MINICONDA
+- conda config --set always_yes yes
+- conda update conda
+- conda info -a
+- cd backend
+- conda env update -f environment.yml
+- source activate flask_env
+- export PYTHONPATH=$PYTHONPATH:.
+- psql -c 'create database s3_label_test;' -U postgres
+
+script:
+- pytest unit_tests
