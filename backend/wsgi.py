@@ -1,11 +1,13 @@
+import os
+
 from .lib.create_app import create_app
 
 config = {
-    'username': 'postgres',
-    'password': 'postgres',
-    'ip': 'localhost',
-    'port': 5432,
-    'database_name': 's3_label_live'
+    'username': os.environ['S3LABEL_DB_USERNAME'],
+    'password': os.environ['S3LABEL_DB_PASSWORD'],
+    'ip': os.environ['S3LABEL_DB_HOST'],
+    'port': os.environ['S3LABEL_DB_PORT'],
+    'database_name': os.environ['S3LABEL_DB_NAME'],
 }
 
 app = create_app(config,
