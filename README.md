@@ -5,14 +5,14 @@
 1.  Installation
 2.  [Importing Labels](./docs/import_label.md)
 3.  [Exporting Labels](./docs/export_label.md)
-4.  [Labels]()
+4.  [Labels](./docs/label.md)
 5.  [Features](./docs/features.md)
 6.  [Troubleshooting](./docs/troubleshoot.md)
 
 ## Installation
 
 ### Backend Setup
-Download and install PostgreSQL (ver. 10 or later)
+Download and install PostgreSQL (ver. 9.4 or later; ver. 9.6 was officially tested and works)
 
 Download and install [Miniconda](https://conda.io/miniconda.html) using Python 3.7 (dependencies)
 

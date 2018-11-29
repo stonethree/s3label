@@ -1,6 +1,8 @@
 # LABELLING
 
 ## Freehand Selection
+To make a freehand selection, use the mouse to choose a point on the picture to start and drag around the section you would like to select then release the mouse.
+
 ![Freehand](./visuals/freehand.gif)
 
 ## Append Selection
