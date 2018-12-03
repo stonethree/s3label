@@ -5,7 +5,7 @@
             <input type="email" placeholder="Enter email address" name="user_email" required v-model="email">
 
             <label for="psw"><b>Password</b></label>
-            <input type="password" placeholder="Enter password" name="psw" required v-model="password">
+            <input type="password" placeholder="Enter password" name="psw" required v-model="password" v-on:keydown.enter="logUserIn">
 
             <button type="submit" v-on:click="logUserIn">Login</button>
         </div>
