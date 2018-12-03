@@ -78,7 +78,7 @@ export default {
             stroke_thickness: 2,
             use_stroke: true,
             labels_table_data: undefined,
-            hide_polygons: false,
+            hide_labels: false,
             perPageLabel: 10,
             currentPageLabel: 1
         };
@@ -369,7 +369,7 @@ export default {
                 ctx2.drawImage(img, vm.padX, vm.padY);
 
                 // redraw the polygons, since we have just resized the canvas and so lost any currently displayed polygons
-                vm.drawAllPolygons(vm.ctx, vm.polygons);
+                vm.drawAllLabels(vm.ctx, vm.polygons);
             }
             img.src = imgUrl;
         },
@@ -391,11 +391,11 @@ export default {
 
         // polygon drawing functions
 
-        drawAllPolygons: function (context, polygon_list) {
+        drawAllLabels: function (context, polygon_list) {
             context.lineWidth = this.stroke_thickness;
             context.clearRect(0, 0, context.canvas.width, context.canvas.height);
 
-            if (!this.hide_polygons) {
+            if (!this.hide_labels) {
                 for (let i = 0; i < polygon_list.length; i++) {
                     this.drawPolygon(context, polygon_list[i]);
                 }
@@ -501,7 +501,7 @@ export default {
 
                             vm.polygons = addPaddingOffset(vm.polygons, vm.padX, vm.padY);
 
-                            vm.drawAllPolygons(vm.ctx, vm.polygons);
+                            vm.drawAllLabels(vm.ctx, vm.polygons);
                         }
                         else {
                             console.error('Serialised label has wrong format:' + polygons)
@@ -517,7 +517,7 @@ export default {
                 .catch(function(error) {
                     console.log(error);
                     vm.polygons = [];
-                    vm.drawAllPolygons(vm.ctx, vm.polygons);
+                    vm.drawAllLabels(vm.ctx, vm.polygons);
                 });
         },
 
@@ -559,8 +559,8 @@ export default {
                 key_handled = true;
             }
             else if (e.code === 'KeyH') {
-                this.hide_polygons = true;
-                this.drawAllPolygons(this.ctx, this.polygons);
+                this.hide_labels = true;
+                this.drawAllLabels(this.ctx, this.polygons);
 
                 key_handled = true;
             }
@@ -575,8 +575,8 @@ export default {
             var key_handled = false;
 
             if (e.code === 'KeyH') {
-                this.hide_polygons = false;
-                this.drawAllPolygons(this.ctx, this.polygons);
+                this.hide_labels = false;
+                this.drawAllLabels(this.ctx, this.polygons);
 
                 key_handled = true;
 
@@ -595,12 +595,4 @@ export default {
 <style>
 .not-inlined div { display: block }
 .tables { cursor: pointer }
-/* #label_task_chooser {
-  font-family: "Avenir", Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
-} */
 </style>

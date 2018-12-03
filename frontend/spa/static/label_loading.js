@@ -129,19 +129,34 @@ export async function getUnlabeledImage(label_task_id) {
 // static functions for retrieving labels from backend
 
 
-function checkLabelFormatValid(polygons) {
+function checkLabelFormatValid(labels) {
     // check that the labels are of the correct format to load
 
-    if (polygons != undefined) {
-        if (polygons.length > 0 && polygons[0].polygon != undefined) {
+    // if (polygons != undefined) {
+    //     if (polygons.length > 0 && polygons[0].polygon != undefined) {
+    //         return true;
+    //     }
+    //     else if (polygons.length == 0) {
+    //         return true;
+    //     }
+    // }
+
+    console.log('Label formatting...');
+
+    if (labels != undefined) {
+        if (labels.length > 0 && labels[0].label != undefined) {
+            console.log('label format valid');
+            return true;
+        } else if (labels.length == 0) {
+            console.log('label format valid');
             return true;
         }
-        else if (polygons.length == 0) {
-            return true;
-        }
+        console.log('labels length: ' + labels.length)
+    } else {
+        console.log('label format invalid');
+        console.log(labels);
+        return false;
     }
-    
-    return false;
 }
 
 
@@ -149,13 +164,19 @@ export async function uploadLabels(input_data_id, label_task_id, polygons) {
 
     console.log('uploading label with label task ID', label_task_id, 'and input data ID', input_data_id)
 
+    console.log(polygons);
+
     if (label_task_id == undefined || input_data_id == undefined) {
         console.log("Error: Input fields must all be defined in order to upload label:" + label_task_id + input_data_id)
     }
-    else if (polygons.length == 0) {
-        console.error('Polygons object should (probably) not be empty when uploading! Not uploading item.');
-    }
+    // else if (polygons.length == 0) {
+    //     console.error('Polygons object should (probably) not be empty when uploading! Not uploading item.');
+    // }
     else {
+        if (polygons.length == 0) {
+                console.warn('Polygons object should (probably) not be empty when uploading! Not uploading item.');
+        }
+
         var data = {label_serialised: polygons}
 
         let access_token = localStorage.getItem("s3_access_token");
@@ -199,22 +220,34 @@ export async function loadLabels(input_data_id, label_task_id) {
             .then(function(response) {
                 if (response.data.length == 1) {
                     console.log("Label found for this image. Attempting to apply it in the view", response.data)
-                    var label = response.data[0];
+                    var respData = response.data[0];
 
                     // check label format is correct
 
-                    var polygons = JSON.parse(label.label_serialised);
+                    // var polygons = JSON.parse(label.label_serialised);
 
-                    if (polygons == null) {
-                        polygons = [];
+                    // if (polygons == null) {
+                    //     polygons = [];
+                    // }
+
+                    // if (checkLabelFormatValid(polygons)) {
+                    //     console.log('Applied serialised label to image')
+                    //     return polygons;
+                    // }
+                    // else {
+                    //     console.error('Serialised label has wrong format:' + polygons)
+                    // }
+                    var labels = JSON.parse(respData.label_serialised);
+
+                    if (labels == null) {
+                        labels = [];
                     }
 
-                    if (checkLabelFormatValid(polygons)) {
-                        console.log('Applied serialised label to image')
-                        return polygons;
-                    }
-                    else {
-                        console.error('Serialised label has wrong format:' + polygons)
+                    if (checkLabelFormatValid(labels)) {
+                        console.log('Applied serialised label to image');
+                        return labels;
+                    } else {
+                        console.error('Serialised label has wrong format: ' + labels);
                     }
                 }
                 else if (response.data.length == 0) {

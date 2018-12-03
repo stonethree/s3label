@@ -10,6 +10,8 @@
                         <br>
                         <input type="radio" class="radio-button" name="tool" value="polygon" v-model="active_tool"> Polygon
                         <br>
+                        <input type="radio" class="radio-button" name="tool" value="rectangle" v-model="active_tool"> Rectangle
+                        <br>
                         <input type="radio" class="radio-button" name="tool" value="select" v-model="active_tool"> Select
                     </form>
                 </div>
@@ -77,7 +79,9 @@
     
         <div class="row justify-content-center">
             <div class="col">
-            <drawing-canvas v-bind:active_tool="active_tool"
+            <!--drawing-canvas v-if="label_task.type == 'instance_segmentation'"-->
+            <drawing-canvas
+                            v-bind:active_tool="active_tool"
                             v-bind:active_mode="active_mode"
                             v-bind:active_overlap_mode="active_overlap_mode"
                             v-bind:active_label="active_label"
@@ -93,10 +97,31 @@
                             v-bind:deselect_event="deselect_event"
                             v-bind:undo_event="undo_event"
                             v-bind:redo_event="redo_event"
-                            v-bind:hide_polygons="hide_polygons"
+                            v-bind:hide_labels="hide_labels"
                             ref="mySubComponent"
                             class="row"
                             ></drawing-canvas>
+            <!--drawing-canvas-box  v-if="label_task.type == 'bounding_boxes'"
+                            v-bind:active_tool="active_tool"
+                            v-bind:active_mode="active_mode"
+                            v-bind:active_overlap_mode="active_overlap_mode"
+                            v-bind:active_label="active_label"
+                            v-bind:input_data_id="input_data_id"
+                            v-bind:label_task_id="label_task.label_task_id"
+                            v-bind:stroke_thickness="stroke_thickness"
+                            v-bind:use_stroke="use_stroke"
+                            v-bind:opacity="opacity"
+                            v-bind:brightness="brightness"
+                            v-bind:contrast="contrast"
+                            v-bind:clear_canvas_event="clear_canvas_event"
+                            v-bind:delete_event="delete_event"
+                            v-bind:deselect_event="deselect_event"
+                            v-bind:undo_event="undo_event"
+                            v-bind:redo_event="redo_event"
+                            v-bind:hide_labels="hide_labels"
+                            ref="mySubComponent"
+                            class="row"
+                            ></drawing-canvas-box-->
             </div>
             <!-- use a v-if to display error with slot if no images found: https://vuejs.org/v2/guide/components.html#Content-Distribution-with-Slots -->
         </div>
@@ -125,6 +150,7 @@
 <script>
 
 import DrawingCanvas from './DrawingCanvas'
+//import DrawingCanvasBox from './DrawingCanvasBox'
 
 import { uploadLabels,
          loadLabels,
@@ -158,7 +184,7 @@ export default {
             deselect_event: false,
             undo_event: false,
             redo_event: false,
-            hide_polygons: false,
+            hide_labels: false,
             label_examples: undefined,
             baseUrl: baseUrl,
             keyboard_shortcuts: [
@@ -178,6 +204,7 @@ export default {
     },
     components: {
         DrawingCanvas,
+        //DrawingCanvasBox
     },
     computed: {
         ...mapGetters('label_task_store', [
@@ -234,8 +261,9 @@ export default {
     },
     beforeRouteLeave (to, from, next) {
         // get current polygons array from drawing canvas component (NB: this isn't the most elegant solution, but it will do for now)
-        var tmp = this.$refs.mySubComponent.fetch_polygons();
-        var polygons = tmp.polygons;
+        //var tmp = this.$refs.mySubComponent.fetch_boxes();
+        var tmp = this.$refs.mySubComponent.fetch_labels();
+        var labels = tmp.labels;
         var edited = tmp.edited;
 
         if (edited) {
@@ -243,7 +271,7 @@ export default {
 
             var vm = this;
 
-            uploadLabels(this.input_data_id, this.label_task_id, polygons)  // upload the labels from the previous image
+            uploadLabels(this.input_data_id, this.label_task_id, labels)  // upload the labels from the previous image
             .then( function() {
                 vm.$store.dispatch('image_labeling/leave_page');
             });
@@ -270,11 +298,12 @@ export default {
 
                 if (vm.input_data_id != old_input_data_id) {
                     // load the labels from the next image
-                    let polygons_new = await loadLabels(vm.input_data_id, vm.label_task_id);
+                    let labels_new = await loadLabels(vm.input_data_id, vm.label_task_id);
 
-                    if (polygons_new != undefined) {
-                        console.log('setting polygons:', polygons_new)
-                        vm.$refs.mySubComponent.set_polygons(polygons_new);
+                    if (labels_new != undefined) {
+                        console.log('setting labels:', labels_new)
+                        //vm.$refs.mySubComponent.set_boxes(labels_new);
+                        vm.$refs.mySubComponent.set_labels(labels_new);
                     }
                 }
             }
@@ -285,11 +314,11 @@ export default {
                 if (vm.input_data_id != old_input_data_id) {
                     console.log('^^^^^^^^^^^loading labels2')
                     // load the labels from the next image
-                    let polygons_new = await loadLabels(vm.input_data_id, vm.label_task_id);
+                    let labels_new = await loadLabels(vm.input_data_id, vm.label_task_id);
 
-                    if (polygons_new != undefined) {
-                        console.log('^^^^^^^^^^^ setting polygons:', polygons_new)
-                        vm.$refs.mySubComponent.set_polygons(polygons_new);
+                    if (labels_new != undefined) {
+                        console.log('^^^^^^^^^^^ setting labels:', labels_new)
+                        vm.$refs.mySubComponent.set_labels(labels_new);
                     }
                 }
             }
@@ -306,15 +335,18 @@ export default {
             var old_input_data_id = this.input_data_id;
             var old_label_id = this.label_id;
 
-            // get current polygons array from drawing canvas component (NB: this isn't the most elegant solution, but it will do for now)
-            var tmp = this.$refs.mySubComponent.fetch_polygons();
-            var polygons = tmp.polygons;
+            // get current polygons/boxes array from drawing canvas component (NB: this isn't the most elegant solution, but it will do for now)
+            //var tmp = this.$refs.mySubComponent.fetch_boxes();
+            //var polygons = tmp.polygons;
+            var tmp = this.$refs.mySubComponent.fetch_labels();
+            //var boxes = tmp.bounding_boxes;
+            var lab = tmp.labels;
             var edited = tmp.edited;
 
             var vm = this;
 
             if (edited) {
-                await uploadLabels(this.input_data_id, this.label_task_id, polygons)  // upload the labels from the previous image
+                await uploadLabels(this.input_data_id, this.label_task_id, lab)  // upload the labels from the previous image
                 .catch(function(error) {
                     console.log('error getting label ID:', error, vm.label_task_id, vm.input_data_id, vm.user_id);
                 })
@@ -328,16 +360,14 @@ export default {
                     
                     // load the labels from the next image
                     loadLabels(vm.input_data_id, vm.label_task_id)
-                    .then(function(polygons_new) {
-                        if (polygons_new != undefined) {
-                            console.log('setting polygons:', polygons_new)
-                            vm.$refs.mySubComponent.set_polygons(polygons_new);
+                    .then(function(lab_new) {
+                        if (lab_new != undefined) {
+                            console.log('setting labels:', lab_new);
+                            vm.$refs.mySubComponent.set_labels(lab_new);
                         }
                     });
-
                 }
             });
-
         },
 
         get_label_examples: function() {
@@ -408,7 +438,7 @@ export default {
                 key_handled = true;
             }
             else if (e.code === 'KeyH') {
-                this.hide_polygons = true;
+                this.hide_labels = true;
 
                 key_handled = true;
             }
@@ -442,9 +472,6 @@ export default {
                     }
                 }
             }
-            else {
-                // console.log('key not found (down):', e.code);
-            }
 
             if (key_handled) {
                 e.stopPropagation();
@@ -464,7 +491,7 @@ export default {
                 key_handled = true;
             }
             else if (e.code === 'KeyH') {
-                this.hide_polygons = false;
+                this.hide_labels = false;
 
                 key_handled = true;
             }
@@ -483,9 +510,6 @@ export default {
                 }
 
                 key_handled = true;
-            }
-            else {
-                // console.log('key not found (up):', e.code);
             }
 
             if (key_handled) {
@@ -506,13 +530,4 @@ export default {
 <style>
 #drawing-tools { border:black }
 .modal-button { padding-top: 0.2em }
-/* .canvas-section div { padding-top: 2em } */
-/* #image_labeling {
-  font-family: 'Avenir', Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
-} */
 </style>

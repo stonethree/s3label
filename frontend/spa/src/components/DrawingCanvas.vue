@@ -24,19 +24,20 @@ import axios from "axios";
 var baseUrl = process.env.API_ADDR;
 axios.defaults.baseURL = baseUrl;
 
-// polygon operations
+// label operations
 
 var PolyBool = require('polybooljs');
-import { convertPolygonToPaths, 
-         convertPathToPolygon, 
-         isPointInPolygon, 
-         getSelectedPolygonIndex, 
-         isPolygonLargeEnough, 
-         addPaddingOffset, 
-         removePaddingOffset } from '../../static/PolygonOperations'
+import { getLabel,
+         isLabelLargeEnough,
+         isPointInLabel,
+         addPaddingOffset,
+         removePaddingOffset } from '../../static/LabelOperations'
+
+import { drawPolygon,
+         drawBoundingBox } from '../../static/DrawingOperations'
 
 import LabelStatus from './LabelStatus'
-import { extractColor, formatColor } from '../../static/color_utilities'
+//import { extractColor, formatColor } from '../../static/color_utilities'
 
 
 export default {
@@ -101,7 +102,7 @@ export default {
             type: Boolean,
             default: false
         },
-        hide_polygons: {
+        hide_labels: {
             required: false,
             type: Boolean,
             default: false
@@ -111,16 +112,16 @@ export default {
         return {
             isDrawing: false,
             edited: false,
-            currentPath: [],
+            coordPath: [],
             padX: 80,
             padY: 80,
             responseAsBlob: undefined,
             ctx: undefined,
             ctx_bg: undefined,
             label_status_toggler: {user_complete: false},
-            polygons: [],
-            polygons_redo: [],
-            polygons_undo: []
+            labels: [],
+            labels_redo: [],
+            labels_undo: []
         };
     },
     components: {
@@ -160,13 +161,13 @@ export default {
     },
     watch: {
         stroke_thickness: function () {
-            this.drawAllPolygons(this.ctx, this.polygons);
+            this.drawAllLabels(this.ctx, this.labels);
         },
         use_stroke: function () {
-            this.drawAllPolygons(this.ctx, this.polygons);
+            this.drawAllLabels(this.ctx, this.labels);
         },
         opacity: function () {
-            this.drawAllPolygons(this.ctx, this.polygons);
+            this.drawAllLabels(this.ctx, this.labels);
         },
         brightness: function () {
             if (this.responseAsBlob != undefined) {
@@ -179,9 +180,7 @@ export default {
             }
         },
         input_data_id: function (new_input_data_id, old_input_data_id) {
-            console.log('switching image...')
-
-            // this.clearCanvas();  
+            console.log('switching image...') 
 
             if (new_input_data_id != undefined) {
                 this.fetchAndDisplayImage(baseUrl + '/input_images/' + new_input_data_id);
@@ -191,8 +190,8 @@ export default {
             }
         },
 
-        polygons: function() {
-            this.drawAllPolygons(this.ctx, this.polygons);
+        labels: function() {
+            this.drawAllLabels(this.ctx, this.labels);
         },
 
         clear_canvas_event: function() {
@@ -220,33 +219,33 @@ export default {
             console.log('redo event occured')
         },
 
-        hide_polygons: function() {
-            this.drawAllPolygons(this.ctx, this.polygons);
+        hide_labels: function() {
+            this.drawAllLabels(this.ctx, this.labels);
         }
     },
     methods: {
-        set_polygons: function(polygons) {
-            // the parent component can set the polygons using this method in order to load the labels from the backend
+        set_labels: function(labels) {
+            // the parent component can set the labels using this method in order to load the labels from the backend
 
-            let polys = JSON.parse(JSON.stringify(polygons));     // deep copy
+            let polys = JSON.parse(JSON.stringify(labels));     // deep copy
 
             // add the padding from the left and top borders of the canvas, so that we include padding in the displayed coordinates
 
-            this.polygons = addPaddingOffset(polys, this.padX, this.padY);
+            this.labels = addPaddingOffset(polys, this.padX, this.padY);
 
-            console.log('polygons set to: ', this.polygons);
+            console.log('labels set to: ', this.labels);
 
             this.edited = false;
         },
 
-        fetch_polygons: function() {
-            // the parent component can fetch the polygons using this method in order to save the labels to the backend
+        fetch_labels: function() {
+            // the parent component can fetch the labels using this method in order to save the labels to the backend
 
-            let polys = JSON.parse(JSON.stringify(this.polygons));     // deep copy
+            let polys = JSON.parse(JSON.stringify(this.labels));     // deep copy
 
             // subtract the padding from the left and top borders of the canvas, so that we don't include padding in the saved coordinates
 
-            return { polygons: removePaddingOffset(polys, this.padX, this.padY),
+            return { labels: removePaddingOffset(polys, this.padX, this.padY),
                      edited: this.edited
             };
         },
@@ -288,118 +287,132 @@ export default {
             }
 
             if (this.active_tool == 'freehand') {
-                this.polygons_redo = [];
+                this.labels_redo = [];
                 this.isDrawing = true;
                 this.ctx.lineJoin = this.ctx.lineCap = 'round';
                 this.ctx.beginPath();
                 this.ctx.moveTo(coords.x, coords.y);
-                this.currentPath.push([coords.x, coords.y]);
+                this.coordPath.push([coords.x, coords.y]);
             }
             if (this.active_tool == 'polygon') {
                 if (!this.isDrawing) {
-                    this.polygons_redo = [];
+                    this.labels_redo = [];
                     this.isDrawing = true;
                     this.ctx.lineJoin = this.ctx.lineCap = 'round';
                     this.ctx.beginPath();
                     this.ctx.moveTo(coords.x, coords.y);
-                    this.currentPath.push([coords.x, coords.y]);
+                    this.coordPath.push([coords.x, coords.y]);
                 }
                 else {
-                    var lastPoint = this.currentPath[this.currentPath.length - 1];
+                    var lastPoint = this.coordPath[this.coordPath.length - 1];
                     if (Math.abs(coords.x - lastPoint[0]) < 2 && Math.abs(coords.y - lastPoint[1]) < 2) {
                         // close and finish drawing path if same point clicked twice
-                        this.currentPath.push(this.currentPath[0]);
-                        this.processPolygon();
+                        this.coordPath.push(this.coordPath[0]);
+                        this.processLabel();
                     }
                     else {
                         // add point to current path
                         this.ctx.lineTo(coords.x, coords.y);
                         this.ctx.stroke();
-                        this.currentPath.push([coords.x, coords.y]);
+                        this.coordPath.push([coords.x, coords.y]);
                     }
                 }
-            }
-            else if (this.active_tool == 'select') {
-                // check which polygons the point lies within
+            } else if (this.active_tool == 'rectangle') {
+                this.isDrawing = true;
+                this.ctx.lineJoin = this.ctx.lineCap = 'miter';
+                this.ctx.moveTo(coords.x, coords.y);
+                this.coordPath.push([coords.x, coords.y]);
+            } else if (this.active_tool == 'select') {
+                // check which labels the point lies within
 
-                for (var jjj = 0; jjj < this.polygons.length; jjj++) {
-                    var currentPolygon = this.polygons[jjj];
+
+                for (var i = 0; i < this.labels.length; i++) {
                     var selected = false;
-
-                    for (var iii = 0; iii < currentPolygon.polygon.regions.length; iii++) {
-                        var xs = currentPolygon.polygon.regions[iii].map(p => p[0]);
-                        var ys = currentPolygon.polygon.regions[iii].map(p => p[1]);
-
-                        if (isPointInPolygon(coords.x, coords.y, xs, ys)) {
-                            selected = true;
-                        }
+                    if (isPointInLabel(coords.x, coords.y, this.labels[i]))
+                    {
+                        this.labels[i].selected = true;
+                    } else {
+                        this.labels[i].selected = false;
                     }
-
-                    currentPolygon.selected = selected;
                 }
 
-                this.drawAllPolygons(this.ctx, this.polygons);
+                this.drawAllLabels(this.ctx, this.labels);
             }
         },
 
         mouseMoveHandler: function (e) {
-            if (this.active_tool == 'freehand') {
-                if (this.isDrawing) {
-                    var coords = this.getMousePos(this.ctx.canvas, e);
+            if (this.isDrawing) {
+                var coords = this.getMousePos(this.ctx.canvas, e);
+                if (this.active_tool == 'freehand') {
                     if (coords.x == undefined || coords.y == undefined) {
                         console.log("coords undef:" + coords);
                     }
                     this.ctx.lineTo(coords.x, coords.y);
                     this.ctx.stroke();
-                    this.currentPath.push([coords.x, coords.y]);
+                    this.coordPath.push([coords.x, coords.y]);
+                } else if (this.active_tool == 'rectangle') {
+                    this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
+                    this.drawAllLabels(this.ctx, this.labels);
+                    this.ctx.beginPath();
+
+                    if (coords.x == undefined || coords.y == undefined) {
+                        console.log("coords undef:" + coords);
+                    }
+
+                    this.ctx.rect(this.coordPath[0][0], this.coordPath[0][1], coords.x - this.coordPath[0][0], coords.y - this.coordPath[0][1]);
+                    this.ctx.stroke();
                 }
             }
         },
 
-        mouseUpHandler: function () {
-            if (this.active_tool == 'freehand' && this.isDrawing) {
-                this.processPolygon();
+        mouseUpHandler: function (e) {
+            //if (this.active_tool == 'freehand' && this.isDrawing) {
+            if (this.isDrawing) {
+                this.processLabel(e);
             }
         },
 
-        processPolygon: function () {
+        processLabel: function (e) {
             this.isDrawing = false;
             this.edited = true;
 
+            var coords = this.getMousePos(this.ctx.canvas, e);
+            this.coordPath.push([coords.x, coords.y]);
+
             this.ctx.closePath();
             if (this.use_stroke) {
-                this.ctx.stroke();
+                    this.ctx.stroke();
             }
             this.ctx.fill();
 
-            // do not add polygon if it has zero area
-            if (!isPolygonLargeEnough(this.currentPath)) {
-                console.log('polygon too small! discarding it')
+            // do not add label if it has zero area
+            if (!isLabelLargeEnough(this.coordPath)) {
+                console.log('label too small! discarding it')
 
-                this.currentPath = [];
-                this.drawAllPolygons(this.ctx, this.polygons);
+                this.coordPath = [];
+                this.drawAllLabels(this.ctx, this.labels);
                 return;
             }
 
             if (this.active_mode == 'new') {
-                // deselect all previous polygons
+                // deselect all previous labels
 
-                for (let i = 0; i < this.polygons.length; i++) {
-                    this.polygons[i].selected = false;
+                for (let i = 0; i < this.labels.length; i++) {
+                    this.labels[i].selected = false;
                 }
             }
 
-            let currentPolygon = convertPathToPolygon(this.currentPath);
-
+            let currentLabel = getLabel(this.active_tool, this.coordPath, coords);
+            //let currentPolygon = convertPathToPolygon(this.currentPath);
+            console.log('currentLabel:');
+            console.log(currentLabel);
             if (this.active_mode == 'new' && this.active_overlap_mode == 'overlap') {
-                // new polygon
+                // new label
 
-                if (this.currentPolygon.regions.length > 0) {
-                    this.polygons.push({ 'polygon': currentPolygon, 'label': this.active_label, 'type': this.active_tool, 'selected': true });
-                }
-                console.log('new overlap poly');
+                this.labels.push({'label': currentLabel, 'label_class': this.active_label, 'type': this.active_tool, 'selected': true});
+                console.log('new overlap label');
             }
-            else if (this.active_mode == 'new' && this.active_overlap_mode == 'no-overlap') {
+            /*else if (this.active_mode == 'new' && this.active_overlap_mode == 'no-overlap') {
                 // subtract all previous polygons from this new path
                 for (var i = 0; i < this.polygons.length; i++) {
                     let poly = this.polygons[i].polygon;
@@ -464,81 +477,40 @@ export default {
             }
             else {
                 console.error('Undefined tool mode:', this.active_mode, this.active_overlap_mode);
-            }
+            }*/
 
-            this.currentPath = [];
+            this.coordPath = [];
 
-            this.drawAllPolygons(this.ctx, this.polygons);
-        },
-
-        setColor: function (rgb, alpha) {
-            this.ctx.fillStyle = formatColor(rgb, alpha);
+            this.drawAllLabels(this.ctx, this.labels);
         },
 
         clearCanvas: function() {
             this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
-            this.polygons = [];
-            this.polygons_redo = [];
+            this.labels = [];
+            this.labels_redo = [];
             this.edited = true;
         },
 
-        drawAllPolygons: function (context, polygon_list) {
+        drawAllLabels: function (context, labels_list) {
             context.lineWidth = this.stroke_thickness;
             context.clearRect(0, 0, context.canvas.width, context.canvas.height);
 
-            if (!this.hide_polygons) {
-                for (let i = 0; i < polygon_list.length; i++) {
-                    this.drawPolygon(context, polygon_list[i]);
+            var vm = this;
+            if (!this.hide_labels) {
+                for (let i = 0; i < labels_list.length; i++) {
+                    switch (labels_list[i].type) {
+                        case 'freehand':
+                        case 'polygon':
+                            drawPolygon(vm, labels_list[i]);
+                            break;
+                        case 'rectangle':
+                            drawBoundingBox(vm, labels_list[i]);
+                            break;
+                        default:
+                    }
+                    
                 }
             }
-        },
-
-        drawPolygon: function (context, polygon) {
-            this.setColor(this.label_colors[polygon.label], this.opacity);
-            let paths_to_draw = convertPolygonToPaths(polygon.polygon);
-
-            if (polygon.selected) {
-                // draw selected polygon
-
-                var currentStrokeStyle = context.strokeStyle;
-                context.strokeStyle = "#FF0000";
-                context.setLineDash([4, 4]);
-
-                for (let j = 0; j < paths_to_draw.length; j++) {
-                    this.drawPath(context, paths_to_draw[j]);
-                }
-
-                context.strokeStyle = currentStrokeStyle;
-                context.setLineDash([]);
-            }
-            else {
-                // draw unselected polygon
-
-                for (let j = 0; j < paths_to_draw.length; j++) {
-                    this.drawPath(context, paths_to_draw[j]);
-                }
-            }
-        },
-
-        drawPath: function (context, path) {
-
-            let w = context.canvas.width;
-            let h = context.canvas.height;
-
-            context.beginPath();
-            context.moveTo(Math.max(this.padX, Math.min(path[0][0], w - this.padX)),
-                Math.max(this.padY, Math.min(path[0][1], h - this.padY)));
-
-            for (let i = 1; i < path.length; i++) {
-                context.lineTo(Math.max(this.padX, Math.min(path[i][0], w - this.padX)),
-                    Math.max(this.padY, Math.min(path[i][1], h - this.padY)));
-            }
-
-            context.closePath();
-            if (this.use_stroke) {
-                context.stroke();
-            }
-            context.fill();
         },
 
         // image displaying functions
@@ -570,9 +542,6 @@ export default {
 
             let img = new Image();
             let imgUrl = URL.createObjectURL(responseAsBlob);
-
-            // this.width = img.width;
-            // this.height = img.height;
 
             var vm = this;
 
@@ -624,7 +593,7 @@ export default {
 
                 // redraw polygon labels
 
-                vm.drawAllPolygons(vm.ctx, vm.polygons);
+                vm.drawAllLabels(vm.ctx, vm.labels);
             }
             img.src = imgUrl;
         },
@@ -665,53 +634,38 @@ export default {
         },
 
         undo: function() {
-            if (this.polygons_undo.length > 0) {
-                this.polygons.push(this.polygons_undo.pop());
+            if (this.labels_undo.length > 0) {        //possibly negligable?
+                this.labels.push(this.labels_undo.pop());
+            } else if (this.labels.length > 0) {
+                this.labels_redo.push(this.labels.pop());
             }
-            else if (this.polygons.length > 0) {
-                this.polygons_redo.push(this.polygons.pop());
-            }
+            this.drawAllLabels(this.ctx, this.labels);
             this.edited = true;
         },
 
         redo: function() {
-            if (this.polygons_redo.length > 0) {
-                this.polygons.push(this.polygons_redo.pop());
+            if (this.labels_redo.length > 0) {
+                this.labels.push(this.labels_redo.pop());
             }
+            this.drawAllLabels(this.ctx, this.labels);
             this.edited = true;
         },
 
         delete: function() {
-            console.log('num orig polys:', this.polygons.length, 'num redo polys:', this.polygons_redo.length)
-            this.polygons_undo.push(...this.polygons.filter(poly => poly.selected));
-            this.polygons = this.polygons.filter(poly => !poly.selected);
-            console.log('num final polys:', this.polygons.length, 'num redo polys:', this.polygons_redo.length)
-            this.drawAllPolygons(this.ctx, this.polygons);
+            this.labels_undo.push(...this.labels.filter(lab => lab.selected));
+            this.labels = this.labels.filter(lab => !lab.selected);
+            this.drawAllLabels(this.ctx, this.labels);
             this.edited = true;
         },
         
         deselect: function() {
-            for (let i = 0; i < this.polygons.length; i++) {
-                this.polygons[i].selected = false;
+            for (let i = 0; i < this.labels.length; i++) {
+                this.labels[i].selected = false;
             }
-            this.drawAllPolygons(this.ctx, this.polygons);
+            this.drawAllLabels(this.ctx, this.labels);
             this.edited = true;
         },
 
-    },
-
-    directives: {
-        drawOnCanvas: function(canvasElement, binding) {
-            // // Get canvas context
-            // var ctx = canvasElement.getContext("2d");
-            // // Clear the canvas
-            // ctx.clearRect(0, 0, 300, 150);
-            // // Insert stuff into canvas
-            // ctx.fillStyle = "black";
-            // ctx.font = "20px Georgia";
-            // ctx.fillText(binding.value, 10, 50);
-            // console.log("length: ", binding.value.length, binding.value)
-        }
     },
 }
 </script>
@@ -726,12 +680,4 @@ export default {
                    transform: translate(0, 300%); 
                    width: 100%; 
                    z-index: 4 }
-/* #drawing_canvas {
-  font-family: 'Avenir', Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
-} */
 </style>
