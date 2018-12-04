@@ -321,7 +321,6 @@ export default {
             }
             else if (this.active_tool == 'select') {
                 // check which polygons the point lies within
-
                 for (var jjj = 0; jjj < this.polygons.length; jjj++) {
                     var currentPolygon = this.polygons[jjj];
                     var selected = false;
@@ -339,6 +338,14 @@ export default {
                 }
 
                 this.drawAllPolygons(this.ctx, this.polygons);
+            } else if(this.active_tool == 'point')  { 
+                // mark current point and process it
+                this.currentPath = [];
+                this.ctx.beginPath();
+                this.ctx.arc(coords.x, coords.y, 4, 0, Math.PI*2);
+                this.ctx.fill();
+                this.currentPath.push([coords.x, coords.y]);
+                this.processPoint();
             }
         },
 
@@ -359,6 +366,32 @@ export default {
         mouseUpHandler: function () {
             if (this.active_tool == 'freehand' && this.isDrawing) {
                 this.processPolygon();
+            }
+        },
+
+        processPoint: function ()  {
+            // processes adding a point
+            this.isDrawing = false;
+            this.edited = true;
+
+            this.ctx.closePath();
+            if(this.use_stroke) {
+                this.ctx.stroke();
+            }
+
+            for (let i = 0; i < this.polygons.length; i++) {
+                this.polygons[i].selected = false;
+            }
+            let currentPolygon = {
+                regions: [this.currentPath],
+                inverted: false
+            };
+            if (this.active_mode == 'new') {
+                // new polygon
+                if (currentPolygon.regions.length > 0) {
+                    this.polygons.push({ 'polygon': currentPolygon, 'label': this.active_label, 'type': this.active_tool, 'selected': true });
+                }
+                console.log('new point');
             }
         },
 
@@ -394,7 +427,7 @@ export default {
             if (this.active_mode == 'new' && this.active_overlap_mode == 'overlap') {
                 // new polygon
 
-                if (this.currentPolygon.regions.length > 0) {
+                if (currentPolygon.regions.length > 0) {
                     this.polygons.push({ 'polygon': currentPolygon, 'label': this.active_label, 'type': this.active_tool, 'selected': true });
                 }
                 console.log('new overlap poly');
@@ -496,6 +529,25 @@ export default {
         drawPolygon: function (context, polygon) {
             this.setColor(this.label_colors[polygon.label], this.opacity);
             let paths_to_draw = convertPolygonToPaths(polygon.polygon);
+            if(paths_to_draw[0].length == 1) {
+                // if the polygon is a point (degenerate polygon), draw it differently
+                context.beginPath();
+                let fstyle = context.fillStyle;
+                context.fillStyle = "rgba(0, 255, 0, 0.2)";
+                context.fillStyle = fstyle;
+                context.arc(paths_to_draw[0][0][0], paths_to_draw[0][0][1], 4, 0, Math.PI*2);
+                context.closePath();
+                if (polygon.selected) {
+                    var currentStrokeStyle = context.strokeStyle;
+                    context.strokeStyle = "#FF0000";
+                    context.setLineDash([4, 4]);
+                }
+                context.stroke();
+                context.fill();
+                context.strokeStyle = currentStrokeStyle;
+                context.setLineDash([]);
+                return;
+            }
 
             if (polygon.selected) {
                 // draw selected polygon

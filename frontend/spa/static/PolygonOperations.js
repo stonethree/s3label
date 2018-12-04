@@ -11,7 +11,16 @@ export function convertPathToPolygon(path) {
 }
 
 export function isPointInPolygon(x, y, cornersX, cornersY) {
-
+    if(cornersX.length == 1 && cornersY.length == 1) {
+        // if polygon is a single point (degenerate polygon), check if euclid distance
+        // between selected coordinates and a given point is very small
+        var euclid_dist = Math.sqrt(Math.pow(x - cornersX[0], 2) + Math.pow(y - cornersY[0], 2));
+        if(euclid_dist < 5) {
+            return true;
+        } else {
+            return false;
+        }
+    }
     var i, j = cornersX.length - 1;
     var oddNodes = false;
 
