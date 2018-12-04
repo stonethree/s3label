@@ -12,7 +12,9 @@ Once the drawing is done the new selection will not overlap existing selections.
  
 ![Image Segmentation](./visuals/segmentation.gif)
 
-Instance segmentation can be implemented on other file types as well e.g. audio files can be segmented
+Support for other labeling types (e.g. bounding boxes, key points and image classes) is currently being added.
+
+The label storage format (i.e. JSON) is very flexible thus allowing for all kinds of data such as audio, videos etc. to be stored.
 
 ## Importing Labels
 Images can easily be imported from the hard drive.

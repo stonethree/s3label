@@ -12,13 +12,13 @@
 ## Installation
 
 ### Backend Setup
-Download and install PostgreSQL (ver. 9.4 or later; ver. 9.6 was officially tested and works)
+Download and install PostgreSQL (ver. 9.4 or later; ver. 9.6 is officially tested)
 
-Download and install [Miniconda](https://conda.io/miniconda.html) using Python 3.7 (dependencies)
+Download and install [Miniconda](https://conda.io/miniconda.html) using Python 3
 
-Using Anaconda Prompt, switch to the backend directory and create an environmental file
+Switch to the backend directory and create an environmental file
 ~~~
-cd <PATH>
+cd backend
 conda env update
 ~~~
 Generate a database called s3_label
@@ -35,16 +35,22 @@ create_db_tables.sql
 SQL file to populate with unit test data:
 init_unit_test_data.sql
 ~~~
-In IDE, create a new Python run configuration called main and then run main configuration. Ensure the following paths and settings are correct:
+In the backend directory, activate the environments
 ~~~
-script path: <PATH to main.py in backend directory>
-Python interpreter: Python 3.5 (s3_label)
-working directory: <PATH to backend directory>
+source activate
+~~~
+Export your current path to the pythonpath variable
+~~~
+export PYTHONPATH=$PYTHONPATH:
+~~~
+Run the backend with main.py
+~~~
+python main.py <args if required>
 ~~~
 ### Frontend Setup
-From spa folder of the frontend directory, install dependencies.
+Install frontend dependencies.
 ~~~
-cd <PATH>
+cd ../frontend/spa/
 npm install
 ~~~
 Compile and run the application. Application will then be running at http://localhost.8080
