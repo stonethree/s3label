@@ -405,7 +405,26 @@ export default {
         drawPolygon: function (context, polygon) {
             this.setColor(this.label_colors[polygon.label], this.opacity);
             let paths_to_draw = convertPolygonToPaths(polygon.polygon);
-
+            if(paths_to_draw[0].length == 1) {
+                // if the polygon is a point (degenerate polygon), draw it differently
+                context.beginPath();
+                let fstyle = context.fillStyle;
+                context.fillStyle = "rgba(0, 255, 0, 0.2)";
+                context.fillStyle = fstyle;
+                context.arc(paths_to_draw[0][0][0], paths_to_draw[0][0][1], 4, 0, Math.PI*2);
+                context.closePath();
+                if (polygon.selected) {
+                    var currentStrokeStyle = context.strokeStyle;
+                    context.strokeStyle = "#FF0000";
+                    context.setLineDash([4, 4]);
+                }
+                context.stroke();
+                context.fill();
+                context.strokeStyle = currentStrokeStyle;
+                context.setLineDash([]);
+                return;
+            }
+            
             if (polygon.selected) {
                 // draw selected polygon
 
