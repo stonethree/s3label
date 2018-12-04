@@ -296,21 +296,20 @@ export default {
             }
             if (this.active_tool == 'polygon') {
                 if (!this.isDrawing) {
+                    console.log('drawing first point')
                     this.labels_redo = [];
                     this.isDrawing = true;
                     this.ctx.lineJoin = this.ctx.lineCap = 'round';
                     this.ctx.beginPath();
                     this.ctx.moveTo(coords.x, coords.y);
                     this.coordPath.push([coords.x, coords.y]);
-                }
-                else {
+                } else {
                     var lastPoint = this.coordPath[this.coordPath.length - 1];
                     if (Math.abs(coords.x - lastPoint[0]) < 2 && Math.abs(coords.y - lastPoint[1]) < 2) {
                         // close and finish drawing path if same point clicked twice
                         this.coordPath.push(this.coordPath[0]);
-                        this.processLabel();
-                    }
-                    else {
+                        this.processLabel(e);
+                    } else {
                         // add point to current path
                         this.ctx.lineTo(coords.x, coords.y);
                         this.ctx.stroke();
@@ -367,7 +366,7 @@ export default {
 
         mouseUpHandler: function (e) {
             //if (this.active_tool == 'freehand' && this.isDrawing) {
-            if (this.isDrawing) {
+            if (this.isDrawing && this.active_tool != 'polygon') {
                 this.processLabel(e);
             }
         },
@@ -386,7 +385,7 @@ export default {
             this.ctx.fill();
 
             // do not add label if it has zero area
-            if (!isLabelLargeEnough(this.coordPath)) {
+            if (!isLabelLargeEnough(this.active_tool, this.coordPath)) {
                 console.log('label too small! discarding it')
 
                 this.coordPath = [];
@@ -634,7 +633,7 @@ export default {
         },
 
         undo: function() {
-            if (this.labels_undo.length > 0) {        //possibly negligable?
+            if (this.labels_undo.length > 0) { 
                 this.labels.push(this.labels_undo.pop());
             } else if (this.labels.length > 0) {
                 this.labels_redo.push(this.labels.pop());

@@ -55,7 +55,7 @@ function convertPolygonToPaths(polygon) {
     return polygon.regions;
 }
 
-import { addPaddingOffset } from '../../static/PolygonOperations'
+import { addPaddingOffset } from '../../static/LabelOperations'
 import LabelStatus from './LabelStatus'
 
 

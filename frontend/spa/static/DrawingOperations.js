@@ -1,11 +1,12 @@
 import { extractColor, formatColor } from './color_utilities'
 
+//sets the fill color of the label
 export function setColor (vm, rgb, alpha) {
     vm.ctx.fillStyle = formatColor(rgb, alpha);
     return vm;
 }
 
-//Polygon (Freehand) drawing function
+//Polygon or Freehand drawing function
 export function drawPolygon(vm, polygon) {
     vm = setColor(vm, vm.label_colors[polygon.label_class], vm.opacity);
     let paths_to_draw = polygon.label.regions;

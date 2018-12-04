@@ -1,39 +1,51 @@
+//returns data structure of a label
 export function getLabel(active_tool, coordPath, coords) {
     switch (active_tool) {
         case 'freehand':
         case 'polygon':
-            return {regions: [coordPath],
-                    inverted: false}
+            return {
+                regions: [coordPath],
+                inverted: false
+            }
         case 'rectangle':
-            return {x: coordPath[0][0],
-                    y: coordPath[0][1],
-                    boxWidth: coords.x - coordPath[0][0],
-                    boxHeight: coords.y - coordPath[0][1]}
+            return {
+                x: coordPath[0][0],
+                y: coordPath[0][1],
+                boxWidth: coords.x - coordPath[0][0],
+                boxHeight: coords.y - coordPath[0][1]
+            }
         default:
     }
 }
 
-export function isLabelLargeEnough(coordPath) {
+export function isLabelLargeEnough(active_tool, coordPath) {
     // check if path has non-negligible area
     //console.log('coordPath:');
     //console.log(coordPath);
+    switch (active_tool) {
+        case 'freehand':
+        case 'polygon':
+        case 'rectangle':
+            var x_min = Math.min(...coordPath.map(p => p[0]));
+            var x_max = Math.max(...coordPath.map(p => p[0]));
+            var y_min = Math.min(...coordPath.map(p => p[1]));
+            var y_max = Math.max(...coordPath.map(p => p[1]));
 
-    var x_min = Math.min(...coordPath.map(p => p[0]));
-    var x_max = Math.max(...coordPath.map(p => p[0]));
-    var y_min = Math.min(...coordPath.map(p => p[1]));
-    var y_max = Math.max(...coordPath.map(p => p[1]));
+            //console.log('x length: ' + Math.abs(x_min - x_max));
+            //console.log('y length: ' + Math.abs(y_min - y_max));
 
-    //console.log('x length: ' + Math.abs(x_min - x_max));
-    //console.log('y length: ' + Math.abs(y_min - y_max));
-
-    if (Math.abs(x_min - x_max) < 5 || Math.abs(y_min - y_max) < 5) {
-        return false;
+            if (Math.abs(x_min - x_max) < 5 || Math.abs(y_min - y_max) < 5) {
+                return false;
+            }
+            else {
+                return true;
+            }
+        default:
     }
-    else {
-        return true;
-    }
+
 }
 
+//determines if selected point lies within any of the stored labels
 export function isPointInLabel(selX, selY, labels) {
     switch (labels.type) {
         case 'freehand':
@@ -61,7 +73,7 @@ export function isPointInLabel(selX, selY, labels) {
                 } else {
                     return false;
                 }
-            }            
+            }
         case 'rectangle':
             var x = [(labels.label.x), (labels.label.x + labels.label.boxWidth)];
             var y = [(labels.label.y), (labels.label.y + labels.label.boxHeight)];
@@ -78,7 +90,7 @@ export function isPointInLabel(selX, selY, labels) {
             }
         default:
     }
-    
+
 }
 
 export function addPaddingOffset(labels, padX, padY) {
