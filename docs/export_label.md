@@ -50,7 +50,7 @@ curl -X PUT \
 | center_dot                | Not yet tested, but it should generate a single dot at the centroid of each instance  |
 | filled_polygon_instances  | Generate filled polygons, where each instance has a different integer value           |
 
-*test_images* can be set to "true", "false" or the field can be omitted (default):
+*test_data* can be set to "true", "false" or the field can be omitted (default):
 
 | test_data         |                                                                                       |
 | -------------     |:-------------                                                                         |
