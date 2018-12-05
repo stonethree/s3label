@@ -4,6 +4,8 @@
 
 There are currently two options for exporting the labels from the database via REST queries: getting all the raw JSON data or generating images from the labels.
 
+It is also possible to use a *SQL select* to query the *latest_label_history* table directly.
+ 
 ### Getting the raw JSON data
 
 ~~~ bash
@@ -62,18 +64,3 @@ curl -X PUT \
 | -------------   |:-------------                                                                         |
 | admin_complete  | Only generate ground truth images for data marked as "admin_complete" (i.e. admin user has approved this image)   |
 | user_complete   | Only generate ground truth images for data marked as "user_complete" (i.e. user has marked this image as complete, but admin user has not necessarily approved the labeling yet)                |
-
-## Useful SQL queries
-
-Delete duplicate input_data items from a particular dataset that has just been uploaded:
-
-~~~
-BEGIN;
-
-delete from input_data i using duplicate_input_data d where i.input_data_id = d.input_data_id and i.dataset_id = 17 and i.timestamp_upload is not null;
-
-select * from input_data where dataset_id = 17;
-
---rollback, so that we can test the query before executing (i.e. perform a dry run)
-ROLLBACK;
-~~~
