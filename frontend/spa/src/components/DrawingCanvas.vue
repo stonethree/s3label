@@ -30,6 +30,7 @@ var PolyBool = require('polybooljs');
 import { getLabel,
          isLabelLargeEnough,
          isPointInLabel,
+         getSelectedLabelIndex,
          addPaddingOffset,
          removePaddingOffset } from '../../static/LabelOperations'
 
@@ -286,56 +287,59 @@ export default {
                 console.log("coords undef:" + coords);
             }
 
-            if (this.active_tool == 'freehand') {
-                this.labels_redo = [];
-                this.isDrawing = true;
-                this.ctx.lineJoin = this.ctx.lineCap = 'round';
-                this.ctx.beginPath();
-                this.ctx.moveTo(coords.x, coords.y);
-                this.coordPath.push([coords.x, coords.y]);
-            }
-            if (this.active_tool == 'polygon') {
-                if (!this.isDrawing) {
-                    console.log('drawing first point')
+            switch (this.active_tool) {
+                case 'freehand':
                     this.labels_redo = [];
                     this.isDrawing = true;
                     this.ctx.lineJoin = this.ctx.lineCap = 'round';
                     this.ctx.beginPath();
                     this.ctx.moveTo(coords.x, coords.y);
                     this.coordPath.push([coords.x, coords.y]);
-                } else {
-                    var lastPoint = this.coordPath[this.coordPath.length - 1];
-                    if (Math.abs(coords.x - lastPoint[0]) < 2 && Math.abs(coords.y - lastPoint[1]) < 2) {
-                        // close and finish drawing path if same point clicked twice
-                        this.coordPath.push(this.coordPath[0]);
-                        this.processLabel(e);
-                    } else {
-                        // add point to current path
-                        this.ctx.lineTo(coords.x, coords.y);
-                        this.ctx.stroke();
+                    break;
+                case 'polygon':
+                    if (!this.isDrawing) {
+                        console.log('drawing first point')
+                        this.labels_redo = [];
+                        this.isDrawing = true;
+                        this.ctx.lineJoin = this.ctx.lineCap = 'round';
+                        this.ctx.beginPath();
+                        this.ctx.moveTo(coords.x, coords.y);
                         this.coordPath.push([coords.x, coords.y]);
-                    }
-                }
-            } else if (this.active_tool == 'rectangle') {
-                this.isDrawing = true;
-                this.ctx.lineJoin = this.ctx.lineCap = 'miter';
-                this.ctx.moveTo(coords.x, coords.y);
-                this.coordPath.push([coords.x, coords.y]);
-            } else if (this.active_tool == 'select') {
-                // check which labels the point lies within
-
-
-                for (var i = 0; i < this.labels.length; i++) {
-                    var selected = false;
-                    if (isPointInLabel(coords.x, coords.y, this.labels[i]))
-                    {
-                        this.labels[i].selected = true;
                     } else {
-                        this.labels[i].selected = false;
+                        var lastPoint = this.coordPath[this.coordPath.length - 1];
+                        if (Math.abs(coords.x - lastPoint[0]) < 2 && Math.abs(coords.y - lastPoint[1]) < 2) {
+                            // close and finish drawing path if same point clicked twice
+                            this.coordPath.push(this.coordPath[0]);
+                            this.processLabel(e);
+                        } else {
+                            // add point to current path
+                            this.ctx.lineTo(coords.x, coords.y);
+                            this.ctx.stroke();
+                            this.coordPath.push([coords.x, coords.y]);
+                        }
                     }
-                }
+                    break;
+                case 'rectangle':
+                    this.isDrawing = true;
+                    this.ctx.lineJoin = this.ctx.lineCap = 'miter';
+                    this.ctx.moveTo(coords.x, coords.y);
+                    this.coordPath.push([coords.x, coords.y]);
+                    break;
+                case 'select':
+                    // check which labels the point lies within
+                    for (var i = 0; i < this.labels.length; i++) {
+                        var selected = false;
+                        if (isPointInLabel(coords.x, coords.y, this.labels[i]))
+                        {
+                            this.labels[i].selected = true;
+                        } else {
+                            this.labels[i].selected = false;
+                        }
+                    }
 
-                this.drawAllLabels(this.ctx, this.labels);
+                    this.drawAllLabels(this.ctx, this.labels);
+                    break;
+                default:
             }
         },
 
@@ -365,7 +369,7 @@ export default {
         },
 
         mouseUpHandler: function (e) {
-            //if (this.active_tool == 'freehand' && this.isDrawing) {
+            //processes label if active tool is not selected as polygon
             if (this.isDrawing && this.active_tool != 'polygon') {
                 this.processLabel(e);
             }
@@ -402,81 +406,85 @@ export default {
             }
 
             let currentLabel = getLabel(this.active_tool, this.coordPath, coords);
-            //let currentPolygon = convertPathToPolygon(this.currentPath);
-            console.log('currentLabel:');
-            console.log(currentLabel);
-            if (this.active_mode == 'new' && this.active_overlap_mode == 'overlap') {
-                // new label
+            
+            // console.log('currentLabel:');
+            // console.log(currentLabel);
 
-                this.labels.push({'label': currentLabel, 'label_class': this.active_label, 'type': this.active_tool, 'selected': true});
-                console.log('new overlap label');
-            }
-            /*else if (this.active_mode == 'new' && this.active_overlap_mode == 'no-overlap') {
-                // subtract all previous polygons from this new path
-                for (var i = 0; i < this.polygons.length; i++) {
-                    let poly = this.polygons[i].polygon;
-                    currentPolygon = PolyBool.difference(currentPolygon, poly);
-                }
-
-                if (currentPolygon.regions.length > 0) {
-                    this.polygons.push({ 'polygon': currentPolygon, 'label': this.active_label, 'type': this.active_tool, 'selected': true });
-                }
-                console.log('new no overlap poly');
-            }
-            else if (this.active_mode == 'append' && this.active_overlap_mode == 'overlap') {
-                // if multiple polygons selected, deselect the least recently created one
-                var polyIndex = getSelectedPolygonIndex(this.polygons);
-
-                if (polyIndex >= 0) {
-                    // append to last polygon
-                    let poly = this.polygons[polyIndex].polygon;
-                    currentPolygon = PolyBool.union(currentPolygon, poly);
-
-                    this.polygons[polyIndex].polygon = currentPolygon;
-                }
-                console.log('append overlap poly');
-            }
-            else if (this.active_mode == 'append' && this.active_overlap_mode == 'no-overlap') {
-                // subtract all previous polygons from this new path
-                for (var i = 0; i < this.polygons.length; i++) {
-                    if (!this.polygons[i].selected) {
-                        currentPolygon = PolyBool.difference(currentPolygon, this.polygons[i].polygon);
-                    }
-                }
-
-                // if multiple polygons selected, deselect the least recently created one
-                var polyIndex = getSelectedPolygonIndex(this.polygons);
-
-                if (polyIndex >= 0) {
-                    // append to last polygon (TODO: should append to selected polygons)
-                    if (this.polygons.length > 0) {
-                        let poly = this.polygons[polyIndex].polygon;
-                        currentPolygon = PolyBool.union(currentPolygon, poly);
-                    }
-
-                    if (currentPolygon.regions.length > 0) {
-                        this.polygons[polyIndex].polygon = currentPolygon;
-                    }
-                }
-                console.log('append no overlap poly');
-            }
-            else if (this.active_mode == 'erase') {
-                // subtract from selected polygon(s)
-
-                for (var i = 0; i < this.polygons.length; i++) {
-                    if (this.polygons[i].selected) {
-                        var newPolygon = PolyBool.difference(this.polygons[i].polygon, currentPolygon);
-
-                        if (newPolygon.regions.length > 0) {
-                            this.polygons[i].polygon = newPolygon;
+            switch (this.active_mode) {
+                case 'new':
+                    if (this.active_overlap_mode == 'overlap') {
+                        // new label
+                        this.labels.push({'label': currentLabel, 'label_class': this.active_label, 'type': this.active_tool, 'selected': true});
+                        console.log('new overlap label');
+                    } else if (this.active_overlap_mode == 'no-overlap') {
+                        // subtract all previous labels from this new path
+                        for (var i = 0; i < this.labels.length; i++) {
+                            let labl = this.labels[i].label;
+                            if (this.active_tool == this.labels[i].type) {
+                                currentLabel = PolyBool.difference(currentLabel, labl);
+                            }
                         }
-                        console.log('erase poly');
+
+                        if (currentLabel.regions.length > 0) {
+                            this.labels.push({ 'label': currentLabel, 'label_class': this.active_label, 'type': this.active_tool, 'selected': true });
+                        }
+                        console.log('new no overlap label');
                     }
-                }
+                    break;
+                case 'append':
+                    if (this.active_overlap_mode == 'overlap') {
+                        // if multiple labels selected, deselect the least recently created one
+                        var labelIndex = getSelectedLabelIndex(this.labels);
+
+                        if (labelIndex >= 0) {
+                            // append to last label
+                            let labl = this.labels[labelIndex].label;
+                            currentLabel = PolyBool.union(currentLabel, labl);
+
+                            this.labels[labelIndex].label = currentLabel;
+                        }
+                        console.log('append overlap label');
+                    } else if (this.active_overlap_mode == 'no-overlap') {
+                        // subtract all previous labels from this new path
+                        for (var i = 0; i < this.labels.length; i++) {
+                            if (!this.labels[i].selected && this.active_tool == this.labels[i].type) {
+                                currentLabel = PolyBool.difference(currentLabel, this.labels[i].label);
+                            }
+                        }
+
+                        // if multiple labels selected, deselect the least recently created one
+                        var labelIndex = getSelectedLabelIndex(this.labels);
+
+                        if (labelIndex >= 0) {
+                            // append to last label (TODO: should append to selected labels)
+                            if (this.labels.length > 0) {
+                                let labl = this.labels[labelIndex].label;
+                                currentLabel = PolyBool.union(currentLabel, labl);
+                            }
+
+                            if (currentLabel.regions.length > 0) {
+                                this.labels[labelIndex].label = currentLabel;
+                            }
+                        }
+                        console.log('append no overlap label');
+                    }
+                    break;
+                case 'erase':
+                    // subtract from selected label(s)
+                    for (var i = 0; i < this.labels.length; i++) {
+                        if (this.labels[i].selected) {
+                            var newLabel = PolyBool.difference(this.labels[i].label, currentLabel);
+
+                            if (newLabel.regions.length > 0) {
+                                this.labels[i].label = newLabel;
+                            }
+                            console.log('erase label');
+                        }
+                    }
+                    break;
+                default:
+                    console.error('Undefined tool mode:', this.active_mode, this.active_overlap_mode);
             }
-            else {
-                console.error('Undefined tool mode:', this.active_mode, this.active_overlap_mode);
-            }*/
 
             this.coordPath = [];
 

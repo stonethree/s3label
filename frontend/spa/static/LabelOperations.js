@@ -90,7 +90,19 @@ export function isPointInLabel(selX, selY, labels) {
             }
         default:
     }
+}
 
+export function getSelectedLabelIndex(labels) {
+    //returns the index of the last selected label in the list
+    var index = -1;
+    
+    for (var i = 0; i < labels.length; i++) {
+        if (labels[i].selected) {
+            index = i;
+        }
+    }
+
+    return index;
 }
 
 export function addPaddingOffset(labels, padX, padY) {
