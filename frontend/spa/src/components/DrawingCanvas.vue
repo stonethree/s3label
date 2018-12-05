@@ -34,8 +34,7 @@ import { getLabel,
          addPaddingOffset,
          removePaddingOffset } from '../../static/LabelOperations'
 
-import { drawPolygon,
-         drawBoundingBox } from '../../static/DrawingOperations'
+import { drawAllLabels } from '../../static/DrawingOperations'
 
 import LabelStatus from './LabelStatus'
 //import { extractColor, formatColor } from '../../static/color_utilities'
@@ -162,13 +161,13 @@ export default {
     },
     watch: {
         stroke_thickness: function () {
-            this.drawAllLabels(this.ctx, this.labels);
+            drawAllLabels(this, this.labels);
         },
         use_stroke: function () {
-            this.drawAllLabels(this.ctx, this.labels);
+            drawAllLabels(this, this.labels);
         },
         opacity: function () {
-            this.drawAllLabels(this.ctx, this.labels);
+            drawAllLabels(this, this.labels);
         },
         brightness: function () {
             if (this.responseAsBlob != undefined) {
@@ -192,7 +191,7 @@ export default {
         },
 
         labels: function() {
-            this.drawAllLabels(this.ctx, this.labels);
+            drawAllLabels(this, this.labels);
         },
 
         clear_canvas_event: function() {
@@ -221,7 +220,7 @@ export default {
         },
 
         hide_labels: function() {
-            this.drawAllLabels(this.ctx, this.labels);
+            drawAllLabels(this, this.labels);
         }
     },
     methods: {
@@ -337,7 +336,7 @@ export default {
                         }
                     }
 
-                    this.drawAllLabels(this.ctx, this.labels);
+                    drawAllLabels(this, this.labels);
                     break;
                 default:
             }
@@ -355,7 +354,7 @@ export default {
                     this.coordPath.push([coords.x, coords.y]);
                 } else if (this.active_tool == 'rectangle') {
                     this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
-                    this.drawAllLabels(this.ctx, this.labels);
+                    drawAllLabels(this, this.labels);
                     this.ctx.beginPath();
 
                     if (coords.x == undefined || coords.y == undefined) {
@@ -393,7 +392,7 @@ export default {
                 console.log('label too small! discarding it')
 
                 this.coordPath = [];
-                this.drawAllLabels(this.ctx, this.labels);
+                drawAllLabels(this, this.labels);
                 return;
             }
 
@@ -488,7 +487,7 @@ export default {
 
             this.coordPath = [];
 
-            this.drawAllLabels(this.ctx, this.labels);
+            drawAllLabels(this, this.labels);
         },
 
         clearCanvas: function() {
@@ -498,7 +497,7 @@ export default {
             this.edited = true;
         },
 
-        drawAllLabels: function (context, labels_list) {
+        /*drawAllLabels: function (context, labels_list) {
             context.lineWidth = this.stroke_thickness;
             context.clearRect(0, 0, context.canvas.width, context.canvas.height);
 
@@ -518,7 +517,7 @@ export default {
                     
                 }
             }
-        },
+        },*/
 
         // image displaying functions
 
@@ -600,7 +599,7 @@ export default {
 
                 // redraw polygon labels
 
-                vm.drawAllLabels(vm.ctx, vm.labels);
+                drawAllLabels(vm, vm.labels);
             }
             img.src = imgUrl;
         },
@@ -646,7 +645,7 @@ export default {
             } else if (this.labels.length > 0) {
                 this.labels_redo.push(this.labels.pop());
             }
-            this.drawAllLabels(this.ctx, this.labels);
+            drawAllLabels(this, this.labels);
             this.edited = true;
         },
 
@@ -654,14 +653,14 @@ export default {
             if (this.labels_redo.length > 0) {
                 this.labels.push(this.labels_redo.pop());
             }
-            this.drawAllLabels(this.ctx, this.labels);
+            drawAllLabels(this, this.labels);
             this.edited = true;
         },
 
         delete: function() {
             this.labels_undo.push(...this.labels.filter(lab => lab.selected));
             this.labels = this.labels.filter(lab => !lab.selected);
-            this.drawAllLabels(this.ctx, this.labels);
+            drawAllLabels(this, this.labels);
             this.edited = true;
         },
         
@@ -669,7 +668,7 @@ export default {
             for (let i = 0; i < this.labels.length; i++) {
                 this.labels[i].selected = false;
             }
-            this.drawAllLabels(this.ctx, this.labels);
+            drawAllLabels(this, this.labels);
             this.edited = true;
         },
 

@@ -51,11 +51,9 @@ import axios from "axios";
 var baseUrl = process.env.API_ADDR;
 axios.defaults.baseURL = baseUrl;
 
-function convertPolygonToPaths(polygon) {
-    return polygon.regions;
-}
-
 import { addPaddingOffset } from '../../static/LabelOperations'
+import { drawAllLabels } from '../../static/DrawingOperations'
+import { extractColor, formatColor } from '../../static/color_utilities'
 import LabelStatus from './LabelStatus'
 
 
@@ -72,7 +70,6 @@ export default {
             label_id: undefined,
             padX: 80,
             padY: 80,
-            polygons: [],
             lineWidth: 2,
             opacity: 0.3,
             stroke_thickness: 2,
@@ -80,7 +77,8 @@ export default {
             labels_table_data: undefined,
             hide_labels: false,
             perPageLabel: 10,
-            currentPageLabel: 1
+            currentPageLabel: 1,
+            labelArr: []
         };
     },
 
@@ -124,7 +122,7 @@ export default {
                 var d = {};
 
                 for (var i = 0; i < this.labels.length; i++) {
-                    d[this.labels[i].label_class] = this.extractColor(this.labels[i].color);
+                    d[this.labels[i].label_class] = extractColor(this.labels[i].color);
                 }
                 return d;
             }
@@ -322,7 +320,7 @@ export default {
             this.label_id = item.label_id;
 
             // highlight selected row
-
+            this.labelArr = [];
             for (var i = 0; i < this.labeled_input_data.length; i++) {
                 if (this.labeled_input_data[i].input_data_id == this.input_data_id) {
                     this.$set(this.labeled_input_data[i], '_rowVariant', 'active');
@@ -368,8 +366,8 @@ export default {
                 vm.setCanvasSize(canvas_bg, img.width, img.height, vm.padX, vm.padY);
                 ctx2.drawImage(img, vm.padX, vm.padY);
 
-                // redraw the polygons, since we have just resized the canvas and so lost any currently displayed polygons
-                vm.drawAllLabels(vm.ctx, vm.polygons);
+                // redraw the labels, since we have just resized the canvas and so lost any currently displayed labels
+                drawAllLabels(vm, vm.labelArr);
             }
             img.src = imgUrl;
         },
@@ -387,87 +385,6 @@ export default {
                 .catch(function(error) {
                     console.log('error fetching and displaying image:', error);
                 });
-        },
-
-        // polygon drawing functions
-
-        drawAllLabels: function (context, polygon_list) {
-            context.lineWidth = this.stroke_thickness;
-            context.clearRect(0, 0, context.canvas.width, context.canvas.height);
-
-            if (!this.hide_labels) {
-                for (let i = 0; i < polygon_list.length; i++) {
-                    this.drawPolygon(context, polygon_list[i]);
-                }
-            }
-        },
-
-        drawPolygon: function (context, polygon) {
-            this.setColor(this.label_colors[polygon.label], this.opacity);
-            let paths_to_draw = convertPolygonToPaths(polygon.polygon);
-
-            if (polygon.selected) {
-                // draw selected polygon
-
-                var currentStrokeStyle = context.strokeStyle;
-                context.strokeStyle = "#FF0000";
-                context.setLineDash([4, 4]);
-
-                for (let j = 0; j < paths_to_draw.length; j++) {
-                    this.drawPath(context, paths_to_draw[j]);
-                }
-
-                context.strokeStyle = currentStrokeStyle;
-                context.setLineDash([]);
-            }
-            else {
-                // draw unselected polygon
-
-                for (let j = 0; j < paths_to_draw.length; j++) {
-                    this.drawPath(context, paths_to_draw[j]);
-                }
-            }
-        },
-
-        drawPath: function (context, path) {
-
-            let w = context.canvas.width;
-            let h = context.canvas.height;
-
-            context.beginPath();
-            context.moveTo(Math.max(this.padX, Math.min(path[0][0], w - this.padX)),
-                Math.max(this.padY, Math.min(path[0][1], h - this.padY)));
-
-            for (let i = 1; i < path.length; i++) {
-                context.lineTo(Math.max(this.padX, Math.min(path[i][0], w - this.padX)),
-                    Math.max(this.padY, Math.min(path[i][1], h - this.padY)));
-            }
-
-            context.closePath();
-            if (this.use_stroke) {
-                context.stroke();
-            }
-            context.fill();
-        },
-
-        extractColor: function (rgb_string) {
-            // takes a string of format
-            var rgb = JSON.parse(rgb_string)
-
-            if (rgb.length == 3) {
-                return rgb;
-            }
-            else {
-                console.error('Color string must have 3 RGB elements specified');
-            }
-        },
-
-        formatColor: function (rgb, alpha) {
-            return 'rgba(' + rgb[0] + ',' + rgb[1] + ',' + rgb[2] + ',' + alpha + ')';
-        },
-
-        setColor: function (rgb, alpha) {
-            this.ctx.fillStyle = this.formatColor(rgb, alpha);
         },
 
         loadImageLabels: function (input_data_id) {
@@ -489,22 +406,24 @@ export default {
                 .then(function(response) {
                     if (response.data.length == 1) {
                         console.log("Label found for this image: attempting to apply it in the view")
-                        let label = response.data[0];
-
+                        let responseLabel = response.data[0];
+                        console.log(response);
                         // check label format is correct
 
-                        var polygons = JSON.parse(label.label_serialised);
+                        var labl = JSON.parse(responseLabel.label_serialised);
+                        //console.log(labl);
 
-                        if (polygons.length > 0 && polygons[0].polygon != undefined) {
+                        if (labl.length > 0 && labl[0].label != undefined) {
                             console.log('Applied serialised label to image')
-                            vm.polygons = polygons;
+                            vm.labelArr = labl;
 
-                            vm.polygons = addPaddingOffset(vm.polygons, vm.padX, vm.padY);
+                            vm.labelArr = addPaddingOffset(vm.labelArr, vm.padX, vm.padY);
+                            console.log(vm.labelArr);
 
-                            vm.drawAllLabels(vm.ctx, vm.polygons);
+                            drawAllLabels(vm, vm.labelArr);
                         }
                         else {
-                            console.error('Serialised label has wrong format:' + polygons)
+                            console.warn('Serialised label has wrong format or is empty:' + labl)
                         }
                     }
                     else if (response.data.length == 0) {
@@ -516,8 +435,8 @@ export default {
                 })
                 .catch(function(error) {
                     console.log(error);
-                    vm.polygons = [];
-                    vm.drawAllLabels(vm.ctx, vm.polygons);
+                    vm.labelArr = [];
+                    drawAllLabels(vm, vm.labelArr);
                 });
         },
 
@@ -560,7 +479,7 @@ export default {
             }
             else if (e.code === 'KeyH') {
                 this.hide_labels = true;
-                this.drawAllLabels(this.ctx, this.polygons);
+                drawAllLabels(this, this.labelArr);
 
                 key_handled = true;
             }
@@ -576,7 +495,7 @@ export default {
 
             if (e.code === 'KeyH') {
                 this.hide_labels = false;
-                this.drawAllLabels(this.ctx, this.polygons);
+                drawAllLabels(this, this.labelArr);
 
                 key_handled = true;
 

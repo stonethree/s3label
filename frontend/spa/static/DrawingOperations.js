@@ -6,6 +6,27 @@ export function setColor (vm, rgb, alpha) {
     return vm;
 }
 
+export function drawAllLabels(vm, labels_list) {
+    vm.ctx.lineWidth = vm.stroke_thickness;
+    vm.ctx.clearRect(0, 0, vm.ctx.canvas.width, vm.ctx.canvas.height);
+
+    if (!vm.hide_labels) {
+        for (let i = 0; i < labels_list.length; i++) {
+            switch (labels_list[i].type) {
+                case 'freehand':
+                case 'polygon':
+                    drawPolygon(vm, labels_list[i]);
+                    break;
+                case 'rectangle':
+                    drawBoundingBox(vm, labels_list[i]);
+                    break;
+                default:
+            }
+            
+        }
+    }
+}
+
 //Polygon or Freehand drawing function
 export function drawPolygon(vm, polygon) {
     vm = setColor(vm, vm.label_colors[polygon.label_class], vm.opacity);
