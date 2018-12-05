@@ -27,7 +27,7 @@ create table label_tasks(
     title VARCHAR NOT NULL,
     description VARCHAR NOT NULL,
     type VARCHAR NOT NULL
-        CHECK (type = 'semantic_segmentation' or type = 'instance_segmentation'),
+        CHECK (type = 'semantic_segmentation' or type = 'instance_segmentation' or type = 'bounding_boxes'),
 	default_tool VARCHAR DEFAULT 'freehand' NOT NULL
 	    CHECK (default_tool = 'freehand' or default_tool = 'polygon' or default_tool = 'select'),
 	permit_overlap BOOLEAN DEFAULT false NOT NULL,

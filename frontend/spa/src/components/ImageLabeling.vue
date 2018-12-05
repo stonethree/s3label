@@ -10,25 +10,27 @@
                         <br>
                         <input type="radio" class="radio-button" name="tool" value="polygon" v-model="active_tool"> Polygon
                         <br>
+                        <input type="radio" class="radio-button" name="tool" value="rectangle" v-model="active_tool"> Rectangle
+                        <br>
                         <input type="radio" class="radio-button" name="tool" value="select" v-model="active_tool"> Select
                     </form>
                 </div>
                 <div id="tool_modes" class="col border-right">
                     <span>Modes</span>
                     <form id="mode_form">
-                        <input type="radio" class="radio-button" name="mode" value="new" v-model="active_mode"> New
+                        <input type="radio" class="radio-button" name="mode" value="new" v-model="active_mode" v-bind:class="{ disabled: isDisabled }" v-bind:disabled="stateNew"> New
                         <br>
-                        <input type="radio" class="radio-button" name="mode" value="append" v-model="active_mode"> Append
+                        <input type="radio" class="radio-button" name="mode" value="append" v-model="active_mode" v-bind:class="{ disabled: isDisabled }" v-bind:disabled="stateAppend"> Append
                         <br>
-                        <input type="radio" class="radio-button" name="mode" value="erase" v-model="active_mode"> Erase
+                        <input type="radio" class="radio-button" name="mode" value="erase" v-model="active_mode" v-bind:class="{ disabled: isDisabled }" v-bind:disabled="stateErase"> Erase
                     </form>
                 </div>
                 <div id="choose_overlap" class="col border-right">
                     <span>Overlap Mode</span>
                     <form>
-                        <input type="radio" class="radio-button" name="overlap_mode" value="overlap" v-model="active_overlap_mode"> Overlapping
+                        <input type="radio" class="radio-button" name="overlap_mode" value="overlap" v-model="active_overlap_mode" v-bind:class="{ disabled: isDisabled }" v-bind:disabled="stateOverlap"> Overlapping
                         <br>
-                        <input type="radio" class="radio-button" name="overlap_mode" value="no-overlap" v-model="active_overlap_mode"> Non-overlapping
+                        <input type="radio" class="radio-button" name="overlap_mode" value="no-overlap" v-model="active_overlap_mode" v-bind:class="{ disabled: isDisabled }" v-bind:disabled="stateNoOverlap"> Non-overlapping
                     </form>
                 </div>
                 <div id="semantic_labels" class="col border-right">
@@ -77,7 +79,8 @@
     
         <div class="row justify-content-center">
             <div class="col">
-            <drawing-canvas v-bind:active_tool="active_tool"
+            <drawing-canvas
+                            v-bind:active_tool="active_tool"
                             v-bind:active_mode="active_mode"
                             v-bind:active_overlap_mode="active_overlap_mode"
                             v-bind:active_label="active_label"
@@ -93,7 +96,7 @@
                             v-bind:deselect_event="deselect_event"
                             v-bind:undo_event="undo_event"
                             v-bind:redo_event="redo_event"
-                            v-bind:hide_polygons="hide_polygons"
+                            v-bind:hide_labels="hide_labels"
                             ref="mySubComponent"
                             class="row"
                             ></drawing-canvas>
@@ -125,6 +128,7 @@
 <script>
 
 import DrawingCanvas from './DrawingCanvas'
+//import DrawingCanvasBox from './DrawingCanvasBox'
 
 import { uploadLabels,
          loadLabels,
@@ -158,7 +162,7 @@ export default {
             deselect_event: false,
             undo_event: false,
             redo_event: false,
-            hide_polygons: false,
+            hide_labels: false,
             label_examples: undefined,
             baseUrl: baseUrl,
             keyboard_shortcuts: [
@@ -173,11 +177,17 @@ export default {
                 { key: 'Delete', action: 'Delete selected region' },
                 { key: 'H', action: 'Temporarily hide labels<br><em>Useful for checking the edge of the label against the underlying image</em>' },
                 { key: '1, 2, ...', action: 'Select label class' },
-            ]
+            ],
+            stateNew: true,
+            stateAppend: true,
+            stateErase: true,
+            stateOverlap: true,
+            stateNoOverlap: false
         };
     },
     components: {
         DrawingCanvas,
+        //DrawingCanvasBox
     },
     computed: {
         ...mapGetters('label_task_store', [
@@ -207,7 +217,41 @@ export default {
         contrast: function() {
             return parseFloat(this.contrast_slider_value) / 100.;
         },
-
+        isDisabled: function() {
+            switch (this.active_tool) {
+                case 'freehand':
+                    this.stateNew = false;
+                    this.stateAppend = false;
+                    this.stateErase = false;
+                    this.stateOverlap = false;
+                    this.stateNoOverlap = false;
+                    break;
+                case 'polygon':
+                    this.active_overlap_mode = 'overlap';
+                    this.stateNew = false;
+                    this.stateAppend = false;
+                    this.stateErase = false;
+                    this.stateOverlap = false;
+                    this.stateNoOverlap = true;
+                    break;
+                case 'rectangle':
+                    this.active_mode = 'new';
+                    this.active_overlap_mode = 'overlap';
+                    this.stateNew = false;
+                    this.stateAppend = true;
+                    this.stateErase = true;
+                    this.stateOverlap = false;
+                    this.stateNoOverlap = true;
+                    break;
+                case 'select':
+                    this.stateNew = true;
+                    this.stateAppend = true;
+                    this.stateErase = true;
+                    this.stateOverlap = true;
+                    this.stateNoOverlap = true;
+                    break;
+            }
+        }
     },
     beforeMount() {
         window.addEventListener('keydown', this.keyDownHandler);
@@ -234,8 +278,9 @@ export default {
     },
     beforeRouteLeave (to, from, next) {
         // get current polygons array from drawing canvas component (NB: this isn't the most elegant solution, but it will do for now)
-        var tmp = this.$refs.mySubComponent.fetch_polygons();
-        var polygons = tmp.polygons;
+        //var tmp = this.$refs.mySubComponent.fetch_boxes();
+        var tmp = this.$refs.mySubComponent.fetch_labels();
+        var labels = tmp.labels;
         var edited = tmp.edited;
 
         if (edited) {
@@ -243,7 +288,7 @@ export default {
 
             var vm = this;
 
-            uploadLabels(this.input_data_id, this.label_task_id, polygons)  // upload the labels from the previous image
+            uploadLabels(this.input_data_id, this.label_task_id, labels)  // upload the labels from the previous image
             .then( function() {
                 vm.$store.dispatch('image_labeling/leave_page');
             });
@@ -270,11 +315,12 @@ export default {
 
                 if (vm.input_data_id != old_input_data_id) {
                     // load the labels from the next image
-                    let polygons_new = await loadLabels(vm.input_data_id, vm.label_task_id);
+                    let labels_new = await loadLabels(vm.input_data_id, vm.label_task_id);
 
-                    if (polygons_new != undefined) {
-                        console.log('setting polygons:', polygons_new)
-                        vm.$refs.mySubComponent.set_polygons(polygons_new);
+                    if (labels_new != undefined) {
+                        console.log('setting labels:', labels_new)
+                        //vm.$refs.mySubComponent.set_boxes(labels_new);
+                        vm.$refs.mySubComponent.set_labels(labels_new);
                     }
                 }
             }
@@ -285,11 +331,11 @@ export default {
                 if (vm.input_data_id != old_input_data_id) {
                     console.log('^^^^^^^^^^^loading labels2')
                     // load the labels from the next image
-                    let polygons_new = await loadLabels(vm.input_data_id, vm.label_task_id);
+                    let labels_new = await loadLabels(vm.input_data_id, vm.label_task_id);
 
-                    if (polygons_new != undefined) {
-                        console.log('^^^^^^^^^^^ setting polygons:', polygons_new)
-                        vm.$refs.mySubComponent.set_polygons(polygons_new);
+                    if (labels_new != undefined) {
+                        console.log('^^^^^^^^^^^ setting labels:', labels_new)
+                        vm.$refs.mySubComponent.set_labels(labels_new);
                     }
                 }
             }
@@ -306,15 +352,18 @@ export default {
             var old_input_data_id = this.input_data_id;
             var old_label_id = this.label_id;
 
-            // get current polygons array from drawing canvas component (NB: this isn't the most elegant solution, but it will do for now)
-            var tmp = this.$refs.mySubComponent.fetch_polygons();
-            var polygons = tmp.polygons;
+            // get current polygons/boxes array from drawing canvas component (NB: this isn't the most elegant solution, but it will do for now)
+            //var tmp = this.$refs.mySubComponent.fetch_boxes();
+            //var polygons = tmp.polygons;
+            var tmp = this.$refs.mySubComponent.fetch_labels();
+            //var boxes = tmp.bounding_boxes;
+            var lab = tmp.labels;
             var edited = tmp.edited;
 
             var vm = this;
 
             if (edited) {
-                await uploadLabels(this.input_data_id, this.label_task_id, polygons)  // upload the labels from the previous image
+                await uploadLabels(this.input_data_id, this.label_task_id, lab)  // upload the labels from the previous image
                 .catch(function(error) {
                     console.log('error getting label ID:', error, vm.label_task_id, vm.input_data_id, vm.user_id);
                 })
@@ -328,16 +377,14 @@ export default {
                     
                     // load the labels from the next image
                     loadLabels(vm.input_data_id, vm.label_task_id)
-                    .then(function(polygons_new) {
-                        if (polygons_new != undefined) {
-                            console.log('setting polygons:', polygons_new)
-                            vm.$refs.mySubComponent.set_polygons(polygons_new);
+                    .then(function(lab_new) {
+                        if (lab_new != undefined) {
+                            console.log('setting labels:', lab_new);
+                            vm.$refs.mySubComponent.set_labels(lab_new);
                         }
                     });
-
                 }
             });
-
         },
 
         get_label_examples: function() {
@@ -408,7 +455,7 @@ export default {
                 key_handled = true;
             }
             else if (e.code === 'KeyH') {
-                this.hide_polygons = true;
+                this.hide_labels = true;
 
                 key_handled = true;
             }
@@ -442,9 +489,6 @@ export default {
                     }
                 }
             }
-            else {
-                // console.log('key not found (down):', e.code);
-            }
 
             if (key_handled) {
                 e.stopPropagation();
@@ -464,7 +508,7 @@ export default {
                 key_handled = true;
             }
             else if (e.code === 'KeyH') {
-                this.hide_polygons = false;
+                this.hide_labels = false;
 
                 key_handled = true;
             }
@@ -483,9 +527,6 @@ export default {
                 }
 
                 key_handled = true;
-            }
-            else {
-                // console.log('key not found (up):', e.code);
             }
 
             if (key_handled) {
@@ -506,13 +547,4 @@ export default {
 <style>
 #drawing-tools { border:black }
 .modal-button { padding-top: 0.2em }
-/* .canvas-section div { padding-top: 2em } */
-/* #image_labeling {
-  font-family: 'Avenir', Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
-} */
 </style>
