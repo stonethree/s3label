@@ -18,19 +18,19 @@
                 <div id="tool_modes" class="col border-right">
                     <span>Modes</span>
                     <form id="mode_form">
-                        <input type="radio" class="radio-button" name="mode" value="new" v-model="active_mode"> New
+                        <input type="radio" class="radio-button" name="mode" value="new" v-model="active_mode" v-bind:class="{ disabled: isDisabled }" v-bind:disabled="stateNew"> New
                         <br>
-                        <input type="radio" class="radio-button" name="mode" value="append" v-model="active_mode"> Append
+                        <input type="radio" class="radio-button" name="mode" value="append" v-model="active_mode" v-bind:class="{ disabled: isDisabled }" v-bind:disabled="stateAppend"> Append
                         <br>
-                        <input type="radio" class="radio-button" name="mode" value="erase" v-model="active_mode"> Erase
+                        <input type="radio" class="radio-button" name="mode" value="erase" v-model="active_mode" v-bind:class="{ disabled: isDisabled }" v-bind:disabled="stateErase"> Erase
                     </form>
                 </div>
                 <div id="choose_overlap" class="col border-right">
                     <span>Overlap Mode</span>
                     <form>
-                        <input type="radio" class="radio-button" name="overlap_mode" value="overlap" v-model="active_overlap_mode"> Overlapping
+                        <input type="radio" class="radio-button" name="overlap_mode" value="overlap" v-model="active_overlap_mode" v-bind:class="{ disabled: isDisabled }" v-bind:disabled="stateOverlap"> Overlapping
                         <br>
-                        <input type="radio" class="radio-button" name="overlap_mode" value="no-overlap" v-model="active_overlap_mode"> Non-overlapping
+                        <input type="radio" class="radio-button" name="overlap_mode" value="no-overlap" v-model="active_overlap_mode" v-bind:class="{ disabled: isDisabled }" v-bind:disabled="stateNoOverlap"> Non-overlapping
                     </form>
                 </div>
                 <div id="semantic_labels" class="col border-right">
@@ -79,7 +79,6 @@
     
         <div class="row justify-content-center">
             <div class="col">
-            <!--drawing-canvas v-if="label_task.type == 'instance_segmentation'"-->
             <drawing-canvas
                             v-bind:active_tool="active_tool"
                             v-bind:active_mode="active_mode"
@@ -101,27 +100,6 @@
                             ref="mySubComponent"
                             class="row"
                             ></drawing-canvas>
-            <!--drawing-canvas-box  v-if="label_task.type == 'bounding_boxes'"
-                            v-bind:active_tool="active_tool"
-                            v-bind:active_mode="active_mode"
-                            v-bind:active_overlap_mode="active_overlap_mode"
-                            v-bind:active_label="active_label"
-                            v-bind:input_data_id="input_data_id"
-                            v-bind:label_task_id="label_task.label_task_id"
-                            v-bind:stroke_thickness="stroke_thickness"
-                            v-bind:use_stroke="use_stroke"
-                            v-bind:opacity="opacity"
-                            v-bind:brightness="brightness"
-                            v-bind:contrast="contrast"
-                            v-bind:clear_canvas_event="clear_canvas_event"
-                            v-bind:delete_event="delete_event"
-                            v-bind:deselect_event="deselect_event"
-                            v-bind:undo_event="undo_event"
-                            v-bind:redo_event="redo_event"
-                            v-bind:hide_labels="hide_labels"
-                            ref="mySubComponent"
-                            class="row"
-                            ></drawing-canvas-box-->
             </div>
             <!-- use a v-if to display error with slot if no images found: https://vuejs.org/v2/guide/components.html#Content-Distribution-with-Slots -->
         </div>
@@ -199,7 +177,12 @@ export default {
                 { key: 'Delete', action: 'Delete selected region' },
                 { key: 'H', action: 'Temporarily hide labels<br><em>Useful for checking the edge of the label against the underlying image</em>' },
                 { key: '1, 2, ...', action: 'Select label class' },
-            ]
+            ],
+            stateNew: true,
+            stateAppend: true,
+            stateErase: true,
+            stateOverlap: true,
+            stateNoOverlap: false
         };
     },
     components: {
@@ -234,7 +217,41 @@ export default {
         contrast: function() {
             return parseFloat(this.contrast_slider_value) / 100.;
         },
-
+        isDisabled: function() {
+            switch (this.active_tool) {
+                case 'freehand':
+                    this.stateNew = false;
+                    this.stateAppend = false;
+                    this.stateErase = false;
+                    this.stateOverlap = false;
+                    this.stateNoOverlap = false;
+                    break;
+                case 'polygon':
+                    this.active_overlap_mode = 'overlap';
+                    this.stateNew = false;
+                    this.stateAppend = false;
+                    this.stateErase = false;
+                    this.stateOverlap = false;
+                    this.stateNoOverlap = true;
+                    break;
+                case 'rectangle':
+                    this.active_mode = 'new';
+                    this.active_overlap_mode = 'overlap';
+                    this.stateNew = false;
+                    this.stateAppend = true;
+                    this.stateErase = true;
+                    this.stateOverlap = false;
+                    this.stateNoOverlap = true;
+                    break;
+                case 'select':
+                    this.stateNew = true;
+                    this.stateAppend = true;
+                    this.stateErase = true;
+                    this.stateOverlap = true;
+                    this.stateNoOverlap = true;
+                    break;
+            }
+        }
     },
     beforeMount() {
         window.addEventListener('keydown', this.keyDownHandler);
