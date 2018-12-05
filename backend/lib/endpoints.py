@@ -1073,8 +1073,8 @@ def generate_ground_truth_images(label_task_id):
     else:
         label_status = 'admin_complete'
 
-    if 'test_images' in request.json:
-        if request.json['test_images'].lower() == 'true':
+    if 'test_data' in request.json:
+        if request.json['test_data'].lower() == 'true':
             label_status += ' AND include_in_test_set'
         else:
             label_status += ' AND NOT include_in_test_set'
@@ -1187,5 +1187,61 @@ def generate_ground_truth_images(label_task_id):
             return resp
     else:
         resp = make_response(jsonify(error='No admin-approved labels found for this label task.'), 404)
+        resp.mimetype = "application/javascript"
+        return resp
+
+
+@ebp.route('/image_labeler/api/v1.0/latest_label_history/label_task_id/<int:label_task_id>', methods=['POST'])
+@fje.jwt_required
+def get_latest_label_history_for_all_label_task(label_task_id):
+    """
+    Get the latest label history item for all the labels.
+
+    Narrow the set of labels by specifying label_task_id, label_status, test_data, etc in the body of the request.
+
+    :return:
+    """
+
+    engine = current_app.config['engine']
+
+    user_identity = fje.get_jwt_identity()
+    user_id_from_auth = ua.get_user_id_from_token(user_identity)
+
+    is_admin = sql_queries_admin.is_user_an_admin(engine, user_id_from_auth)
+
+    if is_admin is None or not is_admin:
+        resp = make_response(jsonify(error='Not permitted to view this content. Must be an admin user.'), 403)
+        resp.mimetype = "application/javascript"
+        return resp
+
+    if not request.json:
+        resp = make_response(jsonify(error='Must use JSON format'), 400)
+        resp.mimetype = "application/javascript"
+        return resp
+
+    if 'label_status' in request.json and request.json['label_status'] == 'user_complete':
+        label_status = 'user_complete'
+    else:
+        label_status = 'admin_complete'
+
+    if 'test_data' in request.json:
+        if request.json['test_data'].lower() == 'true':
+            label_status += ' AND include_in_test_set'
+        else:
+            label_status += ' AND NOT include_in_test_set'
+
+    # get the label data
+
+    df = sql_queries.get_all_completed_labels(engine,
+                                              label_task_id=label_task_id,
+                                              dataset_id=None,
+                                              label_status=label_status)
+
+    if df is not None:
+        resp = make_response(df.to_json(orient='records'), 200)
+        resp.mimetype = "application/javascript"
+        return resp
+    else:
+        resp = make_response(jsonify(error='Label task not found'), 404)
         resp.mimetype = "application/javascript"
         return resp
