@@ -87,7 +87,9 @@ def test_get_latest_label_history_for_logged_in_user(auth, refresh_db_once):
     label = json_of_response(rv_label)
 
     assert label[0]['label_id'] == 3
-    assert label[0]['label_serialised'] == '[{"test": 4}]'
+    assert label[0]['label_serialised'] == '[{"type": "freehand", "label": "foreground_object", "polygon": ' \
+                                           '{"regions": [[[100, 200], [130, 205], [132, 270], [102, 268]]], ' \
+                                           '"inverted": false}, "selected": true}]'
     assert label[0]['input_data_id'] == 3
     assert label[0]['label_task_id'] == 1
     assert label[0]['user_id'] == 1
@@ -103,7 +105,7 @@ def test_get_latest_label_history_for_different_logged_in_user(auth, refresh_db_
     label = json_of_response(rv_label)
 
     assert label[0]['label_id'] == 5
-    assert label[0]['label_serialised'] == '[{"type": "freehand", "label": "foreground_object", ' \
+    assert label[0]['label_serialised'] == '[{"type": "polygon", "label": "foreground_object", ' \
                                            '"polygon": {"regions": [[[100.2, 200.1], [130.4, 205.1], ' \
                                            '[132.2, 270.1], [102.1, 268.7]]], "inverted": false}, "selected": true}]'
     assert label[0]['input_data_id'] == 3
@@ -121,7 +123,9 @@ def test_get_latest_label_history_for_specified_user(auth, refresh_db_once):
     label = json_of_response(rv_label)
 
     assert label[0]['label_id'] == 3
-    assert label[0]['label_serialised'] == '[{"test": 4}]'
+    assert label[0]['label_serialised'] == '[{"type": "freehand", "label": "foreground_object", "polygon": ' \
+                                           '{"regions": [[[100, 200], [130, 205], [132, 270], [102, 268]]], ' \
+                                           '"inverted": false}, "selected": true}]'
     assert label[0]['input_data_id'] == 3
     assert label[0]['label_task_id'] == 1
     assert label[0]['user_id'] == 1
@@ -133,7 +137,7 @@ def test_get_latest_label_history_for_specified_user(auth, refresh_db_once):
     label = json_of_response(rv_label)
 
     assert label[0]['label_id'] == 5
-    assert label[0]['label_serialised'] == '[{"type": "freehand", "label": "foreground_object", ' \
+    assert label[0]['label_serialised'] == '[{"type": "polygon", "label": "foreground_object", ' \
                                            '"polygon": {"regions": [[[100.2, 200.1], [130.4, 205.1], ' \
                                            '[132.2, 270.1], [102.1, 268.7]]], "inverted": false}, "selected": true}]'
     assert label[0]['input_data_id'] == 3
@@ -643,7 +647,6 @@ def test_download_ground_truth_images_to_disk(auth, refresh_db_every_time):
     assert response['num_ground_truth_images'] == 1
 
     assert os.path.exists('tmp/ground_truth_images/im_input_data_id_3_label_id_5_gt2.png')
-    assert not os.path.exists('tmp/ground_truth_images/im_input_data_id_4_label_id_6_gt2.png')
 
     assert dd.get_image_dims('tmp/ground_truth_images/im_input_data_id_3_label_id_5_gt2.png') == (640, 428)
 
