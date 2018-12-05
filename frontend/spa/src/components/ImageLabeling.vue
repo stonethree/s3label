@@ -36,9 +36,9 @@
                 <div id="semantic_labels" class="col border-right">
                     <span>Label Classes</span>
                     <form>
-                        <div v-for="label in labels" :key="label.label_class">
-                            <input type="radio" class="radio-button" name="semantic_label" :value="label.label_class" v-model="active_label"> {{ label.label_class }} <br>
-                        </div>
+                        <select v-model="active_label">                            
+                                <option v-for="label in labels" :key="label.label_class" name="semantic_label" :value="label.label_class">{{ label.label_class }}</option>
+                        </select>
                     </form>
                 </div>
                 <div id="graphics_settings"  class="col border-right">
