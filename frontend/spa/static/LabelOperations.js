@@ -1,5 +1,5 @@
 //returns data structure of a label
-export function getLabel(active_tool, coordPath, coords) {
+export function getLabel(active_tool, coordPath, coords, infos={}) {
     switch (active_tool) {
         case 'freehand':
         case 'polygon':
@@ -14,11 +14,18 @@ export function getLabel(active_tool, coordPath, coords) {
                 boxWidth: coords.x - coordPath[0][0],
                 boxHeight: coords.y - coordPath[0][1]
             }
-        case 'point':
+        case "point":
             return {
-                x: coords.x,
-                y: coords.y
-            }
+                x: coordPath[0][0],
+                y: coordPath[0][1],
+                radius: 4
+            };
+        case "circle":
+            return {
+                x: coordPath[0][0],
+                y: coordPath[0][1],
+                radius: infos['circle_radius']
+            };
         default:
     }
 }
@@ -42,6 +49,10 @@ export function isLabelLargeEnough(active_tool, coordPath) {
             else {
                 return true;
             }
+        case 'point':
+            return true;
+        case 'circle':
+            return true;
         default:
     }
 
@@ -92,21 +103,25 @@ export function isPointInLabel(selX, selY, labels) {
             } else {
                 return false;
             }
+        case 'circle':
+            return isPointInCircle(selX, selY, labels.label.x, labels.label.y, labels.label.radius);
         case 'point':
-                var cornersX = labels.label.x;
-                var cornersY = labels.label.y;
-
-                var euclid_dist = Math.sqrt(Math.pow(selX - cornersX, 2) + Math.pow(selY - cornersY, 2));
-                if(euclid_dist < 5) {
-                    return true;
-                } else {
-                    return false;
-                }
+            return isPointInCircle(selX, selY, labels.label.x, labels.label.y, 4);
         default:
     }
 }
 
+function isPointInCircle(x, y, cornersX, cornersY, radius) {
+    var euclid_dist = Math.sqrt(Math.pow(x - cornersX, 2) + Math.pow(y - cornersY, 2));
+    if(euclid_dist < radius) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
 export function getSelectedLabelIndex(labels) {
+
     //returns the index of the last selected label in the list
     var index = -1;
     
@@ -134,6 +149,14 @@ export function addPaddingOffset(labels, padX, padY) {
                 labels[i].label.x += padX;
                 labels[i].label.y += padY;
                 break;
+            case 'circle':
+                labels[i].label.x += padX;
+                labels[i].label.y += padY;
+                break;
+            case 'point':
+                labels[i].label.x += padX;
+                labels[i].label.y += padY;
+                break;
             default:
         }
     }
@@ -153,6 +176,14 @@ export function removePaddingOffset(labels, padX, padY) {
                 }
                 break;
             case 'rectangle':
+                labels[i].label.x -= padX;
+                labels[i].label.y -= padY;
+                break;
+            case 'circle':
+                labels[i].label.x -= padX;
+                labels[i].label.y -= padY;
+                break;
+            case 'point':
                 labels[i].label.x -= padX;
                 labels[i].label.y -= padY;
                 break;
