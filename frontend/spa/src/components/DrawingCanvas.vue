@@ -4,7 +4,7 @@
             <label-status v-bind:label-id="label_id" v-bind:user-completed-toggle="label_status_toggler.user_complete" style="width:500px;height:350px; position:absolute; left:50%; top:-2em; transform: translate(-50%, 0);"></label-status>
         </div>
         <div id="canvasesdiv" style="position:relative;" @mousedown.passive="mouseDownHandler" @mouseup.passive="mouseUpHandler" @mousemove.passive="mouseMoveHandler">
-            
+            <canvas id="canvas-live" width="900" height="350" style="width:900px;height:350px; border: 1px solid #ccc; z-index: 4; position:absolute; left:50%; top:0px; transform: translate(-50%, 0);"></canvas>
             <canvas id="canvas-fg" width="900" height="350" style="width:900px;height:350px; border: 1px solid #ccc; z-index: 3; position:absolute; left:50%; top:0px; transform: translate(-50%, 0);"></canvas>
             <canvas id="canvas-bg" width="900" height="350" style="width:900px;height:350px; border: 1px solid #ccc; z-index: 2; position:absolute; left:50%; top:0px; transform: translate(-50%, 0);"></canvas>
             <canvas id="canvas-pattern" width="900" height="350" style="width:900px;height:350px; border: 1px solid #ccc; z-index: 1; position:absolute; left:50%; top:0px; transform: translate(-50%, 0);"></canvas>
@@ -34,7 +34,7 @@ import { getLabel,
          addPaddingOffset,
          removePaddingOffset } from '../../static/LabelOperations'
 
-import { drawAllLabels } from '../../static/DrawingOperations'
+import { drawAllLabels, drawLiveCircle } from '../../static/DrawingOperations'
 
 import LabelStatus from './LabelStatus'
 //import { extractColor, formatColor } from '../../static/color_utilities'
@@ -107,6 +107,26 @@ export default {
             type: Boolean,
             default: false
         },
+        increase_circle_event: {
+            required: false,
+            type: Boolean,
+            default: false
+        },
+        decrease_circle_event: {
+            required: false,
+            type: Boolean,
+            default: false
+        },
+        change_radio_event: {
+            required: false,
+            type: Boolean,
+            default: false
+        },
+        switch_label_event: {
+            required: false,
+            type: Boolean,
+            default: false
+        }
     },
     data: function() {
         return {
@@ -121,7 +141,10 @@ export default {
             label_status_toggler: {user_complete: false},
             labels: [],
             labels_redo: [],
-            labels_undo: []
+            labels_undo: [],
+            circleFlag: false,
+            circle_radius: 20,
+            last_mouse_pos: []
         };
     },
     components: {
@@ -142,11 +165,20 @@ export default {
             return this.input_data_id != undefined;
         }
     },
+    beforeMount() {
+        var msScroll = this.onMouseScroll;
+        window.addEventListener('wheel',function(event){
+                msScroll(event);
+                return false; 
+            }, false);
+    },
     mounted() {
         var el = document.getElementById('canvas-fg');
         var el2 = document.getElementById('canvas-bg');
+        var el3 = document.getElementById('canvas-live');
         this.ctx = el.getContext('2d');
         this.ctx_bg = el2.getContext('2d');
+        this.ctx_live = el3.getContext('2d');
 
         console.log('------ mounted page')
 
@@ -196,6 +228,7 @@ export default {
 
         clear_canvas_event: function() {
             this.clearCanvas();
+            this.clearLiveCanvas();
             console.log('clear canvas event occured')
         },
 
@@ -221,17 +254,82 @@ export default {
 
         hide_labels: function() {
             drawAllLabels(this, this.labels);
+        },
+        increase_circle_event: function() {
+            this.inc_circle_size();
+        },
+
+        decrease_circle_event: function() {
+            this.dec_circle_size();
+        },
+
+        switch_label_event: function() {
+            this.rerenderLiveCanvas();
+        },
+
+        change_radio_event: function(){
+            this.radioEvent();
         }
     },
     methods: {
+        inc_circle_size: function(fast_res=false) {
+            if(fast_res) {
+                this.circle_radius += 8;
+            } else {
+                this.circle_radius += 1;
+            }
+            this.clearLiveCanvas();
+            drawLiveCircle(this);
+        },
+
+        dec_circle_size: function(fast_res=false) {
+            if(this.circle_radius != 1){
+                if(fast_res && this.circle_radius > 5) {
+                    this.circle_radius -= 8;
+                } else {
+                    this.circle_radius -= 1;
+                }
+                this.clearLiveCanvas();
+                drawLiveCircle(this);
+            }
+        },
+
+        onMouseScroll: function(e) {
+            var fast_res = false;
+            if(e.shiftKey) {
+                fast_res = true;
+                if(e.deltaY > 0) {
+                    // scrolled up
+                    this.inc_circle_size(fast_res);
+                } else if(e.deltaY < 0 ) {
+                    // scrolled down
+                    this.dec_circle_size(fast_res);
+                }
+                e.stopPropagation();
+                e.preventDefault();
+            } 
+
+
+        },
+
+        rerenderLiveCanvas: function() {
+            //this.drawAllPolygons(this.ctx, this.polygons);
+            this.clearLiveCanvas();
+            drawLiveCircle(this);
+        },
+
+        radioEvent: function() {
+            this.clearLiveCanvas();
+        },
+
         set_labels: function(labels) {
             // the parent component can set the labels using this method in order to load the labels from the backend
 
-            let polys = JSON.parse(JSON.stringify(labels));     // deep copy
+            let labls = JSON.parse(JSON.stringify(labels));     // deep copy
 
             // add the padding from the left and top borders of the canvas, so that we include padding in the displayed coordinates
 
-            this.labels = addPaddingOffset(polys, this.padX, this.padY);
+            this.labels = addPaddingOffset(labls, this.padX, this.padY);
 
             console.log('labels set to: ', this.labels);
 
@@ -241,11 +339,11 @@ export default {
         fetch_labels: function() {
             // the parent component can fetch the labels using this method in order to save the labels to the backend
 
-            let polys = JSON.parse(JSON.stringify(this.labels));     // deep copy
+            let labls = JSON.parse(JSON.stringify(this.labels));     // deep copy
 
             // subtract the padding from the left and top borders of the canvas, so that we don't include padding in the saved coordinates
 
-            return { labels: removePaddingOffset(polys, this.padX, this.padY),
+            return { labels: removePaddingOffset(labls, this.padX, this.padY),
                      edited: this.edited
             };
         },
@@ -255,6 +353,7 @@ export default {
 
             let canvas_bg = document.getElementById("canvas-bg");
             let canvas_fg = document.getElementById("canvas-fg");
+            let canvas_lv = document.getElementById("canvas-live");
             let canvas_pattern = document.getElementById("canvas-pattern");
             let ctx2 = canvas_bg.getContext("2d");  
 
@@ -263,7 +362,7 @@ export default {
 
             this.setCanvasSize(canvas_bg, w, h, this.padX, this.padY);
             this.setCanvasSize(canvas_fg, w, h, this.padX, this.padY);
-
+            this.setCanvasSize(canvas_lv, w, h, this.padX, this.padY);
             ctx2.fillStyle = "hsl(25, 40%, 100%)";
             ctx2.fillRect(this.padX, this.padY, w, h);
 
@@ -324,6 +423,14 @@ export default {
                     this.ctx.moveTo(coords.x, coords.y);
                     this.coordPath.push([coords.x, coords.y]);
                     break;
+                case 'point':
+                    // mark current point and process it
+                    this.coordPath = [];
+                    this.ctx.beginPath();
+                    this.ctx.arc(coords.x, coords.y, 4, 0, Math.PI*2);
+                    this.ctx.fill();
+                    this.processLabel(e);
+                    break;
                 case 'select':
                     // check which labels the point lies within
                     for (var i = 0; i < this.labels.length; i++) {
@@ -338,11 +445,27 @@ export default {
 
                     drawAllLabels(this, this.labels);
                     break;
+                case 'point':  
+                    // mark current point and process it
+                    this.coordPath = [];
+                    this.coordPath.push([coords.x, coords.y]);
+                    this.processLabel(e);
+                    break;
+                case 'circle':  
+                    this.polygons_redo = [];                
+                    this.coordPath = [];
+                    this.coordPath.push([coords.x, coords.y]);
+                    this.processLabel(e);
+                    break;
                 default:
             }
         },
 
         mouseMoveHandler: function (e) {
+            if(this.active_tool == 'circle') {
+                this.isDrawing = true;
+            }
+
             if (this.isDrawing) {
                 var coords = this.getMousePos(this.ctx.canvas, e);
                 if (this.active_tool == 'freehand') {
@@ -363,12 +486,27 @@ export default {
 
                     this.ctx.rect(this.coordPath[0][0], this.coordPath[0][1], coords.x - this.coordPath[0][0], coords.y - this.coordPath[0][1]);
                     this.ctx.stroke();
+                } else if(this.active_tool == 'circle'){
+                    this.last_mouse_pos = [coords.x, coords.y]
+                    // var origin = this.currentPath[0]
+                    this.clearLiveCanvas(); // TODO
+                    drawLiveCircle(this); // TODO
+
+                    if (coords.x == undefined || coords.y == undefined) {
+                        console.log("coords undef:" + coords);
+                    }
                 }
             }
         },
 
         mouseUpHandler: function (e) {
             //processes label if active tool is not selected as polygon
+            if(this.active_tool == 'circle') {
+                return;
+            }
+            if(this.active_tool == 'point') {
+                return;
+            }
             if (this.isDrawing && this.active_tool != 'polygon') {
                 this.processLabel(e);
             }
@@ -377,7 +515,6 @@ export default {
         processLabel: function (e) {
             this.isDrawing = false;
             this.edited = true;
-
             var coords = this.getMousePos(this.ctx.canvas, e);
             this.coordPath.push([coords.x, coords.y]);
 
@@ -388,7 +525,7 @@ export default {
             this.ctx.fill();
 
             // do not add label if it has zero area
-            if (!isLabelLargeEnough(this.active_tool, this.coordPath)) {
+            if (!isLabelLargeEnough(this.active_tool, this.coordPath) && this.active_tool != 'point') {
                 console.log('label too small! discarding it')
 
                 this.coordPath = [];
@@ -403,19 +540,31 @@ export default {
                     this.labels[i].selected = false;
                 }
             }
+            var infos = {};
+            if(this.active_tool == 'circle') {
+                infos['circle_radius'] = this.circle_radius;
+            }
 
-            let currentLabel = getLabel(this.active_tool, this.coordPath, coords);
+            let currentLabel = getLabel(this.active_tool, this.coordPath, coords, infos);
             
             // console.log('currentLabel:');
             // console.log(currentLabel);
 
             switch (this.active_mode) {
                 case 'new':
-                    if (this.active_overlap_mode == 'overlap') {
+                    //deselect all previous labels
+                    for (let i = 0; i < this.labels.length; i++) {
+                        this.labels[i].selected = false;
+                    }
+
+                    if (this.active_tool == 'point' && currentLabel != null) {
+                        this.labels.push({'label': currentLabel, 'label_class': this.active_label, 'type': this.active_tool, 'selected': true});
+                        console.log('new point label');
+                    } else if (this.active_tool != 'point' && this.active_overlap_mode == 'overlap') {
                         // new label
                         this.labels.push({'label': currentLabel, 'label_class': this.active_label, 'type': this.active_tool, 'selected': true});
                         console.log('new overlap label');
-                    } else if (this.active_overlap_mode == 'no-overlap') {
+                    } else if (this.active_tool != 'point' && this.active_overlap_mode == 'no-overlap') {
                         // subtract all previous labels from this new path
                         for (var i = 0; i < this.labels.length; i++) {
                             let labl = this.labels[i].label;
@@ -423,7 +572,6 @@ export default {
                                 currentLabel = PolyBool.difference(currentLabel, labl);
                             }
                         }
-
                         if (currentLabel.regions.length > 0) {
                             this.labels.push({ 'label': currentLabel, 'label_class': this.active_label, 'type': this.active_tool, 'selected': true });
                         }
@@ -486,7 +634,6 @@ export default {
             }
 
             this.coordPath = [];
-
             drawAllLabels(this, this.labels);
         },
 
@@ -496,30 +643,10 @@ export default {
             this.labels_redo = [];
             this.edited = true;
         },
-
-        /*drawAllLabels: function (context, labels_list) {
-            context.lineWidth = this.stroke_thickness;
-            context.clearRect(0, 0, context.canvas.width, context.canvas.height);
-
-            var vm = this;
-            if (!this.hide_labels) {
-                for (let i = 0; i < labels_list.length; i++) {
-                    switch (labels_list[i].type) {
-                        case 'freehand':
-                        case 'polygon':
-                            drawPolygon(vm, labels_list[i]);
-                            break;
-                        case 'rectangle':
-                            drawBoundingBox(vm, labels_list[i]);
-                            break;
-                        default:
-                    }
-                    
-                }
-            }
-        },*/
-
-        // image displaying functions
+        
+        clearLiveCanvas: function() {
+            this.ctx_live.clearRect(0, 0, this.ctx_live.canvas.width, this.ctx_live.canvas.height);
+        },
 
         validateResponse: function (response) {
             if (!response.ok) {
@@ -540,6 +667,7 @@ export default {
         },
 
         showImage: function (responseAsBlob) {
+            let canvas_live = document.getElementById("canvas-live");
             let canvas_fg = document.getElementById("canvas-fg");
             let canvas_bg = document.getElementById("canvas-bg");
             let ctx2 = canvas_bg.getContext("2d");
@@ -552,6 +680,7 @@ export default {
             var vm = this;
 
             img.onload = function () {
+                vm.setCanvasSize(canvas_live, img.width, img.height, vm.padX, vm.padY);
                 vm.setCanvasSize(canvas_fg, img.width, img.height, vm.padX, vm.padY);
                 vm.setCanvasSize(canvas_bg, img.width, img.height, vm.padX, vm.padY);
 

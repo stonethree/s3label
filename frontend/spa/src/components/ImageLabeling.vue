@@ -5,12 +5,16 @@
             <div class="row justify-content-center">
                 <div id="tools" class="col border-right">
                     <span>Tools</span>
-                    <form id="tools_form">
+                    <form id="tools_form" @mousedown=changeRadio()>
                         <input type="radio" class="radio-button" name="tool" value="freehand" v-model="active_tool"> Freehand
                         <br>
                         <input type="radio" class="radio-button" name="tool" value="polygon" v-model="active_tool"> Polygon
                         <br>
                         <input type="radio" class="radio-button" name="tool" value="rectangle" v-model="active_tool"> Rectangle
+                        <br>
+                        <input type="radio" class="radio-button" name="tool" value="point" v-model="active_tool"> Point
+                        <br>
+                        <input type="radio" class="radio-button" name="tool" value="circle" v-model="active_tool"> Circle
                         <br>
                         <input type="radio" class="radio-button" name="tool" value="select" v-model="active_tool"> Select
                     </form>
@@ -97,6 +101,10 @@
                             v-bind:undo_event="undo_event"
                             v-bind:redo_event="redo_event"
                             v-bind:hide_labels="hide_labels"
+                            v-bind:increase_circle_event="increase_circle_event"
+                            v-bind:decrease_circle_event="decrease_circle_event"
+                            v-bind:change_radio_event ="change_radio_event"
+                            v-bind:switch_label_event="switch_label_event"
                             ref="mySubComponent"
                             class="row"
                             ></drawing-canvas>
@@ -163,6 +171,10 @@ export default {
             undo_event: false,
             redo_event: false,
             hide_labels: false,
+            increase_circle_event: false,
+            decrease_circle_event: false,
+            switch_label_event: false,
+            change_radio_event:false,
             label_examples: undefined,
             baseUrl: baseUrl,
             keyboard_shortcuts: [
@@ -243,6 +255,24 @@ export default {
                     this.stateOverlap = false;
                     this.stateNoOverlap = true;
                     break;
+                case 'point':
+                    this.active_mode = 'new';
+                    this.active_overlap_mode = 'overlap';
+                    this.stateNew = false;
+                    this.stateAppend = true;
+                    this.stateErase = true;
+                    this.stateOverlap = false;
+                    this.stateNoOverlap = true;
+                    break;
+                case 'circle':
+                    this.active_mode = 'new';
+                    this.active_overlap_mode = 'overlap';
+                    this.stateNew = false;
+                    this.stateAppend = true;
+                    this.stateErase = true;
+                    this.stateOverlap = false;
+                    this.stateNoOverlap = true;
+                    break;
                 case 'select':
                     this.stateNew = true;
                     this.stateAppend = true;
@@ -250,6 +280,7 @@ export default {
                     this.stateOverlap = true;
                     this.stateNoOverlap = true;
                     break;
+                
             }
         }
     },
@@ -474,10 +505,18 @@ export default {
                 }
 
                 key_handled = true;
+            } 
+            else if(e.code === 'NumpadAdd') {
+                this.increase_circle_event = !this.increase_circle_event;
+                key_handled = true;
+            } 
+            else if(e.code === 'NumpadSubtract') {
+                this.decrease_circle_event = !this.decrease_circle_event;
+                key_handled = true;
             }
             if ((e.keyCode >= 48 && e.keyCode <= 57) || (e.keyCode >= 96 && e.keyCode <= 105)) { 
                 // 0-9 only
-
+                this.switch_label_event = !this.switch_label_event;
                 let label_index = e.keyCode - 48;
 
                 if (label_index >= 1 && label_index <= this.labels.length) {
@@ -489,6 +528,7 @@ export default {
                     }
                 }
             }
+
 
             if (key_handled) {
                 e.stopPropagation();
@@ -538,6 +578,9 @@ export default {
         clearCanvas: function() {
             this.clear_canvas_event = !this.clear_canvas_event;
             console.log('clear canvas called', this.clear_canvas_event)
+        },
+        changeRadio: function(){
+            this.change_radio_event = !this.change_radio_event;
         },
 
     },
