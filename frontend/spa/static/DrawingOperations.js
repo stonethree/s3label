@@ -111,14 +111,12 @@ export function drawBoundingBox (vm, box) {
 //Point drawing function
 export function drawPoint (vm, point) {
     vm = setColor(vm, vm.label_colors[point.label_class], vm.opacity);
-    let paths_to_draw = point.label.regions;
-
-    if(paths_to_draw[0].length == 1) {
+    if(point.label != null) {
         vm.ctx.beginPath();
         let fstyle = vm.ctx.fillStyle;
         vm.ctx.fillStyle = "rgba(0, 255, 0, 0.2)";
         vm.ctx.fillStyle = fstyle;
-        vm.ctx.arc(paths_to_draw[0][0][0], paths_to_draw[0][0][1], 4, 0, Math.PI*2);
+        vm.ctx.arc(point.label.x, point.label.y, 4, 0, Math.PI*2);
         vm.ctx.closePath();
 
         if (point.selected) {

@@ -3,7 +3,6 @@ export function getLabel(active_tool, coordPath, coords) {
     switch (active_tool) {
         case 'freehand':
         case 'polygon':
-        case 'point':
             return {
                 regions: [coordPath],
                 inverted: false
@@ -14,6 +13,11 @@ export function getLabel(active_tool, coordPath, coords) {
                 y: coordPath[0][1],
                 boxWidth: coords.x - coordPath[0][0],
                 boxHeight: coords.y - coordPath[0][1]
+            }
+        case 'point':
+            return {
+                x: coords.x,
+                y: coords.y
             }
         default:
     }
@@ -89,9 +93,8 @@ export function isPointInLabel(selX, selY, labels) {
                 return false;
             }
         case 'point':
-            for (var count = 0; count < labels.label.regions.length; count++) {
-                var cornersX = labels.label.regions[count].map(p => p[0]);
-                var cornersY = labels.label.regions[count].map(p => p[1]);
+                var cornersX = labels.label.x;
+                var cornersY = labels.label.y;
 
                 var euclid_dist = Math.sqrt(Math.pow(selX - cornersX, 2) + Math.pow(selY - cornersY, 2));
                 if(euclid_dist < 5) {
@@ -99,7 +102,6 @@ export function isPointInLabel(selX, selY, labels) {
                 } else {
                     return false;
                 }
-            }
         default:
     }
 }

@@ -227,11 +227,11 @@ export default {
         set_labels: function(labels) {
             // the parent component can set the labels using this method in order to load the labels from the backend
 
-            let polys = JSON.parse(JSON.stringify(labels));     // deep copy
+            let labls = JSON.parse(JSON.stringify(labels));     // deep copy
 
             // add the padding from the left and top borders of the canvas, so that we include padding in the displayed coordinates
 
-            this.labels = addPaddingOffset(polys, this.padX, this.padY);
+            this.labels = addPaddingOffset(labls, this.padX, this.padY);
 
             console.log('labels set to: ', this.labels);
 
@@ -241,11 +241,11 @@ export default {
         fetch_labels: function() {
             // the parent component can fetch the labels using this method in order to save the labels to the backend
 
-            let polys = JSON.parse(JSON.stringify(this.labels));     // deep copy
+            let labls = JSON.parse(JSON.stringify(this.labels));     // deep copy
 
             // subtract the padding from the left and top borders of the canvas, so that we don't include padding in the saved coordinates
 
-            return { labels: removePaddingOffset(polys, this.padX, this.padY),
+            return { labels: removePaddingOffset(labls, this.padX, this.padY),
                      edited: this.edited
             };
         },
@@ -424,14 +424,14 @@ export default {
                         this.labels[i].selected = false;
                     }
 
-                    if (this.active_tool == 'point' && currentLabel.regions.length > 0) {
+                    if (this.active_tool == 'point' && currentLabel != null) {
                         this.labels.push({'label': currentLabel, 'label_class': this.active_label, 'type': this.active_tool, 'selected': true});
                         console.log('new point label');
-                    } else if (this.active_overlap_mode == 'overlap') {
+                    } else if (this.active_tool != 'point' && this.active_overlap_mode == 'overlap') {
                         // new label
                         this.labels.push({'label': currentLabel, 'label_class': this.active_label, 'type': this.active_tool, 'selected': true});
                         console.log('new overlap label');
-                    } else if (this.active_overlap_mode == 'no-overlap') {
+                    } else if (this.active_tool != 'point' && this.active_overlap_mode == 'no-overlap') {
                         // subtract all previous labels from this new path
                         for (var i = 0; i < this.labels.length; i++) {
                             let labl = this.labels[i].label;
