@@ -14,6 +14,11 @@ export function getLabel(active_tool, coordPath, coords) {
                 boxWidth: coords.x - coordPath[0][0],
                 boxHeight: coords.y - coordPath[0][1]
             }
+        case 'point':
+            return {
+                x: coords.x,
+                y: coords.y
+            }
         default:
     }
 }
@@ -31,9 +36,6 @@ export function isLabelLargeEnough(active_tool, coordPath) {
             var y_min = Math.min(...coordPath.map(p => p[1]));
             var y_max = Math.max(...coordPath.map(p => p[1]));
 
-            //console.log('x length: ' + Math.abs(x_min - x_max));
-            //console.log('y length: ' + Math.abs(y_min - y_max));
-
             if (Math.abs(x_min - x_max) < 5 || Math.abs(y_min - y_max) < 5) {
                 return false;
             }
@@ -47,11 +49,13 @@ export function isLabelLargeEnough(active_tool, coordPath) {
 
 //determines if selected point lies within any of the stored labels
 export function isPointInLabel(selX, selY, labels) {
+    // console.log(selX + " " + selY)
+    // console.log(labels)
     switch (labels.type) {
         case 'freehand':
         case 'polygon':
             console.log('determining if point is in label type polygon...')
-            for (var count = 0; count < labels.label.regions.length; j++) {
+            for (var count = 0; count < labels.label.regions.length; count++) {
                 var cornersX = labels.label.regions[count].map(p => p[0]);
                 var cornersY = labels.label.regions[count].map(p => p[1]);
 
@@ -88,6 +92,16 @@ export function isPointInLabel(selX, selY, labels) {
             } else {
                 return false;
             }
+        case 'point':
+                var cornersX = labels.label.x;
+                var cornersY = labels.label.y;
+
+                var euclid_dist = Math.sqrt(Math.pow(selX - cornersX, 2) + Math.pow(selY - cornersY, 2));
+                if(euclid_dist < 5) {
+                    return true;
+                } else {
+                    return false;
+                }
         default:
     }
 }

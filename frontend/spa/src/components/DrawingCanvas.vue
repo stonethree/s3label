@@ -227,11 +227,11 @@ export default {
         set_labels: function(labels) {
             // the parent component can set the labels using this method in order to load the labels from the backend
 
-            let polys = JSON.parse(JSON.stringify(labels));     // deep copy
+            let labls = JSON.parse(JSON.stringify(labels));     // deep copy
 
             // add the padding from the left and top borders of the canvas, so that we include padding in the displayed coordinates
 
-            this.labels = addPaddingOffset(polys, this.padX, this.padY);
+            this.labels = addPaddingOffset(labls, this.padX, this.padY);
 
             console.log('labels set to: ', this.labels);
 
@@ -241,11 +241,11 @@ export default {
         fetch_labels: function() {
             // the parent component can fetch the labels using this method in order to save the labels to the backend
 
-            let polys = JSON.parse(JSON.stringify(this.labels));     // deep copy
+            let labls = JSON.parse(JSON.stringify(this.labels));     // deep copy
 
             // subtract the padding from the left and top borders of the canvas, so that we don't include padding in the saved coordinates
 
-            return { labels: removePaddingOffset(polys, this.padX, this.padY),
+            return { labels: removePaddingOffset(labls, this.padX, this.padY),
                      edited: this.edited
             };
         },
@@ -324,6 +324,14 @@ export default {
                     this.ctx.moveTo(coords.x, coords.y);
                     this.coordPath.push([coords.x, coords.y]);
                     break;
+                case 'point':
+                    // mark current point and process it
+                    this.coordPath = [];
+                    this.ctx.beginPath();
+                    this.ctx.arc(coords.x, coords.y, 4, 0, Math.PI*2);
+                    this.ctx.fill();
+                    this.processLabel(e);
+                    break;
                 case 'select':
                     // check which labels the point lies within
                     for (var i = 0; i < this.labels.length; i++) {
@@ -369,7 +377,7 @@ export default {
 
         mouseUpHandler: function (e) {
             //processes label if active tool is not selected as polygon
-            if (this.isDrawing && this.active_tool != 'polygon') {
+            if (this.isDrawing && this.active_tool != 'polygon' && this.active_tool != 'point') {
                 this.processLabel(e);
             }
         },
@@ -388,7 +396,7 @@ export default {
             this.ctx.fill();
 
             // do not add label if it has zero area
-            if (!isLabelLargeEnough(this.active_tool, this.coordPath)) {
+            if (!isLabelLargeEnough(this.active_tool, this.coordPath) && this.active_tool != 'point') {
                 console.log('label too small! discarding it')
 
                 this.coordPath = [];
@@ -411,11 +419,19 @@ export default {
 
             switch (this.active_mode) {
                 case 'new':
-                    if (this.active_overlap_mode == 'overlap') {
+                    //deselect all previous labels
+                    for (let i = 0; i < this.labels.length; i++) {
+                        this.labels[i].selected = false;
+                    }
+
+                    if (this.active_tool == 'point' && currentLabel != null) {
+                        this.labels.push({'label': currentLabel, 'label_class': this.active_label, 'type': this.active_tool, 'selected': true});
+                        console.log('new point label');
+                    } else if (this.active_tool != 'point' && this.active_overlap_mode == 'overlap') {
                         // new label
                         this.labels.push({'label': currentLabel, 'label_class': this.active_label, 'type': this.active_tool, 'selected': true});
                         console.log('new overlap label');
-                    } else if (this.active_overlap_mode == 'no-overlap') {
+                    } else if (this.active_tool != 'point' && this.active_overlap_mode == 'no-overlap') {
                         // subtract all previous labels from this new path
                         for (var i = 0; i < this.labels.length; i++) {
                             let labl = this.labels[i].label;
@@ -496,29 +512,7 @@ export default {
             this.labels_redo = [];
             this.edited = true;
         },
-
-        /*drawAllLabels: function (context, labels_list) {
-            context.lineWidth = this.stroke_thickness;
-            context.clearRect(0, 0, context.canvas.width, context.canvas.height);
-
-            var vm = this;
-            if (!this.hide_labels) {
-                for (let i = 0; i < labels_list.length; i++) {
-                    switch (labels_list[i].type) {
-                        case 'freehand':
-                        case 'polygon':
-                            drawPolygon(vm, labels_list[i]);
-                            break;
-                        case 'rectangle':
-                            drawBoundingBox(vm, labels_list[i]);
-                            break;
-                        default:
-                    }
-                    
-                }
-            }
-        },*/
-
+        
         // image displaying functions
 
         validateResponse: function (response) {

@@ -12,6 +12,8 @@
                         <br>
                         <input type="radio" class="radio-button" name="tool" value="rectangle" v-model="active_tool"> Rectangle
                         <br>
+                        <input type="radio" class="radio-button" name="tool" value="point" v-model="active_tool"> Point
+                        <br>
                         <input type="radio" class="radio-button" name="tool" value="select" v-model="active_tool"> Select
                     </form>
                 </div>
