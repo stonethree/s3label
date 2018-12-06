@@ -324,15 +324,14 @@ export default {
                     this.ctx.moveTo(coords.x, coords.y);
                     this.coordPath.push([coords.x, coords.y]);
                     break;
-		case 'point':
-			// mark current point and process it
-		        this.coordPath = [];
-		        this.ctx.beginPath();
-		        this.ctx.arc(coords.x, coords.y, 4, 0, Math.PI*2);
-		        this.ctx.fill();
-		        this.coordPath.push([coords.x, coords.y]);
-		        this.processPoint();
-			break;
+                case 'point':
+                    // mark current point and process it
+                    this.coordPath = [];
+                    this.ctx.beginPath();
+                    this.ctx.arc(coords.x, coords.y, 4, 0, Math.PI*2);
+                    this.ctx.fill();
+                    this.processLabel(e);
+                    break;
                 case 'select':
                     // check which labels the point lies within
                     for (var i = 0; i < this.labels.length; i++) {
@@ -383,33 +382,6 @@ export default {
             }
         },
 
-processPoint: function ()  {
-            // processes adding a point
-            this.isDrawing = false;
-            this.edited = true;
-
-            this.ctx.closePath();
-            if(this.use_stroke) {
-                this.ctx.stroke();
-            }
-
-            for (let i = 0; i < this.polygons.length; i++) {
-                this.polygons[i].selected = false;
-            }
-            let currentPolygon = {
-                regions: [this.currentPath],
-                inverted: false
-            };
-            if (this.active_mode == 'new') {
-                // new polygon
-                if (currentPolygon.regions.length > 0) {
-                    this.polygons.push({ 'polygon': currentPolygon, 'label': this.active_label, 'type': this.active_tool, 'selected': true });
-                }
-                console.log('new point');
-            }
-        },
-
-
         processLabel: function (e) {
             this.isDrawing = false;
             this.edited = true;
@@ -424,7 +396,7 @@ processPoint: function ()  {
             this.ctx.fill();
 
             // do not add label if it has zero area
-            if (!isLabelLargeEnough(this.active_tool, this.coordPath)) {
+            if (!isLabelLargeEnough(this.active_tool, this.coordPath) && this.active_tool != 'point') {
                 console.log('label too small! discarding it')
 
                 this.coordPath = [];
@@ -447,7 +419,15 @@ processPoint: function ()  {
 
             switch (this.active_mode) {
                 case 'new':
-                    if (this.active_overlap_mode == 'overlap') {
+                    //deselect all previous labels
+                    for (let i = 0; i < this.labels.length; i++) {
+                        this.labels[i].selected = false;
+                    }
+
+                    if (this.active_tool == 'point' && currentLabel.regions.length > 0) {
+                        this.labels.push({'label': currentLabel, 'label_class': this.active_label, 'type': this.active_tool, 'selected': true});
+                        console.log('new point label');
+                    } else if (this.active_overlap_mode == 'overlap') {
                         // new label
                         this.labels.push({'label': currentLabel, 'label_class': this.active_label, 'type': this.active_tool, 'selected': true});
                         console.log('new overlap label');
@@ -532,96 +512,7 @@ processPoint: function ()  {
             this.labels_redo = [];
             this.edited = true;
         },
-
-        /*drawAllLabels: function (context, labels_list) {
-            context.lineWidth = this.stroke_thickness;
-            context.clearRect(0, 0, context.canvas.width, context.canvas.height);
-
-            var vm = this;
-            if (!this.hide_labels) {
-                for (let i = 0; i < labels_list.length; i++) {
-                    switch (labels_list[i].type) {
-                        case 'freehand':
-                        case 'polygon':
-                            drawPolygon(vm, labels_list[i]);
-                            break;
-                        case 'rectangle':
-                            drawBoundingBox(vm, labels_list[i]);
-                            break;
-                        default:
-                    }
-                    
-                }
-            }
-        },
-
-        drawPolygon: function (context, polygon) {
-            this.setColor(this.label_colors[polygon.label], this.opacity);
-            let paths_to_draw = convertPolygonToPaths(polygon.polygon);
-            if(paths_to_draw[0].length == 1) {
-                // if the polygon is a point (degenerate polygon), draw it differently
-                context.beginPath();
-                let fstyle = context.fillStyle;
-                context.fillStyle = "rgba(0, 255, 0, 0.2)";
-                context.fillStyle = fstyle;
-                context.arc(paths_to_draw[0][0][0], paths_to_draw[0][0][1], 4, 0, Math.PI*2);
-                context.closePath();
-                if (polygon.selected) {
-                    var currentStrokeStyle = context.strokeStyle;
-                    context.strokeStyle = "#FF0000";
-                    context.setLineDash([4, 4]);
-                }
-                context.stroke();
-                context.fill();
-                context.strokeStyle = currentStrokeStyle;
-                context.setLineDash([]);
-                return;
-            }
-
-            if (polygon.selected) {
-                // draw selected polygon
-
-                var currentStrokeStyle = context.strokeStyle;
-                context.strokeStyle = "#FF0000";
-                context.setLineDash([4, 4]);
-
-                for (let j = 0; j < paths_to_draw.length; j++) {
-                    this.drawPath(context, paths_to_draw[j]);
-                }
-
-                context.strokeStyle = currentStrokeStyle;
-                context.setLineDash([]);
-            }
-            else {
-                // draw unselected polygon
-
-                for (let j = 0; j < paths_to_draw.length; j++) {
-                    this.drawPath(context, paths_to_draw[j]);
-                }
-            }
-        },
-
-        drawPath: function (context, path) {
-
-            let w = context.canvas.width;
-            let h = context.canvas.height;
-
-            context.beginPath();
-            context.moveTo(Math.max(this.padX, Math.min(path[0][0], w - this.padX)),
-                Math.max(this.padY, Math.min(path[0][1], h - this.padY)));
-
-            for (let i = 1; i < path.length; i++) {
-                context.lineTo(Math.max(this.padX, Math.min(path[i][0], w - this.padX)),
-                    Math.max(this.padY, Math.min(path[i][1], h - this.padY)));
-            }
-
-            context.closePath();
-            if (this.use_stroke) {
-                context.stroke();
-            }
-            context.fill();
-        },
-
+        
         // image displaying functions
 
         validateResponse: function (response) {

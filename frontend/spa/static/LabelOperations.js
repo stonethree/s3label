@@ -3,6 +3,7 @@ export function getLabel(active_tool, coordPath, coords) {
     switch (active_tool) {
         case 'freehand':
         case 'polygon':
+        case 'point':
             return {
                 regions: [coordPath],
                 inverted: false
@@ -31,9 +32,6 @@ export function isLabelLargeEnough(active_tool, coordPath) {
             var y_min = Math.min(...coordPath.map(p => p[1]));
             var y_max = Math.max(...coordPath.map(p => p[1]));
 
-            //console.log('x length: ' + Math.abs(x_min - x_max));
-            //console.log('y length: ' + Math.abs(y_min - y_max));
-
             if (Math.abs(x_min - x_max) < 5 || Math.abs(y_min - y_max) < 5) {
                 return false;
             }
@@ -47,11 +45,13 @@ export function isLabelLargeEnough(active_tool, coordPath) {
 
 //determines if selected point lies within any of the stored labels
 export function isPointInLabel(selX, selY, labels) {
+    // console.log(selX + " " + selY)
+    // console.log(labels)
     switch (labels.type) {
         case 'freehand':
         case 'polygon':
             console.log('determining if point is in label type polygon...')
-            for (var count = 0; count < labels.label.regions.length; j++) {
+            for (var count = 0; count < labels.label.regions.length; count++) {
                 var cornersX = labels.label.regions[count].map(p => p[0]);
                 var cornersY = labels.label.regions[count].map(p => p[1]);
 
@@ -87,6 +87,18 @@ export function isPointInLabel(selX, selY, labels) {
                 return true;
             } else {
                 return false;
+            }
+        case 'point':
+            for (var count = 0; count < labels.label.regions.length; count++) {
+                var cornersX = labels.label.regions[count].map(p => p[0]);
+                var cornersY = labels.label.regions[count].map(p => p[1]);
+
+                var euclid_dist = Math.sqrt(Math.pow(selX - cornersX, 2) + Math.pow(selY - cornersY, 2));
+                if(euclid_dist < 5) {
+                    return true;
+                } else {
+                    return false;
+                }
             }
         default:
     }

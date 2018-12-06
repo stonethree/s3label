@@ -20,6 +20,9 @@ export function drawAllLabels(vm, labels_list) {
                 case 'rectangle':
                     drawBoundingBox(vm, labels_list[i]);
                     break;
+                case 'point':
+                    drawPoint(vm, labels_list[i]);
+                    break;
                 default:
             }
             
@@ -34,7 +37,6 @@ export function drawPolygon(vm, polygon) {
 
     if (polygon.selected) {
         // draw selected polygon
-
         var currentStrokeStyle = vm.ctx.strokeStyle;
         vm.ctx.strokeStyle = "#FF0000";
         vm.ctx.setLineDash([4, 4]);
@@ -104,4 +106,31 @@ export function drawBoundingBox (vm, box) {
         vm_new.ctx.fill();
     }
     
+}
+
+//Point drawing function
+export function drawPoint (vm, point) {
+    vm = setColor(vm, vm.label_colors[point.label_class], vm.opacity);
+    let paths_to_draw = point.label.regions;
+
+    if(paths_to_draw[0].length == 1) {
+        vm.ctx.beginPath();
+        let fstyle = vm.ctx.fillStyle;
+        vm.ctx.fillStyle = "rgba(0, 255, 0, 0.2)";
+        vm.ctx.fillStyle = fstyle;
+        vm.ctx.arc(paths_to_draw[0][0][0], paths_to_draw[0][0][1], 4, 0, Math.PI*2);
+        vm.ctx.closePath();
+
+        if (point.selected) {
+            var currentStrokeStyle = vm.ctx.strokeStyle;
+            vm.ctx.strokeStyle = "#FF0000";
+            vm.ctx.setLineDash([4, 4]);
+        }
+
+        vm.ctx.stroke_thickness
+        vm.ctx.stroke();
+        vm.ctx.fill();
+        vm.ctx.strokeStyle = currentStrokeStyle;
+        vm.ctx.setLineDash([]);
+    }
 }
