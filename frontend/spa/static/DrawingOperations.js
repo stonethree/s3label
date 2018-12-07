@@ -1,4 +1,7 @@
 import { extractColor, formatColor } from './color_utilities'
+import { addPaddingOffset,
+        removePaddingOffset,
+        setLabelCoords } from './LabelOperations'
 
 //sets the fill color of the label
 export function setColor (vm, rgb, alpha) {
@@ -6,22 +9,28 @@ export function setColor (vm, rgb, alpha) {
     return vm;
 }
 
-export function drawAllLabels(vm, labels_list) {
+export function drawAllLabels(vm, labels_list, mult) {
     vm.ctx.lineWidth = vm.stroke_thickness;
     vm.ctx.clearRect(0, 0, vm.ctx.canvas.width, vm.ctx.canvas.height);
 
+    let shown_labels = JSON.parse(JSON.stringify(labels_list));
+    shown_labels = removePaddingOffset(shown_labels, vm.padX, vm.padY);
+    shown_labels = setLabelCoords(shown_labels, mult);
+    shown_labels = addPaddingOffset(shown_labels, vm.padX, vm.padY);
+    //console.log(shown_labels);
+
     if (!vm.hide_labels) {
-        for (let i = 0; i < labels_list.length; i++) {
-            switch (labels_list[i].type) {
+        for (let i = 0; i < shown_labels.length; i++) {
+            switch (shown_labels[i].type) {
                 case 'freehand':
                 case 'polygon':
-                    drawPolygon(vm, labels_list[i]);
+                    drawPolygon(vm, shown_labels[i]);
                     break;
                 case 'rectangle':
-                    drawBoundingBox(vm, labels_list[i]);
+                    drawBoundingBox(vm, shown_labels[i]);
                     break;
                 case 'point':
-                    drawPoint(vm, labels_list[i]);
+                    drawPoint(vm, shown_labels[i]);
                     break;
                 case 'circle':
                     drawPoint(vm, labels_list[i]);

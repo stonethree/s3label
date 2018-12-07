@@ -11,13 +11,13 @@ export function getLabel(active_tool, coordPath, coords, infos={}) {
             return {
                 x: coordPath[0][0],
                 y: coordPath[0][1],
-                boxWidth: coords.x - coordPath[0][0],
-                boxHeight: coords.y - coordPath[0][1]
+                boxWidth: coords[0] - coordPath[0][0],
+                boxHeight: coords[1] - coordPath[0][1]
             }
         case "point":
             return {
-                x: coordPath[0][0],
-                y: coordPath[0][1],
+                x: coords[0],
+                y: coords[1],
                 radius: 4
             };
         case "circle":
@@ -121,7 +121,6 @@ function isPointInCircle(x, y, cornersX, cornersY, radius) {
 }
 
 export function getSelectedLabelIndex(labels) {
-
     //returns the index of the last selected label in the list
     var index = -1;
     
@@ -136,60 +135,97 @@ export function getSelectedLabelIndex(labels) {
 
 export function addPaddingOffset(labels, padX, padY) {
     // add the padding from the left and top borders of the canvas, so that we include padding in the displayed coordinates
-
-    for (let i = 0; i < labels.length; i++) {
-        switch (labels[i].type) {
+    let new_labels = JSON.parse(JSON.stringify(labels));
+    for (let i = 0; i < new_labels.length; i++) {
+        switch (new_labels[i].type) {
             case 'freehand':
             case 'polygon':
-                for (let j = 0; j < labels[i].label.regions.length; j++) {
-                    labels[i].label.regions[j] = labels[i].label.regions[j].map(coords => [coords[0] + padX, coords[1] + padY]);
+                for (let j = 0; j < new_labels[i].label.regions.length; j++) {
+                    new_labels[i].label.regions[j] = new_labels[i].label.regions[j].map(coords => [coords[0] + padX, coords[1] + padY]);
                 }
                 break;
             case 'rectangle':
-                labels[i].label.x += padX;
-                labels[i].label.y += padY;
+            case 'point':
+                new_labels[i].label.x += padX;
+                new_labels[i].label.y += padY;
                 break;
             case 'circle':
-                labels[i].label.x += padX;
-                labels[i].label.y += padY;
+                new_labels[i].label.x += padX;
+                new_labels[i].label.y += padY;
                 break;
             case 'point':
-                labels[i].label.x += padX;
-                labels[i].label.y += padY;
+                new_labels[i].label.x += padX;
+                new_labels[i].label.y += padY;
                 break;
             default:
         }
     }
 
-    return labels;
+    return new_labels;
 }
 
 export function removePaddingOffset(labels, padX, padY) {
     // subtract the padding from the left and top borders of the canvas, so that we don't include padding in the saved coordinates
-
-    for (let i = 0; i < labels.length; i++) {
-        switch (labels[i].type) {
+    let new_labels = JSON.parse(JSON.stringify(labels));
+    for (let i = 0; i < new_labels.length; i++) {
+        switch (new_labels[i].type) {
             case 'freehand':
             case 'polygon':
-                for (let j = 0; j < labels[i].label.regions.length; j++) {
-                    labels[i].label.regions[j] = labels[i].label.regions[j].map(coords => [coords[0] - padX, coords[1] - padY]);
+                for (let j = 0; j < new_labels[i].label.regions.length; j++) {
+                    new_labels[i].label.regions[j] = new_labels[i].label.regions[j].map(coords => [coords[0] - padX, coords[1] - padY]);
                 }
                 break;
             case 'rectangle':
-                labels[i].label.x -= padX;
-                labels[i].label.y -= padY;
-                break;
-            case 'circle':
-                labels[i].label.x -= padX;
-                labels[i].label.y -= padY;
-                break;
             case 'point':
-                labels[i].label.x -= padX;
-                labels[i].label.y -= padY;
+                new_labels[i].label.x -= padX;
+                new_labels[i].label.y -= padY;
                 break;
             default:
         }
     }
 
-    return labels;
+    return new_labels;
+}
+
+//edit coords of labels according to zoom multiplier
+export function setLabelCoords(labels_list, multiplier) {
+    //console.log('multiplier: ' + multiplier);
+    let new_labelslist = JSON.parse(JSON.stringify(labels_list));
+    for (let i = 0; i < new_labelslist.length; i++) {
+        switch (new_labelslist[i].type) {
+            case 'freehand':
+            case 'polygon':
+                for (var count = 0; count < new_labelslist[i].label.regions.length; count++) {
+                    for (let j = 0; j < new_labelslist[i].label.regions[count].length; j++) {
+                        new_labelslist[i].label.regions[count][j][0] *= multiplier;
+                        new_labelslist[i].label.regions[count][j][1] *= multiplier;
+                    }
+                }
+                break;
+            case 'rectangle':
+                //console.log('x: ' + new_labelslist[i].label.x + ' y: ' + new_labelslist[i].label.y);
+                new_labelslist[i].label.x *= multiplier;
+                new_labelslist[i].label.y *= multiplier;
+                new_labelslist[i].label.boxWidth *= multiplier;
+                new_labelslist[i].label.boxHeight *= multiplier;
+                //console.log(new_labelslist[i].label);
+                break;
+            case 'point':
+                new_labelslist[i].label.x *= multiplier;
+                new_labelslist[i].label.y *= multiplier;
+                console.log(new_labelslist[i].label.x);
+                console.log(new_labelslist[i].label.y);
+            case 'circle':
+                new_labelslist[i].label.x -= padX;
+                new_labelslist[i].label.y -= padY;
+                break;
+            case 'point':
+                new_labelslist[i].label.x -= padX;
+                new_labelslist[i].label.y -= padY;
+                break;
+            default:
+        }
+    }
+    //console.log(new_labelslist);
+    return new_labelslist;
 }

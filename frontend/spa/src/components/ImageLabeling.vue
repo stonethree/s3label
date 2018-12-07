@@ -215,6 +215,7 @@ export default {
             statePoint: true,
             stateCircle: true,
             save_timer: '',
+            zoom_state: 100,
         };
     },
     created: function() {
@@ -568,16 +569,30 @@ export default {
                 }
 
                 key_handled = true;
-            } 
+            }
             else if(e.code === 'NumpadAdd') {
                 this.increase_circle_event = !this.increase_circle_event;
                 key_handled = true;
-            } 
+            }
             else if(e.code === 'NumpadSubtract') {
                 this.decrease_circle_event = !this.decrease_circle_event;
                 key_handled = true;
             }
-            if ((e.keyCode >= 48 && e.keyCode <= 57) || (e.keyCode >= 96 && e.keyCode <= 105)) { 
+            else if (e.code == 'BracketLeft') {
+                //this.$refs.mySubComponent.zoom_index--;
+                var mult = 0.5;
+                //this.zoom_state *= mult;
+                //this.$refs.mySubComponent.multiplier = this.zoom_state;
+                this.$refs.mySubComponent.resize_canvas(mult);
+            }
+            else if (e.code == 'BracketRight') {
+                //this.$refs.mySubComponent.zoom_index++;
+                var mult = 2;
+                //this.zoom_state *= mult;
+                //this.$refs.mySubComponent.multiplier = this.zoom_state;
+                this.$refs.mySubComponent.resize_canvas(mult);
+            }
+            if ((e.keyCode >= 48 && e.keyCode <= 57) || (e.keyCode >= 96 && e.keyCode <= 105)) {
                 // 0-9 only
                 this.switch_label_event = !this.switch_label_event;
                 let label_index = e.keyCode - 48;
