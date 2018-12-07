@@ -1,8 +1,10 @@
 <template>
     <div class="canvas-section" style="position:static; display: inline;">
-        <div id="labelstatusdiv" style="position:relative;">
-            <label-status v-bind:label-id="label_id" v-bind:user-completed-toggle="label_status_toggler.user_complete" style="width:500px;height:350px; position:absolute; left:50%; top:-2em; transform: translate(-50%, 0);"></label-status>
-        </div>
+        <!--div id="labelstatusdiv" style="position:relative;display: inline-block;">
+            <div class="arrow-style"><i class="fa fa-arrow-circle-left"></i></div>
+            <label-status v-bind:label-id="label_id" v-bind:user-completed-toggle="label_status_toggler.user_complete" class="label-status-style"></label-status>
+            <div class="arrow-style"><i class="fa fa-arrow-circle-right"></i></div>
+        </div-->
         <div id="canvasesdiv" style="position:relative;" @mousedown.passive="mouseDownHandler" @mouseup.passive="mouseUpHandler" @mousemove.passive="mouseMoveHandler">
             
             <canvas id="canvas-fg" width="900" height="350" style="width:900px;height:350px; border: 1px solid #ccc; z-index: 3; position:absolute; left:50%; top:0px; transform: translate(-50%, 0);"></canvas>
@@ -36,7 +38,7 @@ import { getLabel,
 
 import { drawAllLabels } from '../../static/DrawingOperations'
 
-import LabelStatus from './LabelStatus'
+//import LabelStatus from './LabelStatus'
 //import { extractColor, formatColor } from '../../static/color_utilities'
 
 
@@ -124,9 +126,9 @@ export default {
             labels_undo: []
         };
     },
-    components: {
-        LabelStatus,
-    },
+    // components: {
+    //     LabelStatus,
+    // },
     computed: {
         ...mapGetters('label_task_store', [
             'label_colors'
@@ -512,7 +514,7 @@ export default {
             this.labels_redo = [];
             this.edited = true;
         },
-        
+
         // image displaying functions
 
         validateResponse: function (response) {
@@ -672,6 +674,12 @@ export default {
 
 
 <style>
+.arrow-style {
+    float: left;
+    width: fit-content;
+    height: fit-content;
+}
+
 .canvas-section div { padding-top: 2em }
 .image-not-found { position:absolute; 
                    left: 0; 
