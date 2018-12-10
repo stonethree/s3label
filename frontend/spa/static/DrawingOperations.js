@@ -17,7 +17,6 @@ export function drawAllLabels(vm, labels_list, mult) {
     shown_labels = removePaddingOffset(shown_labels, vm.padX, vm.padY);
     shown_labels = setLabelCoords(shown_labels, mult);
     shown_labels = addPaddingOffset(shown_labels, vm.padX, vm.padY);
-    //console.log(shown_labels);
 
     if (!vm.hide_labels) {
         for (let i = 0; i < shown_labels.length; i++) {
@@ -104,7 +103,6 @@ export function drawPolygon(vm, polygon) {
 
         for (let j = 0; j < paths_to_draw.length; j++) {
             drawPath(vm, paths_to_draw[j]);
-            //console.log(paths_to_draw[j]);
         }
 
         vm.ctx.strokeStyle = currentStrokeStyle;
@@ -112,7 +110,6 @@ export function drawPolygon(vm, polygon) {
     }
     else {
         // draw unselected polygon
-
         for (let j = 0; j < paths_to_draw.length; j++) {
             drawPath(vm, paths_to_draw[j]);
         }

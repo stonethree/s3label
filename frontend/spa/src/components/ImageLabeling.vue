@@ -64,6 +64,14 @@
                         <span>Contrast</span>
                         <input id="contrast_slider" type="range" min="-100" max="100" class="slider" v-model="contrast_slider_value">
                     </div>
+                    <div id="zoom_mode">
+                        <span>Zoom</span>
+                        <div v-bind:key="zoom_state">
+                            <i class="fa fa-search-plus" @click="keyDownHandler($event = {code: 'BracketRight'})" style="cursor: pointer;"></i>
+                            {{ zoom_state }}%
+                            <i class="fa fa-search-minus" @click="keyDownHandler($event = {code: 'BracketLeft'})" style="cursor: pointer;"></i>
+                        </div>
+                    </div>
                 </div>
                 <div id="clear_canvas_container" class="col">
                     <button type="submit" @click="clearCanvas">Clear canvas</button>
@@ -148,7 +156,6 @@
 <script>
 
 import DrawingCanvas from './DrawingCanvas'
-//import DrawingCanvasBox from './DrawingCanvasBox'
 import LabelStatus from './LabelStatus'
 
 import { uploadLabels,
@@ -409,7 +416,6 @@ export default {
 
                     if (labels_new != undefined) {
                         console.log('setting labels:', labels_new)
-                        //vm.$refs.mySubComponent.set_boxes(labels_new);
                         vm.$refs.mySubComponent.set_labels(labels_new);
                     }
                 }
@@ -579,17 +585,13 @@ export default {
                 key_handled = true;
             }
             else if (e.code == 'BracketLeft') {
-                //this.$refs.mySubComponent.zoom_index--;
                 var mult = 0.5;
-                //this.zoom_state *= mult;
-                //this.$refs.mySubComponent.multiplier = this.zoom_state;
+                this.zoom_state *= mult;
                 this.$refs.mySubComponent.resize_canvas(mult);
             }
             else if (e.code == 'BracketRight') {
-                //this.$refs.mySubComponent.zoom_index++;
                 var mult = 2;
-                //this.zoom_state *= mult;
-                //this.$refs.mySubComponent.multiplier = this.zoom_state;
+                this.zoom_state *= mult;
                 this.$refs.mySubComponent.resize_canvas(mult);
             }
             if ((e.keyCode >= 48 && e.keyCode <= 57) || (e.keyCode >= 96 && e.keyCode <= 105)) {
@@ -676,10 +678,5 @@ export default {
 .label-status-style {
     width: fit-content;
     float: left;
-    /*width: fit-content;
-    position: absolute;
-    left:50%;
-    top:-2em;
-    transform: translate(-50%, 0);*/
 }
 </style>

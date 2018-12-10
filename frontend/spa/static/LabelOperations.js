@@ -32,8 +32,6 @@ export function getLabel(active_tool, coordPath, coords, infos={}) {
 
 export function isLabelLargeEnough(active_tool, coordPath) {
     // check if path has non-negligible area
-    //console.log('coordPath:');
-    //console.log(coordPath);
     switch (active_tool) {
         case 'freehand':
         case 'polygon':
@@ -60,8 +58,6 @@ export function isLabelLargeEnough(active_tool, coordPath) {
 
 //determines if selected point lies within any of the stored labels
 export function isPointInLabel(selX, selY, labels) {
-    // console.log(selX + " " + selY)
-    // console.log(labels)
     switch (labels.type) {
         case 'freehand':
         case 'polygon':
@@ -189,7 +185,6 @@ export function removePaddingOffset(labels, padX, padY) {
 
 //edit coords of labels according to zoom multiplier
 export function setLabelCoords(labels_list, multiplier) {
-    //console.log('multiplier: ' + multiplier);
     let new_labelslist = JSON.parse(JSON.stringify(labels_list));
     for (let i = 0; i < new_labelslist.length; i++) {
         switch (new_labelslist[i].type) {
@@ -203,12 +198,10 @@ export function setLabelCoords(labels_list, multiplier) {
                 }
                 break;
             case 'rectangle':
-                //console.log('x: ' + new_labelslist[i].label.x + ' y: ' + new_labelslist[i].label.y);
                 new_labelslist[i].label.x *= multiplier;
                 new_labelslist[i].label.y *= multiplier;
                 new_labelslist[i].label.boxWidth *= multiplier;
                 new_labelslist[i].label.boxHeight *= multiplier;
-                //console.log(new_labelslist[i].label);
                 break;
             case 'point':
                 new_labelslist[i].label.x *= multiplier;
@@ -226,6 +219,5 @@ export function setLabelCoords(labels_list, multiplier) {
             default:
         }
     }
-    //console.log(new_labelslist);
     return new_labelslist;
 }

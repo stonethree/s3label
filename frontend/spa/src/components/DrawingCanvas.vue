@@ -846,6 +846,10 @@ export default {
         resize_canvas: function(mult) {
             console.log('resizing image...')
             this.showImage(this.responseAsBlob);
+
+            this.multiplier *= mult;
+            console.log('multiplier: ' + this.multiplier);
+
             drawAllLabels(this, this.labels, this.multiplier);
         },
     },
