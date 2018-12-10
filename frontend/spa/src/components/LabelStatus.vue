@@ -29,7 +29,7 @@
                 <i class="fa fa-smile-o fa-stack-1x icon-dim"></i>
             </span>
         </div>
-            <div @click="toggle_paid">
+        <div @click="toggle_paid" style="width: fit-content; height: fit-content;">
             <span v-if="status.paid" class="fa-stack" data-toggle="tooltip" v-bind:title="tooltips.paid.marked">
                 <i class="fa fa-check fa-stack-1x tick"></i>
                 <i class="fa fa-dollar fa-stack-1x"></i>
@@ -238,7 +238,8 @@ export default {
 <style>
 .status-icons div { display: inline;
                     cursor: pointer;
-                    padding-right: 1.5em; }
+                    padding-right: 1.5em;
+                    padding-left: 1.5em; }
 .tick { color:green;
             top: -1.4em;
             left: 0.8em;

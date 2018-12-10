@@ -1,8 +1,5 @@
 <template>
     <div class="canvas-section" style="position:static; display: inline;">
-        <div id="labelstatusdiv" style="position:relative;">
-            <label-status v-bind:label-id="label_id" v-bind:user-completed-toggle="label_status_toggler.user_complete" style="width:500px;height:350px; position:absolute; left:50%; top:-2em; transform: translate(-50%, 0);"></label-status>
-        </div>
         <div id="canvasesdiv" style="position:relative;" @mousedown.passive="mouseDownHandler" @mouseup.passive="mouseUpHandler" @mousemove.passive="mouseMoveHandler">
             <canvas id="canvas-live" width="900" height="350" style="width:900px;height:350px; border: 1px solid #ccc; z-index: 4; position:absolute; left:50%; top:0px; transform: translate(-50%, 0);"></canvas>
             <canvas id="canvas-fg" width="900" height="350" style="width:900px;height:350px; border: 1px solid #ccc; z-index: 3; position:absolute; left:50%; top:0px; transform: translate(-50%, 0);"></canvas>
@@ -35,9 +32,6 @@ import { getLabel,
          removePaddingOffset } from '../../static/LabelOperations'
 
 import { drawAllLabels, drawLiveCircle } from '../../static/DrawingOperations'
-
-import LabelStatus from './LabelStatus'
-//import { extractColor, formatColor } from '../../static/color_utilities'
 
 
 export default {
@@ -147,9 +141,9 @@ export default {
             last_mouse_pos: []
         };
     },
-    components: {
-        LabelStatus,
-    },
+    // components: {
+    //     LabelStatus,
+    // },
     computed: {
         ...mapGetters('label_task_store', [
             'label_colors'
@@ -546,9 +540,6 @@ export default {
             }
 
             let currentLabel = getLabel(this.active_tool, this.coordPath, coords, infos);
-            
-            // console.log('currentLabel:');
-            // console.log(currentLabel);
 
             switch (this.active_mode) {
                 case 'new':
@@ -647,6 +638,8 @@ export default {
         clearLiveCanvas: function() {
             this.ctx_live.clearRect(0, 0, this.ctx_live.canvas.width, this.ctx_live.canvas.height);
         },
+
+        // image displaying functions
 
         validateResponse: function (response) {
             if (!response.ok) {
@@ -807,6 +800,12 @@ export default {
 
 
 <style>
+.arrow-style {
+    float: left;
+    width: fit-content;
+    height: fit-content;
+}
+
 .canvas-section div { padding-top: 2em }
 .image-not-found { position:absolute; 
                    left: 0; 

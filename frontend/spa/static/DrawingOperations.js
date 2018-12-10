@@ -160,34 +160,9 @@ export function drawBoundingBox (vm, box) {
     
 }
 
-<<<<<<< HEAD
 export function drawLiveCircle(vm) {
     if(vm.active_tool != 'circle') {
         return;
-=======
-//Point drawing function
-export function drawPoint (vm, point) {
-    vm = setColor(vm, vm.label_colors[point.label_class], vm.opacity);
-    if(point.label != null) {
-        vm.ctx.beginPath();
-        let fstyle = vm.ctx.fillStyle;
-        vm.ctx.fillStyle = "rgba(0, 255, 0, 0.2)";
-        vm.ctx.fillStyle = fstyle;
-        vm.ctx.arc(point.label.x, point.label.y, 4, 0, Math.PI*2);
-        vm.ctx.closePath();
-
-        if (point.selected) {
-            var currentStrokeStyle = vm.ctx.strokeStyle;
-            vm.ctx.strokeStyle = "#FF0000";
-            vm.ctx.setLineDash([4, 4]);
-        }
-
-        vm.ctx.stroke_thickness
-        vm.ctx.stroke();
-        vm.ctx.fill();
-        vm.ctx.strokeStyle = currentStrokeStyle;
-        vm.ctx.setLineDash([]);
->>>>>>> bc31f13... Point label data structure changed
     }
     let x = vm.last_mouse_pos[0];
     let y = vm.last_mouse_pos[1];

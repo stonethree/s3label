@@ -81,9 +81,17 @@
             </div>
         </div>
     
-        <div class="row justify-content-center">
+        <br>
+        <div class="row justify-content-center" style="width: fit-content; display: inline;">
             <div class="col">
-            <drawing-canvas
+                <div  id="labelstatusdiv">
+                    <div style="width: fit-content; height: 35px; margin: 0 auto;">
+                        <div @click="switch_image('previous_image')" class="arrow-style"><i class="fa fa-arrow-circle-left"></i></div>
+                        <label-status v-bind:label-id="label_id" v-bind:user-completed-toggle="label_status_toggler.user_complete" class="label-status-style"></label-status>
+                        <div @click="switch_image('next_image')" class="arrow-style"><i class="fa fa-arrow-circle-right"></i></div>
+                    </div>
+                </div>
+                <drawing-canvas
                             v-bind:active_tool="active_tool"
                             v-bind:active_mode="active_mode"
                             v-bind:active_overlap_mode="active_overlap_mode"
@@ -137,6 +145,7 @@
 
 import DrawingCanvas from './DrawingCanvas'
 //import DrawingCanvasBox from './DrawingCanvasBox'
+import LabelStatus from './LabelStatus'
 
 import { uploadLabels,
          loadLabels,
@@ -194,11 +203,13 @@ export default {
             stateAppend: true,
             stateErase: true,
             stateOverlap: true,
-            stateNoOverlap: false
+            stateNoOverlap: false,
+            label_status_toggler: {user_complete: false},
         };
     },
     components: {
         DrawingCanvas,
+        LabelStatus
         //DrawingCanvasBox
     },
     computed: {
@@ -309,7 +320,6 @@ export default {
     },
     beforeRouteLeave (to, from, next) {
         // get current polygons array from drawing canvas component (NB: this isn't the most elegant solution, but it will do for now)
-        //var tmp = this.$refs.mySubComponent.fetch_boxes();
         var tmp = this.$refs.mySubComponent.fetch_labels();
         var labels = tmp.labels;
         var edited = tmp.edited;
@@ -384,10 +394,7 @@ export default {
             var old_label_id = this.label_id;
 
             // get current polygons/boxes array from drawing canvas component (NB: this isn't the most elegant solution, but it will do for now)
-            //var tmp = this.$refs.mySubComponent.fetch_boxes();
-            //var polygons = tmp.polygons;
             var tmp = this.$refs.mySubComponent.fetch_labels();
-            //var boxes = tmp.bounding_boxes;
             var lab = tmp.labels;
             var edited = tmp.edited;
 
@@ -590,4 +597,19 @@ export default {
 <style>
 #drawing-tools { border:black }
 .modal-button { padding-top: 0.2em }
+.arrow-style {
+    float: left;
+    width: fit-content;
+    height: fit-content;
+    cursor: pointer;
+}
+.label-status-style {
+    width: fit-content;
+    float: left;
+    /*width: fit-content;
+    position: absolute;
+    left:50%;
+    top:-2em;
+    transform: translate(-50%, 0);*/
+}
 </style>
