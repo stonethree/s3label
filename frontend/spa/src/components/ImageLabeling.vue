@@ -291,7 +291,6 @@ export default {
     },
     beforeRouteLeave (to, from, next) {
         // get current polygons array from drawing canvas component (NB: this isn't the most elegant solution, but it will do for now)
-        //var tmp = this.$refs.mySubComponent.fetch_boxes();
         var tmp = this.$refs.mySubComponent.fetch_labels();
         var labels = tmp.labels;
         var edited = tmp.edited;
@@ -366,10 +365,7 @@ export default {
             var old_label_id = this.label_id;
 
             // get current polygons/boxes array from drawing canvas component (NB: this isn't the most elegant solution, but it will do for now)
-            //var tmp = this.$refs.mySubComponent.fetch_boxes();
-            //var polygons = tmp.polygons;
             var tmp = this.$refs.mySubComponent.fetch_labels();
-            //var boxes = tmp.bounding_boxes;
             var lab = tmp.labels;
             var edited = tmp.edited;
 
