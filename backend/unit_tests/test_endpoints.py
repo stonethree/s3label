@@ -87,7 +87,9 @@ def test_get_latest_label_history_for_logged_in_user(auth, refresh_db_once):
     label = json_of_response(rv_label)
 
     assert label[0]['label_id'] == 3
-    assert label[0]['label_serialised'] == '[{"test": 4}]'
+    assert label[0]['label_serialised'] == '[{"type": "freehand", "label": "foreground_object", "polygon": ' \
+                                           '{"regions": [[[100, 200], [130, 205], [132, 270], [102, 268]]], ' \
+                                           '"inverted": false}, "selected": true}]'
     assert label[0]['input_data_id'] == 3
     assert label[0]['label_task_id'] == 1
     assert label[0]['user_id'] == 1
@@ -103,7 +105,7 @@ def test_get_latest_label_history_for_different_logged_in_user(auth, refresh_db_
     label = json_of_response(rv_label)
 
     assert label[0]['label_id'] == 5
-    assert label[0]['label_serialised'] == '[{"type": "freehand", "label": "foreground_object", ' \
+    assert label[0]['label_serialised'] == '[{"type": "polygon", "label": "foreground_object", ' \
                                            '"polygon": {"regions": [[[100.2, 200.1], [130.4, 205.1], ' \
                                            '[132.2, 270.1], [102.1, 268.7]]], "inverted": false}, "selected": true}]'
     assert label[0]['input_data_id'] == 3
@@ -121,7 +123,9 @@ def test_get_latest_label_history_for_specified_user(auth, refresh_db_once):
     label = json_of_response(rv_label)
 
     assert label[0]['label_id'] == 3
-    assert label[0]['label_serialised'] == '[{"test": 4}]'
+    assert label[0]['label_serialised'] == '[{"type": "freehand", "label": "foreground_object", "polygon": ' \
+                                           '{"regions": [[[100, 200], [130, 205], [132, 270], [102, 268]]], ' \
+                                           '"inverted": false}, "selected": true}]'
     assert label[0]['input_data_id'] == 3
     assert label[0]['label_task_id'] == 1
     assert label[0]['user_id'] == 1
@@ -133,7 +137,7 @@ def test_get_latest_label_history_for_specified_user(auth, refresh_db_once):
     label = json_of_response(rv_label)
 
     assert label[0]['label_id'] == 5
-    assert label[0]['label_serialised'] == '[{"type": "freehand", "label": "foreground_object", ' \
+    assert label[0]['label_serialised'] == '[{"type": "polygon", "label": "foreground_object", ' \
                                            '"polygon": {"regions": [[[100.2, 200.1], [130.4, 205.1], ' \
                                            '[132.2, 270.1], [102.1, 268.7]]], "inverted": false}, "selected": true}]'
     assert label[0]['input_data_id'] == 3
@@ -643,8 +647,36 @@ def test_download_ground_truth_images_to_disk(auth, refresh_db_every_time):
     assert response['num_ground_truth_images'] == 1
 
     assert os.path.exists('tmp/ground_truth_images/im_input_data_id_3_label_id_5_gt2.png')
-    assert not os.path.exists('tmp/ground_truth_images/im_input_data_id_4_label_id_6_gt2.png')
 
     assert dd.get_image_dims('tmp/ground_truth_images/im_input_data_id_3_label_id_5_gt2.png') == (640, 428)
 
     assert os.path.exists('tmp/ground_truth_images/labels_info.csv')
+
+
+def test_get_all_latest_label_history_for_a_label_task(auth, refresh_db_every_time):
+    auth.login(email='shaun.irwin@stonethree.com', password='abc')
+
+    rv = auth.client.post(auth.base_url + '/latest_label_history/label_task_id/1',
+                          headers=auth.auth_header(),
+                          data=json.dumps({'test_data': 'false',
+                                           'label_status': 'admin_complete'}),
+                          content_type='application/json')
+
+    assert rv.status_code == 200
+
+    response = json_of_response(rv)
+
+    df = pd.DataFrame(response)
+
+    expected_label = """[{"type": "polygon", "label": "foreground_object", "polygon": {"regions": """ + \
+"""[[[100.2, 200.1], [130.4, 205.1], [132.2, 270.1], [102.1, 268.7]]], "inverted": false}, "selected": true}]"""
+
+    assert df.loc[:, 'data_path'].tolist() == ['test_images/image3.jpg', 'test_images/image4.jpg']
+    assert df.loc[:, 'input_data_id'].tolist() == [3, 4]
+    assert df.loc[:, 'label_id'].tolist() == [5, 6]
+    assert df.loc[:, 'dataset_id'].tolist() == [2, 2]
+    assert df.loc[:, 'label_serialised'].tolist() == [expected_label, None]
+    assert df.loc[:, 'include_in_test_set'].tolist() == [False, False]
+    assert df.loc[:, 'admin_complete'].tolist() == [True, True]
+    # assert df.loc[:, 'label_history_id'].tolist() == [6, None]
+    # assert df.loc[:, 'num_objects_labeled'].tolist() == [1, 0]

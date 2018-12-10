@@ -2,9 +2,31 @@
 
 ## How to generate ground truth labels and dump them to disk
 
-Use the following API call to generate ground truth image data:
+There are currently two options for exporting the labels from the database via REST queries: getting all the raw JSON data or generating images from the labels.
 
+It is also possible to use a *SQL select* to query the *latest_label_history* table directly.
+ 
+### Getting the raw JSON data
+
+~~~ bash
+curl -X POST \
+  https://label.stonethree.com/image_labeler/api/v1.0/latest_label_history/label_task_id/5 \
+  -H 'Authorization: Bearer <token>' \
+  -H 'Cache-Control: no-cache' \
+  -H 'Content-Type: application/json' \
+  -d '{
+	"test_images": "true",
+    "label_status": "admin_complete"
+}'
 ~~~
+
+The *test_data* and *label_status* fields are optional. Use these to further filter the labels returned.
+
+### Generate ground truth images from the labels
+
+Use the following API call to generate ground truth image data and dump it to disk (on the same machine where the backend is hosted):
+
+~~~ bash
 curl -X PUT \
   https://label.stonethree.com/image_labeler/api/v1.0/label_images/label_task_id/5 \
   -H 'Authorization: Bearer <token>' \
@@ -14,15 +36,9 @@ curl -X PUT \
 	"output_folder": "/tmp/ground_truth_images/label_task_5_test",
 	"suffix": "_gt4",
 	"gt_mode": "filled_polygon_instances",
-	"test_images": "true",
-  "label_status": "admin_complete"
+	"test_data": "true",
+    "label_status": "admin_complete"
 }'
-~~~
-
-Powershell:
-
-~~~
-curl -Method Put -Uri "https://label.stonethree.com/image_labeler/api/v1.0/label_images/label_task_id/5" -ContentType "application/json"
 ~~~
 
 *gt_mode* can be one of the following:
@@ -34,9 +50,9 @@ curl -Method Put -Uri "https://label.stonethree.com/image_labeler/api/v1.0/label
 | center_dot                | Not yet tested, but it should generate a single dot at the centroid of each instance  |
 | filled_polygon_instances  | Generate filled polygons, where each instance has a different integer value           |
 
-*test_images* can be set to "true", "false" or the field can be omitted (default):
+*test_data* can be set to "true", "false" or the field can be omitted (default):
 
-| test_images       |                                                                                       |
+| test_data         |                                                                                       |
 | -------------     |:-------------                                                                         |
 | true              | Only generate ground truth images for data marked as "test data"                      |
 | false             | Only generate ground truth images for data *not* marked as "test data"                |
@@ -48,18 +64,3 @@ curl -Method Put -Uri "https://label.stonethree.com/image_labeler/api/v1.0/label
 | -------------   |:-------------                                                                         |
 | admin_complete  | Only generate ground truth images for data marked as "admin_complete" (i.e. admin user has approved this image)   |
 | user_complete   | Only generate ground truth images for data marked as "user_complete" (i.e. user has marked this image as complete, but admin user has not necessarily approved the labeling yet)                |
-
-## Useful SQL queries
-
-Delete duplicate input_data items from a particular dataset that has just been uploaded:
-
-~~~
-BEGIN;
-
-delete from input_data i using duplicate_input_data d where i.input_data_id = d.input_data_id and i.dataset_id = 17 and i.timestamp_upload is not null;
-
-select * from input_data where dataset_id = 17;
-
---rollback, so that we can test the query before executing (i.e. perform a dry run)
-ROLLBACK;
-~~~

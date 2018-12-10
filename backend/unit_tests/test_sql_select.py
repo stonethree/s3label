@@ -378,7 +378,9 @@ def test_get_latest_label(refresh_db_once, db_connection_sqlalchemy):
     df_test['label_id'] = [4]
     df_test['input_data_id'] = [3]
     df_test['in_progress'] = [False]
-    df_test['label_serialised'] = ['[{"test": 5}]']
+    df_test['label_serialised'] = ['[{"type": "rectangle", "label": {"x": 95, "y": 69.21875, '
+                                   '"boxWidth": 260, "boxHeight": 117}, "selected": true, '
+                                   '"label_class": "foreground_object"}]']
 
     engine = db_connection_sqlalchemy
     df = sql_queries.get_latest_label(engine, user_id=1, label_task_id=2, input_data_id=3)

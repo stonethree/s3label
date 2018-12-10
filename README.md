@@ -8,7 +8,8 @@
 4. [Labels](./docs/label.md)
 5. [Features](./docs/features.md)
 6. [Payment Tracking](./docs/making_payments.md)
-7. [Troubleshooting](./docs/troubleshoot.md)
+7.  [Useful SQL queries](./docs/useful_sql_queries.md)
+8. [Troubleshooting](./docs/troubleshoot.md)
 
 ## Installation
 
