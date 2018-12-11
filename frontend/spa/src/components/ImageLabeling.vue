@@ -125,6 +125,7 @@
                             v-bind:decrease_circle_event="decrease_circle_event"
                             v-bind:change_radio_event ="change_radio_event"
                             v-bind:switch_label_event="switch_label_event"
+                            v-bind:zoom_level="zoom_level"
                             ref="mySubComponent"
                             class="row"
                             ></drawing-canvas>
@@ -348,6 +349,9 @@ export default {
                         break;
                 }
             }
+        },
+        zoom_level: function() {
+            return this.zoom_state;
         }
     },
     beforeMount() {
@@ -587,12 +591,10 @@ export default {
             else if (e.code == 'BracketLeft') {
                 var mult = 0.5;
                 this.zoom_state *= mult;
-                this.$refs.mySubComponent.resize_canvas(mult);
             }
             else if (e.code == 'BracketRight') {
                 var mult = 2;
                 this.zoom_state *= mult;
-                this.$refs.mySubComponent.resize_canvas(mult);
             }
             if ((e.keyCode >= 48 && e.keyCode <= 57) || (e.keyCode >= 96 && e.keyCode <= 105)) {
                 // 0-9 only
