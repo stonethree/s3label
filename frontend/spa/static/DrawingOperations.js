@@ -23,11 +23,63 @@ export function drawAllLabels(vm, labels_list) {
                 case 'point':
                     drawPoint(vm, labels_list[i]);
                     break;
+                case 'circle':
+                    drawPoint(vm, labels_list[i]);
+                    break;
                 default:
             }
             
         }
     }
+}
+
+export function drawPoint(vm, point) {
+    // console.log("Drawing point");
+    vm = setColor(vm, vm.label_colors[point.label_class], vm.opacity);
+
+    vm.ctx.beginPath();
+    let fstyle = vm.ctx.fillStyle;
+    vm.ctx.fillStyle = fstyle;
+    if (point.selected) {
+        var currentStrokeStyle = vm.ctx.strokeStyle;
+        vm.ctx.strokeStyle = "#FF0000";
+        vm.ctx.setLineDash([4, 4]);
+    }
+    // console.log(point);
+    vm.ctx.arc(point.label.x, point.label.y, point.label.radius, 0, Math.PI*2);
+    vm.ctx.closePath();
+    
+    vm.ctx.stroke();
+    vm.ctx.fill();
+    // vm.ctx.closePath();
+    // vm.ctx.strokeStyle = currentStrokeStyle;
+    vm.ctx.beginPath();
+    vm.ctx.setLineDash([]);
+
+    var currentColour = vm.ctx.currentColour
+
+    if (point.selected) {
+        vm.ctx.fillStyle = "#FF0000"
+    } else {
+        vm.ctx.fillStyle = "#000000"
+    }
+    
+
+    if(point.type == "circle") {
+
+
+        // just a comment
+        // this.setColor([0, 0, 0], 1);
+        vm.ctx.moveTo(point.label.x, point.label.y);
+        vm.ctx.arc(point.label.x, point.label.y, 2 , 0, Math.PI*2);
+
+    }    
+
+    vm.ctx.stroke();
+    vm.ctx.fill();
+
+    vm.ctx.strokeStyle = currentStrokeStyle;
+    vm.ctx.fillStyle = fstyle;
 }
 
 //Polygon or Freehand drawing function
@@ -108,27 +160,22 @@ export function drawBoundingBox (vm, box) {
     
 }
 
-//Point drawing function
-export function drawPoint (vm, point) {
-    vm = setColor(vm, vm.label_colors[point.label_class], vm.opacity);
-    if(point.label != null) {
-        vm.ctx.beginPath();
-        let fstyle = vm.ctx.fillStyle;
-        vm.ctx.fillStyle = "rgba(0, 255, 0, 0.2)";
-        vm.ctx.fillStyle = fstyle;
-        vm.ctx.arc(point.label.x, point.label.y, 4, 0, Math.PI*2);
-        vm.ctx.closePath();
-
-        if (point.selected) {
-            var currentStrokeStyle = vm.ctx.strokeStyle;
-            vm.ctx.strokeStyle = "#FF0000";
-            vm.ctx.setLineDash([4, 4]);
-        }
-
-        vm.ctx.stroke_thickness
-        vm.ctx.stroke();
-        vm.ctx.fill();
-        vm.ctx.strokeStyle = currentStrokeStyle;
-        vm.ctx.setLineDash([]);
+export function drawLiveCircle(vm) {
+    if(vm.active_tool != 'circle') {
+        return;
     }
+    let x = vm.last_mouse_pos[0];
+    let y = vm.last_mouse_pos[1];
+    vm.ctx_live.fillStyle = formatColor(vm.label_colors[vm.active_label], vm.opacity);
+    //vm.ctx.fillStyle = formatColor([0, 255, 0], 0.5);
+    vm.ctx_live.beginPath();
+    vm.ctx_live.moveTo(x + vm.circle_radius, y);
+    vm.ctx_live.arc(x, y, vm.circle_radius , 0, Math.PI*2);
+
+    vm.ctx_live.fill();
+    vm.ctx_live.fillStyle = formatColor([0, 0, 0], 1);
+    vm.ctx_live.moveTo(x, y);
+    vm.ctx_live.arc(x, y, 2 , 0, Math.PI*2);
+    
+    vm.ctx_live.stroke();
 }
