@@ -53,6 +53,20 @@ export const StoreLabelTask = {
             else {
                 return undefined
             }
-        }
+        },
+        default_tool: (state, getters) => {
+            if (getters.label_task != undefined) {
+                return getters.label_task.default_tool;
+            } else {
+                return undefined;
+            }
+        },
+        allowed_tools: (state, getters) => {
+            if (getters.label_task != undefined) {
+                return getters.label_task.allowed_tools;
+            } else {
+                return undefined;
+            }
+        },
     }
 }
