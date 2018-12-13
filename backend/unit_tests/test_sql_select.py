@@ -254,6 +254,7 @@ def test_get_label_tasks(refresh_db_once, db_connection_sqlalchemy):
                      'description',
                      'type',
                      'default_tool',
+                     'allowed_tools',
                      'permit_overlap',
                      'label_classes']
 
@@ -279,6 +280,7 @@ def test_get_label_tasks_for_specific_user(refresh_db_once, db_connection_sqlalc
                      'description',
                      'type',
                      'default_tool',
+                     'allowed_tools',
                      'permit_overlap',
                      'label_classes']
 
@@ -300,6 +302,7 @@ def test_get_label_task(refresh_db_once, db_connection_sqlalchemy):
                      'description',
                      'type',
                      'default_tool',
+                     'allowed_tools',
                      'permit_overlap',
                      'label_classes']
 

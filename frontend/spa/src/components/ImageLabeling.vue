@@ -6,15 +6,15 @@
                 <div id="tools" class="col border-right">
                     <span>Tools</span>
                     <form id="tools_form" @mousedown=changeRadio()>
-                        <input type="radio" class="radio-button" name="tool" value="freehand" v-model="active_tool"> Freehand
+                        <input type="radio" class="radio-button" name="tool" value="freehand" v-model="active_tool" :class="{ disabled: disableDrawTools }" :disabled="stateFreehand"> Freehand
                         <br>
-                        <input type="radio" class="radio-button" name="tool" value="polygon" v-model="active_tool"> Polygon
+                        <input type="radio" class="radio-button" name="tool" value="polygon" v-model="active_tool" :class="{ disabled: disableDrawTools }" :disabled="statePoly"> Polygon
                         <br>
-                        <input type="radio" class="radio-button" name="tool" value="rectangle" v-model="active_tool"> Rectangle
+                        <input type="radio" class="radio-button" name="tool" value="rectangle" v-model="active_tool" :class="{ disabled: disableDrawTools }" :disabled="stateRect"> Rectangle
                         <br>
-                        <input type="radio" class="radio-button" name="tool" value="point" v-model="active_tool"> Point
+                        <input type="radio" class="radio-button" name="tool" value="point" v-model="active_tool" :class="{ disabled: disableDrawTools }" :disabled="statePoint"> Point
                         <br>
-                        <input type="radio" class="radio-button" name="tool" value="circle" v-model="active_tool"> Circle
+                        <input type="radio" class="radio-button" name="tool" value="circle" v-model="active_tool" :class="{ disabled: disableDrawTools }" :disabled="stateCircle"> Circle
                         <br>
                         <input type="radio" class="radio-button" name="tool" value="select" v-model="active_tool"> Select
                     </form>
@@ -205,18 +205,24 @@ export default {
             stateOverlap: true,
             stateNoOverlap: false,
             label_status_toggler: {user_complete: false},
+            stateFreehand: true,
+            statePoly: true,
+            stateRect: true,
+            statePoint: true,
+            stateCircle: true,
         };
     },
     components: {
         DrawingCanvas,
         LabelStatus
-        //DrawingCanvasBox
     },
     computed: {
         ...mapGetters('label_task_store', [
             'label_task',
             'labels',
-            'label_task_id'
+            'label_task_id',
+            'default_tool',
+            'allowed_tools',
         ]),
         ...mapGetters('user_login', [
             'user_id'
@@ -291,7 +297,40 @@ export default {
                     this.stateOverlap = true;
                     this.stateNoOverlap = true;
                     break;
-                
+            }
+        },
+        disableDrawTools: function() {
+            var enabled_tools = [];
+            if (this.allowed_tools != null && this.allowed_tools != 'none') {
+                enabled_tools = this.allowed_tools.split(", ");
+            }
+            this.active_tool = this.default_tool;
+            enabled_tools.push(this.default_tool);
+            for (let i = 0; i < enabled_tools.length; i++) {
+                switch(enabled_tools[i]) {
+                    case 'freehand':
+                        this.stateFreehand = false;
+                        break;
+                    case 'polygon':
+                        this.statePoly = false;
+                        break;
+                    case 'rectangle':
+                        this.stateRect = false;
+                        break;
+                    case 'point':
+                        this.statePoint = false;
+                        break;
+                    case 'circle':
+                        this.stateCircle = false;
+                        break;
+                    case 'null':
+                        this.stateFreehand = false;
+                        this.statePoly = false;
+                        this.stateRect = false;
+                        this.statePoint = false;
+                        this.stateCircle = false;
+                        break;
+                }
             }
         }
     },
@@ -535,7 +574,6 @@ export default {
                     }
                 }
             }
-
 
             if (key_handled) {
                 e.stopPropagation();
