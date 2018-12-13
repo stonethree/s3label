@@ -86,9 +86,13 @@
             <div class="col">
                 <div  id="labelstatusdiv">
                     <div style="width: fit-content; height: 35px; margin: 0 auto;">
-                        <div @click="switch_image('previous_image')" class="arrow-style"><i class="fa fa-arrow-circle-left"></i></div>
+                        <div @click="switch_image('previous_image')" class="icon-style">
+                            <span class="fa-stack"><i class="fa fa-arrow-circle-left"></i></span>
+                        </div>
                         <label-status v-bind:label-id="label_id" v-bind:user-completed-toggle="label_status_toggler.user_complete" class="label-status-style"></label-status>
-                        <div @click="switch_image('next_image')" class="arrow-style"><i class="fa fa-arrow-circle-right"></i></div>
+                        <div @click="switch_image('next_image')" class="icon-style">
+                            <span class="fa-stack"><i class="fa fa-arrow-circle-right"></i></span>
+                        </div>
                     </div>
                 </div>
                 <drawing-canvas
@@ -210,7 +214,11 @@ export default {
             stateRect: true,
             statePoint: true,
             stateCircle: true,
+            save_timer: '',
         };
+    },
+    created: function() {
+        this.save_timer = setInterval(this.save_progress, 5000);
     },
     components: {
         DrawingCanvas,
@@ -356,6 +364,7 @@ export default {
     beforeDestroy () {
         window.removeEventListener('keydown', this.keyDownHandler);
         window.removeEventListener('keyup', this.keyUpHandler);
+        clearInterval(this.save_timer);
     },
     beforeRouteLeave (to, from, next) {
         // get current polygons array from drawing canvas component (NB: this isn't the most elegant solution, but it will do for now)
@@ -423,7 +432,6 @@ export default {
 
         switch_image: async function (next_or_previous='next_image') {
             // switch to next or previous image
-
             if (next_or_previous != 'next_image' && next_or_previous != 'previous_image') {
                 console.error('Error: Unexpected next_ore_previous parameter. Unable to switch image.');
                 return -1;
@@ -432,19 +440,10 @@ export default {
             var old_input_data_id = this.input_data_id;
             var old_label_id = this.label_id;
 
-            // get current polygons/boxes array from drawing canvas component (NB: this isn't the most elegant solution, but it will do for now)
-            var tmp = this.$refs.mySubComponent.fetch_labels();
-            var lab = tmp.labels;
-            var edited = tmp.edited;
-
             var vm = this;
 
-            if (edited) {
-                await uploadLabels(this.input_data_id, this.label_task_id, lab)  // upload the labels from the previous image
-                .catch(function(error) {
-                    console.log('error getting label ID:', error, vm.label_task_id, vm.input_data_id, vm.user_id);
-                })
-            }
+            //upload the labels from the previous image
+            this.save_progress();
 
             await vm.$store.dispatch('image_labeling/' + next_or_previous, vm.label_task.label_task_id)    // switch to the next image
             .then(function() {
@@ -462,6 +461,24 @@ export default {
                     });
                 }
             });
+        },
+
+        save_progress: async function() {
+            // get current labels array from drawing canvas component (NB: this isn't the most elegant solution, but it will do for now)
+            var tmp = this.$refs.mySubComponent.fetch_labels();
+            console.log(tmp);
+            var lab = tmp.labels;
+            var edited = tmp.edited;
+            var vm = this;
+            
+            if (edited) {
+                await uploadLabels(this.input_data_id, this.label_task_id, lab) 
+                .catch(function(error) {
+                    console.log('error getting label ID:', error, vm.label_task_id, vm.input_data_id, vm.user_id);
+                })
+                
+                console.log('current progress saved')
+            }
         },
 
         get_label_examples: function() {
@@ -635,7 +652,7 @@ export default {
 <style>
 #drawing-tools { border:black }
 .modal-button { padding-top: 0.2em }
-.arrow-style {
+.icon-style {
     float: left;
     width: fit-content;
     height: fit-content;
