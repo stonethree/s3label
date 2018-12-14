@@ -32,7 +32,7 @@ import { getLabel,
          removePaddingOffset,
          setLabelCoords } from '../../static/LabelOperations'
 
-import { drawAllLabels, drawLiveCircle, drawPoint } from '../../static/DrawingOperations'
+import { drawAllLabels, drawCircle } from '../../static/DrawingOperations'
 
 import LabelStatus from './LabelStatus'
 import { getLatestLabeledImage } from '../../static/label_loading';
@@ -265,6 +265,7 @@ export default {
 
         switch_label_event: function() {
             this.rerenderLiveCanvas();
+            this.isDrawing = false;
         },
 
         change_radio_event: function(){
@@ -284,7 +285,7 @@ export default {
                 this.circle_radius += 1;
             }
             this.clearLiveCanvas();
-            drawLiveCircle(this);
+            drawCircle(this, this.ctx_live, this.last_mouse_pos, this.circle_radius*this.multiplier);
         },
 
         dec_circle_size: function(fast_res=false) {
@@ -295,7 +296,7 @@ export default {
                     this.circle_radius -= 1;
                 }
                 this.clearLiveCanvas();
-                drawLiveCircle(this);
+                drawCircle(this, this.ctx_live, this.last_mouse_pos, this.circle_radius*this.multiplier);
             }
         },
 
@@ -318,9 +319,8 @@ export default {
         },
 
         rerenderLiveCanvas: function() {
-            //this.drawAllPolygons(this.ctx, this.polygons);
             this.clearLiveCanvas();
-            drawLiveCircle(this);
+            drawCircle(this, this.ctx_live, this.last_mouse_pos, this.circle_radius*this.multiplier);
         },
 
         radioEvent: function() {
@@ -397,7 +397,6 @@ export default {
             switch (this.active_tool) {
                 case 'freehand':
                     this.labels_redo = [];
-                    this.shown_redo = [];
                     this.isDrawing = true;
                     this.ctx.lineJoin = this.ctx.lineCap = 'round';
                     this.ctx.beginPath();
@@ -408,7 +407,6 @@ export default {
                     if (!this.isDrawing) {
                         console.log('drawing first point')
                         this.labels_redo = [];
-                        this.shown_redo = [];
                         this.isDrawing = true;
                         this.ctx.lineJoin = this.ctx.lineCap = 'round';
                         this.ctx.beginPath();
@@ -435,16 +433,17 @@ export default {
                     this.isDrawing = true;
                     this.ctx.lineJoin = this.ctx.lineCap = 'miter';
                     this.ctx.moveTo(coords.x, coords.y);
-                    console.log('x: ' + coords.x + 'y: ' + coords.y);
                     this.coordPath.push([tmpX, tmpY]);
-                    console.log('x: ' + tmpX + 'y: ' + tmpY);
                     break;
                 case 'point':
                     // mark current point and process it
                     this.coordPath = [];
-                    this.ctx.beginPath();
-                    this.ctx.arc(coords.x, coords.y, 4, 0, Math.PI*2);
-                    this.ctx.fill();
+                    this.processLabel(e);
+                    break;
+                case 'circle':
+                    this.labels_redo = [];
+                    this.coordPath = [];
+                    //this.coordPath.push([coords.x, coords.y]);
                     this.processLabel(e);
                     break;
                 case 'select':
@@ -460,29 +459,14 @@ export default {
                     }
                     drawAllLabels(this, this.labels, this.multiplier);
                     break;
-                case 'point':
-                    // mark current point and process it
-                    this.coordPath = [];
-                    this.coordPath.push([coords.x, coords.y]);
-                    this.processLabel(e);
-                    break;
-                case 'circle':
-                    this.polygons_redo = [];
-                    this.coordPath = [];
-                    this.coordPath.push([coords.x, coords.y]);
-                    this.processLabel(e);
-                    break;
+                
                 default:
             }
         },
 
         mouseMoveHandler: function (e) {
-            if(this.active_tool == 'circle') {
-                this.isDrawing = true;
-            }
-
+            var coords = this.getMousePos(this.ctx.canvas, e);
             if (this.isDrawing) {
-                var coords = this.getMousePos(this.ctx.canvas, e);
                 if (this.active_tool == 'freehand') {
                     if (coords.x == undefined || coords.y == undefined) {
                         console.log("coords undef:" + coords);
@@ -510,15 +494,15 @@ export default {
 
                     this.ctx.rect(tmpX, tmpY, coords.x - tmpX, coords.y - tmpY);
                     this.ctx.stroke();
-                } else if(this.active_tool == 'circle'){
-                    this.last_mouse_pos = [coords.x, coords.y]
-                    // var origin = this.currentPath[0]
-                    this.clearLiveCanvas(); // TODO
-                    drawLiveCircle(this); // TODO
+                }
+            } else if (this.active_tool == 'circle') {
+                this.last_mouse_pos = [coords.x, coords.y];
+                this.clearLiveCanvas(); // TODO
+                this.ctx_live.moveTo(coords.x, coords.y);
+                drawCircle(this, this.ctx_live, this.last_mouse_pos, this.circle_radius*this.multiplier); // TODO
 
-                    if (coords.x == undefined || coords.y == undefined) {
-                        console.log("coords undef:" + coords);
-                    }
+                if (coords.x == undefined || coords.y == undefined) {
+                    console.log("coords undef:" + coords);
                 }
             }
         },
@@ -526,7 +510,7 @@ export default {
         mouseUpHandler: function (e) {
             //processes label if active tool is not selected as polygon
             if(this.active_tool == 'circle') {
-                return;
+                this.isDrawing = false;
             }
             if(this.active_tool == 'point') {
                 return;
@@ -572,10 +556,12 @@ export default {
                     this.labels[i].selected = false;
                 }
             }
+
             var infos = {};
             if(this.active_tool == 'circle') {
                 infos['circle_radius'] = this.circle_radius;
             }
+            
             let tmpCoords = [tmpX, tmpY];
             let currentLabel = getLabel(this.active_tool, this.coordPath, tmpCoords, infos);
 
@@ -675,7 +661,6 @@ export default {
             this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
             this.labels = [];
             this.labels_redo = [];
-            this.shown_redo = [];
             this.edited = true;
         },
 
@@ -692,7 +677,6 @@ export default {
 
         readResponseAsBlob: function (response) {
             this.responseAsBlob = response.blob();
-            this.imgShown = new Image()
             return this.responseAsBlob;
         },
 
@@ -717,14 +701,13 @@ export default {
             var vm = this;
 
             img.onload = function () {
-                vm.setCanvasSize(canvas_live, img.width, img.height, vm.padX, vm.padY);
                 //size image according to multiplier (for zooming)
                 img.width = img.width*vm.multiplier;
                 img.height = img.height*vm.multiplier;
                 
                 vm.setCanvasSize(canvas_fg, img.width, img.height, vm.padX, vm.padY);
                 vm.setCanvasSize(canvas_bg, img.width, img.height, vm.padX, vm.padY);
-
+                vm.setCanvasSize(canvas_live, img.width, img.height, vm.padX, vm.padY);
                 // add shadow
                 ctx2.shadowBlur = 10;
                 ctx2.shadowColor = "hsla(2, 0%, 0%, 0.46)";
@@ -768,7 +751,7 @@ export default {
 
                 vm.draw_pattern(img.width, img.height);
 
-                // redraw polygon labels
+                // redraw labels
 
                 drawAllLabels(vm, vm.labels, vm.multiplier);
             }
@@ -846,7 +829,7 @@ export default {
         resize_canvas: function(mult) {
             console.log('resizing image...')
             this.showImage(this.responseAsBlob);
-            drawAllLabels(this, this.labels, this.multiplier);
+            //drawAllLabels(this, this.labels, this.multiplier);
         },
     },
 }

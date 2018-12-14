@@ -99,10 +99,9 @@ export function isPointInLabel(selX, selY, labels) {
             } else {
                 return false;
             }
+        case 'point':
         case 'circle':
             return isPointInCircle(selX, selY, labels.label.x, labels.label.y, labels.label.radius);
-        case 'point':
-            return isPointInCircle(selX, selY, labels.label.x, labels.label.y, 4);
         default:
     }
 }
@@ -142,14 +141,7 @@ export function addPaddingOffset(labels, padX, padY) {
                 break;
             case 'rectangle':
             case 'point':
-                new_labels[i].label.x += padX;
-                new_labels[i].label.y += padY;
-                break;
             case 'circle':
-                new_labels[i].label.x += padX;
-                new_labels[i].label.y += padY;
-                break;
-            case 'point':
                 new_labels[i].label.x += padX;
                 new_labels[i].label.y += padY;
                 break;
@@ -163,6 +155,7 @@ export function addPaddingOffset(labels, padX, padY) {
 export function removePaddingOffset(labels, padX, padY) {
     // subtract the padding from the left and top borders of the canvas, so that we don't include padding in the saved coordinates
     let new_labels = JSON.parse(JSON.stringify(labels));
+    console.log('pad X: ' + padX + ' padY: ' + padY);
     for (let i = 0; i < new_labels.length; i++) {
         switch (new_labels[i].type) {
             case 'freehand':
@@ -173,6 +166,7 @@ export function removePaddingOffset(labels, padX, padY) {
                 break;
             case 'rectangle':
             case 'point':
+            case 'circle':
                 new_labels[i].label.x -= padX;
                 new_labels[i].label.y -= padY;
                 break;
@@ -185,6 +179,7 @@ export function removePaddingOffset(labels, padX, padY) {
 
 //edit coords of labels according to zoom multiplier
 export function setLabelCoords(labels_list, multiplier) {
+    console.log('multiplier: ' + multiplier);
     let new_labelslist = JSON.parse(JSON.stringify(labels_list));
     for (let i = 0; i < new_labelslist.length; i++) {
         switch (new_labelslist[i].type) {
@@ -206,15 +201,11 @@ export function setLabelCoords(labels_list, multiplier) {
             case 'point':
                 new_labelslist[i].label.x *= multiplier;
                 new_labelslist[i].label.y *= multiplier;
-                console.log(new_labelslist[i].label.x);
-                console.log(new_labelslist[i].label.y);
-            case 'circle':
-                new_labelslist[i].label.x -= padX;
-                new_labelslist[i].label.y -= padY;
                 break;
-            case 'point':
-                new_labelslist[i].label.x -= padX;
-                new_labelslist[i].label.y -= padY;
+            case 'circle':
+                new_labelslist[i].label.x *= multiplier;
+                new_labelslist[i].label.y *= multiplier;
+                new_labelslist[i].label.radius *= multiplier;
                 break;
             default:
         }
