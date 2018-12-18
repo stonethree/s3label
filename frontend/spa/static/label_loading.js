@@ -171,7 +171,7 @@ export async function uploadLabels(input_data_id, label_task_id, polygons) {
     }
     else {
         if (polygons.length == 0) {
-                console.warn('Labels object should (probably) not be empty when uploading! Not uploading item.');
+                console.warn('Labels object should (probably) not be empty when uploading!');
         }
 
         var data = {label_serialised: polygons}
