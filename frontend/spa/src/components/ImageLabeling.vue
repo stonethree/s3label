@@ -64,6 +64,14 @@
                         <span>Contrast</span>
                         <input id="contrast_slider" type="range" min="-100" max="100" class="slider" v-model="contrast_slider_value">
                     </div>
+                    <div id="zoom_mode">
+                        <span>Zoom</span>
+                        <div v-bind:key="zoom_state">
+                            <i class="fa fa-search-minus" @click="keyDownHandler($event = {code: 'BracketLeft'})" style="cursor: pointer;"></i>
+                            {{ zoom_state }}%
+                            <i class="fa fa-search-plus" @click="keyDownHandler($event = {code: 'BracketRight'})" style="cursor: pointer;"></i>
+                        </div>
+                    </div>
                 </div>
                 <div id="clear_canvas_container" class="col">
                     <button type="submit" @click="clearCanvas">Clear canvas</button>
@@ -117,6 +125,7 @@
                             v-bind:decrease_circle_event="decrease_circle_event"
                             v-bind:change_radio_event ="change_radio_event"
                             v-bind:switch_label_event="switch_label_event"
+                            v-bind:zoom_level="zoom_level"
                             ref="mySubComponent"
                             class="row"
                             ></drawing-canvas>
@@ -148,7 +157,6 @@
 <script>
 
 import DrawingCanvas from './DrawingCanvas'
-//import DrawingCanvasBox from './DrawingCanvasBox'
 import LabelStatus from './LabelStatus'
 
 import { uploadLabels,
@@ -215,6 +223,7 @@ export default {
             statePoint: true,
             stateCircle: true,
             save_timer: '',
+            zoom_state: 100,
         };
     },
     created: function() {
@@ -340,6 +349,9 @@ export default {
                         break;
                 }
             }
+        },
+        zoom_level: function() {
+            return this.zoom_state;
         }
     },
     beforeMount() {
@@ -408,7 +420,6 @@ export default {
 
                     if (labels_new != undefined) {
                         console.log('setting labels:', labels_new)
-                        //vm.$refs.mySubComponent.set_boxes(labels_new);
                         vm.$refs.mySubComponent.set_labels(labels_new);
                     }
                 }
@@ -568,16 +579,24 @@ export default {
                 }
 
                 key_handled = true;
-            } 
+            }
             else if(e.code === 'NumpadAdd') {
                 this.increase_circle_event = !this.increase_circle_event;
                 key_handled = true;
-            } 
+            }
             else if(e.code === 'NumpadSubtract') {
                 this.decrease_circle_event = !this.decrease_circle_event;
                 key_handled = true;
             }
-            if ((e.keyCode >= 48 && e.keyCode <= 57) || (e.keyCode >= 96 && e.keyCode <= 105)) { 
+            else if (e.code == 'BracketLeft') {
+                var mult = 0.5;
+                this.zoom_state *= mult;
+            }
+            else if (e.code == 'BracketRight') {
+                var mult = 2;
+                this.zoom_state *= mult;
+            }
+            if ((e.keyCode >= 48 && e.keyCode <= 57) || (e.keyCode >= 96 && e.keyCode <= 105)) {
                 // 0-9 only
                 this.switch_label_event = !this.switch_label_event;
                 let label_index = e.keyCode - 48;
@@ -661,10 +680,5 @@ export default {
 .label-status-style {
     width: fit-content;
     float: left;
-    /*width: fit-content;
-    position: absolute;
-    left:50%;
-    top:-2em;
-    transform: translate(-50%, 0);*/
 }
 </style>

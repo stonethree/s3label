@@ -29,12 +29,13 @@ import { getLabel,
          isPointInLabel,
          getSelectedLabelIndex,
          addPaddingOffset,
-         removePaddingOffset } from '../../static/LabelOperations'
+         removePaddingOffset,
+         setLabelCoords } from '../../static/LabelOperations'
 
-import { drawAllLabels, drawLiveCircle, drawPoint } from '../../static/DrawingOperations'
+import { drawAllLabels, drawCircle } from '../../static/DrawingOperations'
 
 import LabelStatus from './LabelStatus'
-//import { extractColor, formatColor } from '../../static/color_utilities'
+import { getLatestLabeledImage } from '../../static/label_loading';
 
 
 export default {
@@ -123,7 +124,11 @@ export default {
             required: false,
             type: Boolean,
             default: false
-        }
+        },
+        zoom_level: {
+            required: true,
+            type: Number
+        },
     },
     data: function() {
         return {
@@ -141,12 +146,10 @@ export default {
             labels_undo: [],
             circleFlag: false,
             circle_radius: 20,
-            last_mouse_pos: []
+            last_mouse_pos: [],
+            multiplier: 1,
         };
     },
-    // components: {
-    //     LabelStatus,
-    // },
     computed: {
         ...mapGetters('label_task_store', [
             'label_colors'
@@ -166,7 +169,7 @@ export default {
         var msScroll = this.onMouseScroll;
         window.addEventListener('wheel',function(event){
                 msScroll(event);
-                return false; 
+                return false;
             }, false);
     },
     mounted() {
@@ -190,13 +193,13 @@ export default {
     },
     watch: {
         stroke_thickness: function () {
-            drawAllLabels(this, this.labels);
+            drawAllLabels(this, this.labels, this.multiplier);
         },
         use_stroke: function () {
-            drawAllLabels(this, this.labels);
+            drawAllLabels(this, this.labels, this.multiplier);
         },
         opacity: function () {
-            drawAllLabels(this, this.labels);
+            drawAllLabels(this, this.labels, this.multiplier);
         },
         brightness: function () {
             if (this.responseAsBlob != undefined) {
@@ -209,8 +212,8 @@ export default {
             }
         },
         input_data_id: function (new_input_data_id, old_input_data_id) {
-            console.log('switching image...') 
-
+            console.log('switching image...');
+            
             if (new_input_data_id != undefined) {
                 this.fetchAndDisplayImage(baseUrl + '/input_images/' + new_input_data_id);
             }
@@ -220,7 +223,7 @@ export default {
         },
 
         labels: function() {
-            drawAllLabels(this, this.labels);
+            drawAllLabels(this, this.labels, this.multiplier);
         },
 
         clear_canvas_event: function() {
@@ -250,7 +253,7 @@ export default {
         },
 
         hide_labels: function() {
-            drawAllLabels(this, this.labels);
+            drawAllLabels(this, this.labels, this.multiplier);
         },
         increase_circle_event: function() {
             this.inc_circle_size();
@@ -262,11 +265,17 @@ export default {
 
         switch_label_event: function() {
             this.rerenderLiveCanvas();
+            this.isDrawing = false;
         },
 
         change_radio_event: function(){
             this.radioEvent();
-        }
+        },
+
+        zoom_level: function() {
+            this.multiplier = this.zoom_level/100;
+            this.resize_canvas(this.multiplier);
+        },
     },
     methods: {
         inc_circle_size: function(fast_res=false) {
@@ -276,7 +285,7 @@ export default {
                 this.circle_radius += 1;
             }
             this.clearLiveCanvas();
-            drawLiveCircle(this);
+            drawCircle(this, this.ctx_live, this.last_mouse_pos, this.circle_radius*this.multiplier);
         },
 
         dec_circle_size: function(fast_res=false) {
@@ -287,7 +296,7 @@ export default {
                     this.circle_radius -= 1;
                 }
                 this.clearLiveCanvas();
-                drawLiveCircle(this);
+                drawCircle(this, this.ctx_live, this.last_mouse_pos, this.circle_radius*this.multiplier);
             }
         },
 
@@ -304,15 +313,14 @@ export default {
                 }
                 e.stopPropagation();
                 e.preventDefault();
-            } 
+            }
 
 
         },
 
         rerenderLiveCanvas: function() {
-            //this.drawAllPolygons(this.ctx, this.polygons);
             this.clearLiveCanvas();
-            drawLiveCircle(this);
+            drawCircle(this, this.ctx_live, this.last_mouse_pos, this.circle_radius*this.multiplier);
         },
 
         radioEvent: function() {
@@ -382,6 +390,10 @@ export default {
                 console.log("coords undef:" + coords);
             }
 
+            // getting coords at zoom level 100%
+            let tmpX = ((coords.x-this.padX)/this.multiplier)+this.padX;
+            let tmpY = ((coords.y-this.padY)/this.multiplier)+this.padY;
+
             switch (this.active_tool) {
                 case 'freehand':
                     this.labels_redo = [];
@@ -389,7 +401,7 @@ export default {
                     this.ctx.lineJoin = this.ctx.lineCap = 'round';
                     this.ctx.beginPath();
                     this.ctx.moveTo(coords.x, coords.y);
-                    this.coordPath.push([coords.x, coords.y]);
+                    this.coordPath.push([tmpX, tmpY]);
                     break;
                 case 'polygon':
                     if (!this.isDrawing) {
@@ -401,34 +413,37 @@ export default {
                         this.ctx.arc(coords.x, coords.y, 4, 0, Math.PI*2);
                         this.ctx.stroke();
                         this.ctx.moveTo(coords.x, coords.y);
-                        this.coordPath.push([coords.x, coords.y]);
+                        this.coordPath.push([tmpX, tmpY]);
                     } else {
                         var lastPoint = this.coordPath[this.coordPath.length - 1];
-                        if (Math.abs(coords.x - lastPoint[0]) < 2 && Math.abs(coords.y - lastPoint[1]) < 2) {
-                            // close and finish drawing path if same point clicked twice
-                            this.coordPath.push(this.coordPath[0]);
+                        console.log('lastpoint: x - ' + lastPoint[0] + ' y - ' + lastPoint[1]);
+                        if (Math.abs(coords.x - (((lastPoint[0]-this.padX)*this.multiplier)+this.padX)) < 2 && Math.abs(coords.y - (((lastPoint[1]-this.padY)*this.multiplier)+this.padY)) < 2) {
                             this.processLabel(e);
                         } else {
                             // add point to current path
                             this.ctx.arc(coords.x, coords.y, 4, 0, Math.PI*2);
                             this.ctx.stroke();
                             this.ctx.lineTo(coords.x, coords.y);
-                            this.coordPath.push([coords.x, coords.y]);
+                            this.coordPath.push([tmpX, tmpY]);
                         }
+                        console.log('coordPath: ' + this.coordPath);
                     }
                     break;
                 case 'rectangle':
                     this.isDrawing = true;
                     this.ctx.lineJoin = this.ctx.lineCap = 'miter';
                     this.ctx.moveTo(coords.x, coords.y);
-                    this.coordPath.push([coords.x, coords.y]);
+                    this.coordPath.push([tmpX, tmpY]);
                     break;
                 case 'point':
                     // mark current point and process it
                     this.coordPath = [];
-                    this.ctx.beginPath();
-                    this.ctx.arc(coords.x, coords.y, 4, 0, Math.PI*2);
-                    this.ctx.fill();
+                    this.processLabel(e);
+                    break;
+                case 'circle':
+                    this.labels_redo = [];
+                    this.coordPath = [];
+                    //this.coordPath.push([coords.x, coords.y]);
                     this.processLabel(e);
                     break;
                 case 'select':
@@ -442,59 +457,52 @@ export default {
                             this.labels[i].selected = false;
                         }
                     }
-
-                    drawAllLabels(this, this.labels);
+                    drawAllLabels(this, this.labels, this.multiplier);
                     break;
-                case 'point':  
-                    // mark current point and process it
-                    this.coordPath = [];
-                    this.coordPath.push([coords.x, coords.y]);
-                    this.processLabel(e);
-                    break;
-                case 'circle':  
-                    this.polygons_redo = [];                
-                    this.coordPath = [];
-                    this.coordPath.push([coords.x, coords.y]);
-                    this.processLabel(e);
-                    break;
+                
                 default:
             }
         },
 
         mouseMoveHandler: function (e) {
-            if(this.active_tool == 'circle') {
-                this.isDrawing = true;
-            }
-
+            var coords = this.getMousePos(this.ctx.canvas, e);
             if (this.isDrawing) {
-                var coords = this.getMousePos(this.ctx.canvas, e);
                 if (this.active_tool == 'freehand') {
                     if (coords.x == undefined || coords.y == undefined) {
                         console.log("coords undef:" + coords);
                     }
                     this.ctx.lineTo(coords.x, coords.y);
                     this.ctx.stroke();
-                    this.coordPath.push([coords.x, coords.y]);
+
+                    // getting coords at zoom level 100%
+                    let tmpX = ((coords.x-this.padX)/this.multiplier)+this.padX;
+                    let tmpY = ((coords.y-this.padY)/this.multiplier)+this.padY;
+
+                    this.coordPath.push([tmpX, tmpY]);
                 } else if (this.active_tool == 'rectangle') {
                     this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
-                    drawAllLabels(this, this.labels);
+                    drawAllLabels(this, this.labels, this.multiplier);
                     this.ctx.beginPath();
 
                     if (coords.x == undefined || coords.y == undefined) {
                         console.log("coords undef:" + coords);
                     }
 
-                    this.ctx.rect(this.coordPath[0][0], this.coordPath[0][1], coords.x - this.coordPath[0][0], coords.y - this.coordPath[0][1]);
-                    this.ctx.stroke();
-                } else if(this.active_tool == 'circle'){
-                    this.last_mouse_pos = [coords.x, coords.y]
-                    // var origin = this.currentPath[0]
-                    this.clearLiveCanvas(); // TODO
-                    drawLiveCircle(this); // TODO
+                    // getting coords at zoom level (depending on multiplier)
+                    let tmpX = ((this.coordPath[0][0]-this.padX)*this.multiplier)+this.padX;
+                    let tmpY = ((this.coordPath[0][1]-this.padY)*this.multiplier)+this.padY;
 
-                    if (coords.x == undefined || coords.y == undefined) {
-                        console.log("coords undef:" + coords);
-                    }
+                    this.ctx.rect(tmpX, tmpY, coords.x - tmpX, coords.y - tmpY);
+                    this.ctx.stroke();
+                }
+            } else if (this.active_tool == 'circle') {
+                this.last_mouse_pos = [coords.x, coords.y];
+                this.clearLiveCanvas(); // TODO
+                this.ctx_live.moveTo(coords.x, coords.y);
+                drawCircle(this, this.ctx_live, this.last_mouse_pos, this.circle_radius*this.multiplier); // TODO
+
+                if (coords.x == undefined || coords.y == undefined) {
+                    console.log("coords undef:" + coords);
                 }
             }
         },
@@ -502,7 +510,7 @@ export default {
         mouseUpHandler: function (e) {
             //processes label if active tool is not selected as polygon
             if(this.active_tool == 'circle') {
-                return;
+                this.isDrawing = false;
             }
             if(this.active_tool == 'point') {
                 return;
@@ -515,21 +523,29 @@ export default {
         processLabel: function (e) {
             this.isDrawing = false;
             this.edited = true;
+
             var coords = this.getMousePos(this.ctx.canvas, e);
-            this.coordPath.push([coords.x, coords.y]);
+            
+            //getting coords at zoom level 100%
+            let tmpX = ((coords.x-this.padX)/this.multiplier)+this.padX;
+            let tmpY = ((coords.y-this.padY)/this.multiplier)+this.padY;
+
+            this.coordPath.push([tmpX, tmpY]);
 
             this.ctx.closePath();
             if (this.use_stroke) {
                     this.ctx.stroke();
             }
             this.ctx.fill();
+            
+            console.log('coordPath: ' + this.coordPath);
 
             // do not add label if it has zero area
             if (!isLabelLargeEnough(this.active_tool, this.coordPath) && this.active_tool != 'point') {
                 console.log('label too small! discarding it')
 
                 this.coordPath = [];
-                drawAllLabels(this, this.labels);
+                drawAllLabels(this, this.labels, this.multiplier);
                 return;
             }
 
@@ -540,15 +556,17 @@ export default {
                     this.labels[i].selected = false;
                 }
             }
+
             var infos = {};
             if(this.active_tool == 'circle') {
                 infos['circle_radius'] = this.circle_radius;
             }
-
-            let currentLabel = getLabel(this.active_tool, this.coordPath, coords, infos);
             
-            // console.log('currentLabel:');
-            // console.log(currentLabel);
+            let tmpCoords = [tmpX, tmpY];
+            let currentLabel = getLabel(this.active_tool, this.coordPath, tmpCoords, infos);
+
+            console.log('currentLabel:');
+            console.log(currentLabel);
 
             switch (this.active_mode) {
                 case 'new':
@@ -572,6 +590,7 @@ export default {
                                 currentLabel = PolyBool.difference(currentLabel, labl);
                             }
                         }
+
                         if (currentLabel.regions.length > 0) {
                             this.labels.push({ 'label': currentLabel, 'label_class': this.active_label, 'type': this.active_tool, 'selected': true });
                         }
@@ -634,7 +653,8 @@ export default {
             }
 
             this.coordPath = [];
-            drawAllLabels(this, this.labels);
+
+            drawAllLabels(this, this.labels, this.multiplier);
         },
 
         clearCanvas: function() {
@@ -643,7 +663,7 @@ export default {
             this.labels_redo = [];
             this.edited = true;
         },
-        
+
         clearLiveCanvas: function() {
             this.ctx_live.clearRect(0, 0, this.ctx_live.canvas.width, this.ctx_live.canvas.height);
         },
@@ -656,7 +676,8 @@ export default {
         },
 
         readResponseAsBlob: function (response) {
-            return response.blob();
+            this.responseAsBlob = response.blob();
+            return this.responseAsBlob;
         },
 
         setCanvasSize: function (c, width, height, padX, padY) {
@@ -680,16 +701,20 @@ export default {
             var vm = this;
 
             img.onload = function () {
-                vm.setCanvasSize(canvas_live, img.width, img.height, vm.padX, vm.padY);
+                //size image according to multiplier (for zooming)
+                img.width = img.width*vm.multiplier;
+                img.height = img.height*vm.multiplier;
+                
                 vm.setCanvasSize(canvas_fg, img.width, img.height, vm.padX, vm.padY);
                 vm.setCanvasSize(canvas_bg, img.width, img.height, vm.padX, vm.padY);
-
+                vm.setCanvasSize(canvas_live, img.width, img.height, vm.padX, vm.padY);
                 // add shadow
-
                 ctx2.shadowBlur = 10;
                 ctx2.shadowColor = "hsla(2, 0%, 0%, 0.46)";
 
-                ctx2.drawImage(img, vm.padX, vm.padY);
+                //console.log(img)
+
+                ctx2.drawImage(img, vm.padX, vm.padY, img.width, img.height);
 
                 // apply brightness and contrast adjustments
 
@@ -726,9 +751,9 @@ export default {
 
                 vm.draw_pattern(img.width, img.height);
 
-                // redraw polygon labels
+                // redraw labels
 
-                drawAllLabels(vm, vm.labels);
+                drawAllLabels(vm, vm.labels, vm.multiplier);
             }
             img.src = imgUrl;
         },
@@ -769,12 +794,12 @@ export default {
         },
 
         undo: function() {
-            if (this.labels_undo.length > 0) { 
+            if (this.labels_undo.length > 0) {
                 this.labels.push(this.labels_undo.pop());
             } else if (this.labels.length > 0) {
                 this.labels_redo.push(this.labels.pop());
             }
-            drawAllLabels(this, this.labels);
+            drawAllLabels(this, this.labels, this.multiplier);
             this.edited = true;
         },
 
@@ -782,14 +807,14 @@ export default {
             if (this.labels_redo.length > 0) {
                 this.labels.push(this.labels_redo.pop());
             }
-            drawAllLabels(this, this.labels);
+            drawAllLabels(this, this.labels, this.multiplier);
             this.edited = true;
         },
 
         delete: function() {
             this.labels_undo.push(...this.labels.filter(lab => lab.selected));
             this.labels = this.labels.filter(lab => !lab.selected);
-            drawAllLabels(this, this.labels);
+            drawAllLabels(this, this.labels, this.multiplier);
             this.edited = true;
         },
         
@@ -797,10 +822,15 @@ export default {
             for (let i = 0; i < this.labels.length; i++) {
                 this.labels[i].selected = false;
             }
-            drawAllLabels(this, this.labels);
+            drawAllLabels(this, this.labels, this.multiplier);
             this.edited = true;
         },
 
+        resize_canvas: function(mult) {
+            console.log('resizing image...')
+            this.showImage(this.responseAsBlob);
+            //drawAllLabels(this, this.labels, this.multiplier);
+        },
     },
 }
 </script>
@@ -816,8 +846,7 @@ export default {
 .canvas-section div { padding-top: 2em }
 .image-not-found { position:absolute; 
                    left: 0; 
-                   text-align: center; 
-                   /* top: 0;  */
+                   text-align: center;
                    transform: translate(0, 300%); 
                    width: 100%; 
                    z-index: 4 }
