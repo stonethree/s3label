@@ -31,7 +31,7 @@ import { getLabel,
          addPaddingOffset,
          removePaddingOffset } from '../../static/LabelOperations'
 
-import { drawAllLabels, drawLiveCircle } from '../../static/DrawingOperations'
+import { drawAllLabels, drawLiveCircle, drawPoint } from '../../static/DrawingOperations'
 
 import LabelStatus from './LabelStatus'
 //import { extractColor, formatColor } from '../../static/color_utilities'
@@ -398,6 +398,8 @@ export default {
                         this.isDrawing = true;
                         this.ctx.lineJoin = this.ctx.lineCap = 'round';
                         this.ctx.beginPath();
+                        this.ctx.arc(coords.x, coords.y, 4, 0, Math.PI*2);
+                        this.ctx.stroke();
                         this.ctx.moveTo(coords.x, coords.y);
                         this.coordPath.push([coords.x, coords.y]);
                     } else {
@@ -408,8 +410,9 @@ export default {
                             this.processLabel(e);
                         } else {
                             // add point to current path
-                            this.ctx.lineTo(coords.x, coords.y);
+                            this.ctx.arc(coords.x, coords.y, 4, 0, Math.PI*2);
                             this.ctx.stroke();
+                            this.ctx.lineTo(coords.x, coords.y);
                             this.coordPath.push([coords.x, coords.y]);
                         }
                     }
