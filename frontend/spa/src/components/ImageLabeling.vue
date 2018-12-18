@@ -67,9 +67,9 @@
                     <div id="zoom_mode">
                         <span>Zoom</span>
                         <div v-bind:key="zoom_state">
-                            <i class="fa fa-search-plus" @click="keyDownHandler($event = {code: 'BracketRight'})" style="cursor: pointer;"></i>
-                            {{ zoom_state }}%
                             <i class="fa fa-search-minus" @click="keyDownHandler($event = {code: 'BracketLeft'})" style="cursor: pointer;"></i>
+                            {{ zoom_state }}%
+                            <i class="fa fa-search-plus" @click="keyDownHandler($event = {code: 'BracketRight'})" style="cursor: pointer;"></i>
                         </div>
                     </div>
                 </div>
