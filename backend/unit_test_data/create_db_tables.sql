@@ -29,7 +29,8 @@ create table label_tasks(
     type VARCHAR NOT NULL
         CHECK (type = 'semantic_segmentation' or type = 'instance_segmentation' or type = 'bounding_boxes'),
     default_tool VARCHAR DEFAULT 'freehand' NOT NULL
-	    CHECK (default_tool = 'freehand' or default_tool = 'polygon' or default_tool = 'rectangle' or default_tool = 'point' or default_tool = 'circle' or default_tool = 'select'),
+	    CHECK (default_tool = 'freehand' or default_tool = 'polygon' or default_tool = 'rectangle' or default_tool = 'point' or default_tool = 'circle' or default_tool = 'select')
+	    CHECK (allowed_tools LIKE concat('%', default_tool,'%')),
 	allowed_tools VARCHAR DEFAULT null,
 	permit_overlap BOOLEAN DEFAULT false NOT NULL,
 	label_classes VARCHAR DEFAULT '[{"label_class": "foreground_object", "color": "[0,255,0]"}, {"label_class": "background", "color": "[0,0,255]"}]' NOT NULL);
