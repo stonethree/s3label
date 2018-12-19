@@ -3,47 +3,70 @@
         <div id="drawingtools" class="row">
             <div class="col">
             <div class="row justify-content-center">
+            
                 <div id="tools" class="col border-right">
-                    <span>Tools</span>
-                    <form id="tools_form" @mousedown=changeRadio()>
-                        <input type="radio" class="radio-button" name="tool" value="freehand" v-model="active_tool" :class="{ disabled: disableDrawTools }" :disabled="stateFreehand"> Freehand
-                        <br>
-                        <input type="radio" class="radio-button" name="tool" value="polygon" v-model="active_tool" :class="{ disabled: disableDrawTools }" :disabled="statePoly"> Polygon
-                        <br>
-                        <input type="radio" class="radio-button" name="tool" value="rectangle" v-model="active_tool" :class="{ disabled: disableDrawTools }" :disabled="stateRect"> Rectangle
-                        <br>
-                        <input type="radio" class="radio-button" name="tool" value="point" v-model="active_tool" :class="{ disabled: disableDrawTools }" :disabled="statePoint"> Point
-                        <br>
-                        <input type="radio" class="radio-button" name="tool" value="circle" v-model="active_tool" :class="{ disabled: disableDrawTools }" :disabled="stateCircle"> Circle
-                        <br>
-                        <input type="radio" class="radio-button" name="tool" value="select" v-model="active_tool"> Select
-                    </form>
+                    <div class="row">
+                        <div class="col">Drawing Tool
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col">
+                            <select width="100" style="width: 100px" id="tools_form">
+                                <option class="radio-button" name="tool" value="freehand" v-model="active_tool"> Freehand </option>
+                                <option class="radio-button" name="tool" value="polygon" v-model="active_tool"> Polygon </option>
+                                <option class="radio-button" name="tool" value="rectangle" v-model="active_tool"> Rectangle </option>
+                                <option class="radio-button" name="tool" value="point" v-model="active_tool"> Point </option>
+                                <option class="radio-button" name="tool" value="circle" v-model="active_tool"> Circle </option>
+                                <option class="radio-button" name="tool" value="select" v-model="active_tool"> Select </option>
+                            </select>
+                        </div>
+                    </div>
                 </div>
+                 
                 <div id="tool_modes" class="col border-right">
-                    <span>Modes</span>
-                    <form id="mode_form">
-                        <input type="radio" class="radio-button" name="mode" value="new" v-model="active_mode" v-bind:class="{ disabled: isDisabled }" v-bind:disabled="stateNew"> New
-                        <br>
-                        <input type="radio" class="radio-button" name="mode" value="append" v-model="active_mode" v-bind:class="{ disabled: isDisabled }" v-bind:disabled="stateAppend"> Append
-                        <br>
-                        <input type="radio" class="radio-button" name="mode" value="erase" v-model="active_mode" v-bind:class="{ disabled: isDisabled }" v-bind:disabled="stateErase"> Erase
-                    </form>
+                    <div class="row">
+                        <div class="col"> Freehand Mode
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col">
+                            <select width="100" style="width: 100px"  id="mode_form">
+                                <option class="radio-button" name="mode" value="new" v-model="active_mode" v-bind:class="{ disabled: isDisabled }" v-bind:disabled="stateNew"> New </option>
+                                <option class="radio-button" name="mode" value="append" v-model="active_mode" v-bind:class="{ disabled: isDisabled }" v-bind:disabled="stateAppend"> Append </option>
+                                <option class="radio-button" name="mode" value="erase" v-model="active_mode" v-bind:class="{ disabled: isDisabled }" v-bind:disabled="stateErase"> Erase </option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row" style="margin-bottom: 0.5rem">
+                    </div>
+                    <div class="row justify-content-left" > 
+                        <div id="choose_overlap" class="col">
+                            <span style="white-space: nowrap" >Allow Overlap</span>
+                            <div style="width:10px"></div>
+                            <input id="choose_overlap" type="checkbox" class="radio-button" name="overlap_mode" value="overlap" v-model="active_overlap_mode" v-bind:class="{ disabled: isDisabled }" v-bind:disabled="stateOverlap" title="Choose whether labels can overlap each other or not.">
+                        </div>
+                    </div>
                 </div>
-                <div id="choose_overlap" class="col border-right">
-                    <span>Overlap Mode</span>
-                    <form>
-                        <input type="radio" class="radio-button" name="overlap_mode" value="overlap" v-model="active_overlap_mode" v-bind:class="{ disabled: isDisabled }" v-bind:disabled="stateOverlap"> Overlapping
-                        <br>
-                        <input type="radio" class="radio-button" name="overlap_mode" value="no-overlap" v-model="active_overlap_mode" v-bind:class="{ disabled: isDisabled }" v-bind:disabled="stateNoOverlap"> Non-overlapping
-                    </form>
-                </div>
-                <div id="semantic_labels" class="col border-right">
-                    <span>Label Classes</span>
-                    <form>
-                        <select v-model="active_label">                            
+                
+                <div class="col border-right">
+                    <div class="row">
+                        <div class="col">Label Class
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col">
+                            <select v-model="active_label">                            
                                 <option v-for="label in labels" :key="label.label_class" name="semantic_label" :value="label.label_class">{{ label.label_class }}</option>
-                        </select>
-                    </form>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row" style="margin-bottom: .5rem;">
+                    </div>
+                    <div class="row">
+                        <div class="col">
+                            <button width="100" style="width: 100px; white-space: nowrap"type="submit" @click="clearCanvas">Clear canvas</button>
+                        </div>
+                    </div>
                 </div>
                 <div id="graphics_settings"  class="col border-right">
                     <div id="stroke_slider_container">
@@ -73,16 +96,23 @@
                         </div>
                     </div>
                 </div>
-                <div id="clear_canvas_container" class="col">
-                    <button type="submit" @click="clearCanvas">Clear canvas</button>
-                </div>
                 <div class="col">
-                    <div class="row modal-button">
-                        <b-btn v-b-modal.hotkeyModal>Keyboard Shortcuts</b-btn>
+                    <div class="row">
+                        <div class="col">
+                            <div class="modal-button">
+                                <b-btn width="100" style="width:100px" v-b-modal.hotkeyModal>Hotkeys</b-btn>
+                            </div>
+                        </div>
                     </div>
-                    <div class="row modal-button">
-                        <b-btn v-if="label_examples != undefined" v-b-modal.exampleLabelingsModal>Labeling Examples</b-btn>
-                        <b-btn v-else v-b-modal.exampleLabelingsModal disabled>Labeling Examples</b-btn>
+                    <div class="row" style="margin-bottom: .5rem;">
+                    </div>
+                    <div class="row">
+                        <div class="col">
+                            <div class="modal-button">
+                                <b-btn width="100" style="width:100px" v-if="label_examples != undefined" v-b-modal.exampleLabelingsModal>Examples</b-btn>
+                                <b-btn width="100" style="width:100px" v-else v-b-modal.exampleLabelingsModal disabled>Examples</b-btn>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -128,6 +158,7 @@
                             v-bind:zoom_level="zoom_level"
                             ref="mySubComponent"
                             class="row"
+                            @interface="handleImageFilterCallback"
                             ></drawing-canvas>
             </div>
             <!-- use a v-if to display error with slot if no images found: https://vuejs.org/v2/guide/components.html#Content-Distribution-with-Slots -->
@@ -224,6 +255,7 @@ export default {
             stateCircle: true,
             save_timer: '',
             zoom_state: 100,
+            image_filter: "filter_all",
         };
     },
     created: function() {
@@ -404,12 +436,14 @@ export default {
     },
 
     methods: {
+        
         set_first_image: async function () {
             var old_input_data_id = this.input_data_id;
             var vm = this;
 
             if (this.input_data_id_start != undefined) {
                 // an initial image is specified, so load this image
+                
                 await this.$store.dispatch('image_labeling/set_initial_image', this.input_data_id_start);
 
                 console.log('^^^^^^^^^^^ deciding if to load labels', vm.input_data_id, old_input_data_id)
@@ -426,7 +460,9 @@ export default {
             }
             else {
                 // no initial image specified. Request a new unlabeled image
-                await this.$store.dispatch('image_labeling/next_image', this.label_task.label_task_id);
+                
+                var payload = {'task_id':this.label_task.label_task_id,'label_filter':this.image_filter}
+                await this.$store.dispatch('image_labeling/next_image', payload);
 
                 if (vm.input_data_id != old_input_data_id) {
                     console.log('^^^^^^^^^^^loading labels2')
@@ -450,13 +486,13 @@ export default {
 
             var old_input_data_id = this.input_data_id;
             var old_label_id = this.label_id;
-
             var vm = this;
 
             //upload the labels from the previous image
-            this.save_progress();
-
-            await vm.$store.dispatch('image_labeling/' + next_or_previous, vm.label_task.label_task_id)    // switch to the next image
+            this.save_progress();;
+            
+            var payload = {'task_id': vm.label_task.label_task_id, 'label_filter': this.image_filter}
+            await vm.$store.dispatch('image_labeling/' + next_or_previous, payload)    // switch to the next image
             .then(function() {
                 console.log('should load labels now...............', vm.input_data_id, old_input_data_id, vm.label_id, old_label_id)
                 if (vm.input_data_id != old_input_data_id) {
@@ -664,12 +700,18 @@ export default {
             this.change_radio_event = !this.change_radio_event;
         },
 
+        handleImageFilterCallback: function(filter){
+            this.image_filter = filter
+            this.save_progress();
+            this.$store.dispatch('image_labeling/change_filter');
+            this.set_first_image()
+        },
+
     },
 }
 </script>
 
 <style>
-#drawing-tools { border:black }
 .modal-button { padding-top: 0.2em }
 .icon-style {
     float: left;

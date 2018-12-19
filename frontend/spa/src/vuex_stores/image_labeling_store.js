@@ -2,6 +2,9 @@ import { getLatestLabeledImage,
          getPrecedingLabeledImage, 
          getFollowingLabeledImage, 
          getUnlabeledImage,
+         getPrecedingLabeledImageFiltered, 
+         getFirstLabeledImageFiltered,
+         getFollowingLabeledImageFiltered,
          } from '../../static/label_loading'
 
 import { uploadLabels,
@@ -74,29 +77,67 @@ export const StoreImageLabeling = {
             commit(SET_UNLABELED_IMAGES_AVAILABLE, true);
             commit(SET_PREVIOUS_IMAGES_AVAILABLE, true);
         },
+        
+        async change_filter({ commit }) {
+            console.log('Cleared ids after filter changed')
+            commit(CLEAR_INPUT_DATA_ID);
+            commit(CLEAR_LABEL_ID);
+            commit(SET_UNLABELED_IMAGES_AVAILABLE, true);
+            commit(SET_PREVIOUS_IMAGES_AVAILABLE, true);
+        }, 
 
-        async previous_image ({ commit, getters, dispatch }, label_task_id) {
+        async previous_image ({ commit, getters, dispatch }, payload) {
+            
+            var label_task_id = payload.task_id;
+            var label_filter = payload.label_filter;
 
             console.log('getting previous image')
 
             var input_data_id = undefined;
             var label_id = undefined;
 
-            if (getters.input_data_id == undefined) {
-                let data = await getLatestLabeledImage(label_task_id);
+            switch(label_filter){
+                case "filter_all":
+                    if (getters.input_data_id == undefined) {
+                        let data = await getLatestLabeledImage(label_task_id);
 
-                if (data != undefined) {
-                    input_data_id = data.input_data_id;
-                    label_id = data.label_id;
-                }
-            }
-            else {
-                let data = await getPrecedingLabeledImage(getters.input_data_id, label_task_id);
+                        if (data != undefined) {
+                            input_data_id = data.input_data_id;
+                            label_id = data.label_id;
+                        }
+                    }
+                    else {
+                        let data = await getPrecedingLabeledImage(getters.input_data_id, label_task_id);
 
-                if (data != undefined) {
-                    input_data_id = data.input_data_id;
-                    label_id = data.label_id;
-                }
+                        if (data != undefined) {
+                            input_data_id = data.input_data_id;
+                            label_id = data.label_id;
+                        }
+                    }
+                    break;
+                    
+                case "filter_complete":
+                case "filter_incomplete":
+                    if (getters.input_data_id == undefined) {
+                        console.log(label_filter + ' - getting image:', input_data_id, label_id)
+                        let data = await getFirstLabeledImageFiltered(label_task_id, label_filter);
+                        if (data != undefined) {
+                            input_data_id = data.input_data_id;
+                            label_id = data.label_id;
+                        }
+                    }
+                    else {
+                        console.log(label_filter + ' - getting image:', input_data_id, label_id)
+                        let next_data = await getPrecedingLabeledImageFiltered(getters.input_data_id, label_task_id, label_filter);
+                        if (next_data != undefined) {
+                            input_data_id = next_data.input_data_id;
+                            label_id = next_data.label_id;
+                        }
+                    }
+                    break;
+                    
+                default:
+                    console.log(label_filter + ' not implemented yet.')
             }
 
             if (input_data_id != undefined && label_id != undefined) {
@@ -110,38 +151,62 @@ export const StoreImageLabeling = {
             }
         },
 
-        async next_image ({ commit, getters, dispatch }, label_task_id) {
+        //async next_image ({ commit, getters, dispatch }, label_task_id) {
+        async next_image ({ commit, getters, dispatch }, payload) {
 
-            console.log('getting next image')
+            var label_task_id = payload.task_id;
+            var label_filter = payload.label_filter;
 
             var input_data_id = undefined;
             var label_id = undefined;
 
-            // firstly, check if the user has labeled another image following the current one
+            switch(label_filter){
+                case "filter_all":
+                    console.log('ALL: getting next image')
+                    // First look for all the labeled images
+                    console.log('input_data_id '+getters.input_data_id)
+                    if (getters.input_data_id != undefined) {
+                        let next_data = await getFollowingLabeledImage(getters.input_data_id, label_task_id);
 
-            if (getters.input_data_id != undefined) {
-                let next_data = await getFollowingLabeledImage(getters.input_data_id, label_task_id);
-
-                if (next_data != undefined) {
-                    input_data_id = next_data.input_data_id;
-                    label_id = next_data.label_id;
-                }
+                        if (next_data != undefined) {
+                            input_data_id = next_data.input_data_id;
+                            label_id = next_data.label_id;
+                        }
+                    }
+                    // if no next image found, request a new unlabeled image for the user to label
+                    if (input_data_id == undefined) {
+                        console.log('All: getting next image2:', input_data_id, label_id)
+                        let data = await getUnlabeledImage(label_task_id);
+                        if (data != undefined) {
+                            input_data_id = data.input_data_id;
+                            label_id = data.label_id;
+                        }
+                    }
+                    break;
+                    
+                case "filter_complete":
+                case "filter_incomplete":
+                    if (getters.input_data_id == undefined) {
+                        console.log(label_filter + ' - getting image: ', input_data_id, label_id)
+                        let data = await getFirstLabeledImageFiltered(label_task_id, label_filter);
+                        if (data != undefined) {
+                            input_data_id = data.input_data_id;
+                            label_id = data.label_id;
+                        }
+                    }
+                    else {
+                        console.log(label_filter + ' - getting image: ', input_data_id, label_id)
+                        let next_data = await getFollowingLabeledImageFiltered(getters.input_data_id, label_task_id, label_filter);
+                        if (next_data != undefined) {
+                            input_data_id = next_data.input_data_id;
+                            label_id = next_data.label_id;
+                        }
+                    }
+                    break;
+                    
+                default:
+                    console.log(label_filter + ' not implemented yet.')
             }
-
-            console.log('getting next image2:', input_data_id, label_id)
-
-            // if no next image found, request a new unlabeled image for the user to label
-
-            if (input_data_id == undefined) {
-                let data = await getUnlabeledImage(label_task_id);
-
-                if (data != undefined) {
-                    input_data_id = data.input_data_id;
-                    label_id = data.label_id;
-                }
-            }
-
-            console.log('getting next image3:', input_data_id, label_id)
 
             if (input_data_id != undefined && label_id != undefined) {
                 commit(SET_INPUT_DATA_ID, input_data_id);

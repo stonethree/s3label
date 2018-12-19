@@ -1,13 +1,31 @@
 <template>
-    <div class="canvas-section" style="position:static; display: inline;">
-        <div id="canvasesdiv" style="position:relative;" @mousedown.passive="mouseDownHandler" @mouseup.passive="mouseUpHandler" @mousemove.passive="mouseMoveHandler">
-            <canvas id="canvas-live" width="900" height="350" style="width:900px;height:350px; border: 1px solid #ccc; z-index: 4; position:absolute; left:50%; top:0px; transform: translate(-50%, 0);"></canvas>
-            <canvas id="canvas-fg" width="900" height="350" style="width:900px;height:350px; border: 1px solid #ccc; z-index: 3; position:absolute; left:50%; top:0px; transform: translate(-50%, 0);"></canvas>
-            <canvas id="canvas-bg" width="900" height="350" style="width:900px;height:350px; border: 1px solid #ccc; z-index: 2; position:absolute; left:50%; top:0px; transform: translate(-50%, 0);"></canvas>
-            <canvas id="canvas-pattern" width="900" height="350" style="width:900px;height:350px; border: 1px solid #ccc; z-index: 1; position:absolute; left:50%; top:0px; transform: translate(-50%, 0);"></canvas>
-            <span v-if="input_data_id == undefined" class="image-not-found">No more unlabeled images available for this label task. Thanks for the effort! 
-                <br>You may choose to label images from another <router-link v-bind:to="'/label_tasks'" >label task</router-link> if any are available.
-            </span>
+    <div class="canvas-section justify-content-center row">
+        <div class="col">
+            <div class="row justify-content-center" style="margin-top:50px;">
+                <div class="col">
+                    <div class="row justify-content-center">
+                        <label-status style="width:280px; margin-left: 15px; margin-right:15px" v-bind:label-id="label_id" v-bind:user-completed-toggle="label_status_toggler.user_complete"></label-status>
+                        <span style="margin-right:15px;">Filter</span> 
+                        <select v-on:change="filtered" v-model="image_filter">
+                            <option value="filter_all">No image filter</option>
+                            <option value="filter_complete">Images you have finished labeling</option>
+                            <option value="filter_incomplete">Images you have not finished labeling</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+                
+            <div class="row justify-content-center" id="canvasesdiv" @mousedown.passive="mouseDownHandler" @mouseup.passive="mouseUpHandler" @mousemove.passive="mouseMoveHandler">
+                <canvas id="canvas-live" width="900" height="350" style="position:absolute; width:900px;height:350px; border: 1px solid #ccc; z-index: 4; top:90px;"></canvas>
+                <canvas id="canvas-fg" width="900" height="350" style="position:absolute; width:900px;height:350px; border: 1px solid #ccc; z-index: 3; top:90px;"></canvas>
+                <canvas id="canvas-bg" width="900" height="350" style="position:absolute; width:900px;height:350px; border: 1px solid #ccc; z-index: 2; top:90px;"></canvas>
+                <canvas id="canvas-pattern" width="900" height="350" style="position:absolute; width:900px;height:350px; border: 1px solid #ccc; z-index: 1; top:90px;"></canvas>
+                <span id="user_info" class="image-not-found" style="display: block; top:100px">
+                    <span id="span_label_filter_text">&nbsp;</span>
+                    <br>
+                    <span id="span_label_filter_show_task">You may choose to label images from another <router-link v-bind:to="'/label_tasks'" >label task</router-link> if any are available.</span>
+                </span>
+            </div>
         </div>
     </div>
 </template>
@@ -148,6 +166,7 @@ export default {
             circle_radius: 20,
             last_mouse_pos: [],
             multiplier: 1,
+            image_filter: "filter_all",
         };
     },
     computed: {
@@ -352,6 +371,23 @@ export default {
                      edited: this.edited
             };
         },
+        
+        update_label_filter_text: function() {
+            if (document.getElementById("user_info").style.display == "block")
+            {
+                document.getElementById("span_label_filter_show_task").style.display = "none";
+                if (this.image_filter == "filter_all"){
+                    document.getElementById("span_label_filter_text").innerHTML = "No more unlabeled images available for this label task. Thanks for the effort!";
+                    document.getElementById("span_label_filter_show_task").style.display = "block";
+                }
+                else if (this.image_filter == "filter_complete"){
+                    document.getElementById("span_label_filter_text").innerHTML = "There are no more finished images for this task."
+                }
+                else if (this.image_filter == "filter_incomplete"){
+                    document.getElementById("span_label_filter_text").innerHTML = "There are no more unfinished images for this task."
+                }
+            }
+        },
 
         draw_image_unavailable_placeholder: function() {
             // draw a placeholder image to the canvas and state to the user that no unlabeled images found
@@ -360,7 +396,10 @@ export default {
             let canvas_fg = document.getElementById("canvas-fg");
             let canvas_lv = document.getElementById("canvas-live");
             let canvas_pattern = document.getElementById("canvas-pattern");
-            let ctx2 = canvas_bg.getContext("2d");  
+            let ctx2 = canvas_bg.getContext("2d");
+            
+            document.getElementById("user_info").style.display = "block";
+            this.update_label_filter_text();
 
             let w = 600;
             let h = 400;
@@ -372,6 +411,7 @@ export default {
             ctx2.fillRect(this.padX, this.padY, w, h);
 
             this.draw_pattern(w, h);
+
         },
 
         getMousePos: function (canvas, event) {
@@ -761,6 +801,7 @@ export default {
         fetchAndDisplayImage: function (pathToResource) {
 
             console.log('fetching im')
+            document.getElementById("user_info").style.display = "none"
             
             // let access_token = localStorage.getItem("s3_access_token");
 
@@ -825,6 +866,10 @@ export default {
             drawAllLabels(this, this.labels, this.multiplier);
             this.edited = true;
         },
+        
+        filtered: function() {
+            this.$emit('interface', this.image_filter)
+        },
 
         resize_canvas: function(mult) {
             console.log('resizing image...')
@@ -837,13 +882,13 @@ export default {
 
 
 <style>
+
 .arrow-style {
     float: left;
     width: fit-content;
     height: fit-content;
 }
-
-.canvas-section div { padding-top: 2em }
+.canvas-section div { padding-top: 0em }
 .image-not-found { position:absolute; 
                    left: 0; 
                    text-align: center;
