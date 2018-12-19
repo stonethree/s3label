@@ -82,7 +82,43 @@ def test_get_all_user_input_data(refresh_db_once, db_connection_sqlalchemy):
     assert_series_equal(df['input_data_id'], df_test['input_data_id'])
     assert_series_equal(df['user_id'], df_test['user_id'])
     assert_series_equal(df['label_task_id'], df_test['label_task_id'])
+    
+    
+def test_get_all_user_input_data_filtered(refresh_db_once, db_connection_sqlalchemy):
+    #filter incomplete
+    df_test = pd.DataFrame()
+    df_test['label_id'] = [1]
+    df_test['input_data_id'] = [1]
+    df_test['user_id'] = [1]
+    df_test['label_task_id'] = [1]
 
+    engine = db_connection_sqlalchemy
+    df = sql_queries.get_first_user_input_data(engine, user_id=1, label_task_id=1, label_filter = "filter_incomplete")
+    
+    print("Received first incomplete entry")
+
+    assert_series_equal(df['label_id'], df_test['label_id'])
+    assert_series_equal(df['input_data_id'], df_test['input_data_id'])
+    assert_series_equal(df['user_id'], df_test['user_id'])
+    assert_series_equal(df['label_task_id'], df_test['label_task_id'])
+    
+    #filter complete
+    df_test = pd.DataFrame()
+    df_test['label_id'] = [6]
+    df_test['input_data_id'] = [4]
+    df_test['user_id'] = [1]
+    df_test['label_task_id'] = [3]
+
+    engine = db_connection_sqlalchemy
+    df = sql_queries.get_first_user_input_data(engine, user_id=3, label_task_id=1, label_filter = "filter_incomplete")
+
+    assert_series_equal(df['label_id'], df_test['label_id'])
+    assert_series_equal(df['input_data_id'], df_test['input_data_id'])
+    assert_series_equal(df['user_id'], df_test['user_id'])
+    assert_series_equal(df['label_task_id'], df_test['label_task_id'])  
+    
+    print("Received first complete entry")
+ 
 
 def test_get_preceding_user_data_item(refresh_db_once, db_connection_sqlalchemy):
     df_test = pd.DataFrame()
