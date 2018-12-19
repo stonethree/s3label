@@ -110,14 +110,9 @@ def test_get_all_user_input_data_filtered(refresh_db_once, db_connection_sqlalch
     df_test['label_task_id'] = [3]
 
     engine = db_connection_sqlalchemy
-    df = sql_queries.get_first_user_input_data(engine, user_id=3, label_task_id=1, label_filter = "filter_incomplete")
+    df = sql_queries.get_first_user_input_data(engine, user_id=3, label_task_id=1, label_filter = "filter_complete")
 
-    assert_series_equal(df['label_id'], df_test['label_id'])
-    assert_series_equal(df['input_data_id'], df_test['input_data_id'])
-    assert_series_equal(df['user_id'], df_test['user_id'])
-    assert_series_equal(df['label_task_id'], df_test['label_task_id'])  
-    
-    print("Received first complete entry")
+    assert len(df) == 0  
  
 
 def test_get_preceding_user_data_item(refresh_db_once, db_connection_sqlalchemy):
