@@ -252,6 +252,73 @@ def get_next_or_preceding_input_data_item(label_task_id):
         resp = make_response(jsonify(error='No labeled data found for this user and/or label task'), 404)
         resp.mimetype = "application/javascript"
         return resp
+        
+        
+@ebp.route('/image_labeler/api/v1.0/labeled_data/label_tasks/<int:label_task_id>/filter/<label_filter>', methods=['GET'])
+@fje.jwt_required
+def get_next_or_preceding_input_data_item_filtered(label_task_id, label_filter):
+    """
+    Get next or preceding data item for the user based on the filter.
+
+    The current input data ID is given, then the item following or preceding it (in order of label ID) is returned.
+
+    :param label_task_id:
+    :return:
+    """
+
+    engine = current_app.config['engine']
+
+    # check that the user has permission to get the requested data: admin users can get any user's data, but an
+    # ordinary user can only get their own data
+
+    user_identity = fje.get_jwt_identity()
+    user_id_from_auth = ua.get_user_id_from_token(user_identity)
+
+    # get the ID of the input data item to end the selection at
+
+    current_input_data_id = request.args.get('current_input_data_id', None)
+    action = request.args.get('action', None)
+
+    if action is None or action not in ['next', 'previous']:
+        resp = make_response(jsonify(error='Must specify whether to return next data item (action="next") or previous '
+                                           'data item (action="previous")'), 400)
+        resp.mimetype = "application/javascript"
+        return resp
+
+    try:
+        current_input_data_id = int(current_input_data_id)
+    except (ValueError, TypeError):
+        resp = make_response(jsonify(error='current_input_data_id must be an integer'), 400)
+        resp.mimetype = "application/javascript"
+        return resp
+
+    if current_input_data_id is None:
+        resp = make_response(jsonify(error='Need to specify current input data ID'), 400)
+        resp.mimetype = "application/javascript"
+        return resp
+
+    try:
+        if action == 'previous':
+            df_input_data = sql_queries.get_preceding_user_data_item_filtered(engine,
+                                                                     user_id=user_id_from_auth,
+                                                                     label_task_id=label_task_id,
+                                                                     current_input_data_id=current_input_data_id,
+                                                                     label_filter=label_filter)
+        else:
+            df_input_data = sql_queries.get_next_user_data_item_filtered(engine,
+                                                                user_id=user_id_from_auth,
+                                                                label_task_id=label_task_id,
+                                                                current_input_data_id=current_input_data_id,
+                                                                label_filter=label_filter)
+
+        resp = make_response(df_input_data.to_json(orient='records'), 200)
+        resp.mimetype = "application/javascript"
+        return resp
+    except Exception as e:
+        logger.error(e)
+        resp = make_response(jsonify(error='No labeled data found for this user and/or label task'), 404)
+        resp.mimetype = "application/javascript"
+        return resp
 
 
 @ebp.route('/image_labeler/api/v1.0/item_counts', methods=['GET'])
@@ -359,6 +426,62 @@ def get_all_user_input_data(label_task_id, user_id):
                                                             label_task_id=label_task_id,
                                                             n=num_labeled_images)
 
+        resp = make_response(df_input_data.to_json(orient='records'), 200)
+        resp.mimetype = "application/javascript"
+        return resp
+    except Exception as e:
+        logger.error(e)
+        resp = make_response(jsonify(error='No input data found for this user and/or label task'), 404)
+        resp.mimetype = "application/javascript"
+        return resp
+        
+@ebp.route('/image_labeler/api/v1.0/all_data/label_tasks/<int:label_task_id>/users/<user_id>/filter/<label_filter>', methods=['GET'])
+@fje.jwt_required
+def get_first_user_input_data(label_task_id, user_id, label_filter):
+    """
+    Get the ID of the first input_data item that matches the filter.
+
+    :param label_task_id:
+    :param user_id:
+    :param label_filter
+    :return:
+    """
+
+    engine = current_app.config['engine']
+
+    # check that the user has permission to get the requested data: admin users can get any user's data, but an
+    # ordinary user can only get their own data
+
+    user_identity = fje.get_jwt_identity()
+    user_id_from_auth = ua.get_user_id_from_token(user_identity)
+
+    # get user ID specified
+
+    try:
+        user_id = int(user_id)
+    except ValueError:
+        if user_id == 'own':
+            user_id = user_id_from_auth
+        else:
+            resp = make_response(jsonify(error='Must either specify ".../user_id/own" or ".../user_id/<user_id>"'), 405)
+            resp.mimetype = "application/javascript"
+            return resp
+
+    if user_id != user_id_from_auth:
+        is_admin = sql_queries_admin.is_user_an_admin(engine, user_id_from_auth)
+
+        if is_admin is None or not is_admin:
+            resp = make_response(jsonify(error='Not permitted to view this content. Must be an admin user.'), 403)
+            resp.mimetype = "application/javascript"
+            return resp
+
+    try:
+        df_input_data = sql_queries.get_first_user_input_data(engine,
+                                                            user_id=user_id,
+                                                            label_task_id=label_task_id,
+                                                            label_filter=label_filter)
+        logger.debug(df_input_data.to_json(orient='records'))
+                                                            
         resp = make_response(df_input_data.to_json(orient='records'), 200)
         resp.mimetype = "application/javascript"
         return resp
