@@ -30,10 +30,10 @@
                     </div>
                     <div class="row">
                         <div class="col">
-                            <select width="100" style="width: 100px"  id="mode_form">
-                                <option class="radio-button" name="mode" value="new" v-model="active_mode" v-bind:class="{ disabled: isDisabled }" v-bind:disabled="stateNew"> New </option>
-                                <option class="radio-button" name="mode" value="append" v-model="active_mode" v-bind:class="{ disabled: isDisabled }" v-bind:disabled="stateAppend"> Append </option>
-                                <option class="radio-button" name="mode" value="erase" v-model="active_mode" v-bind:class="{ disabled: isDisabled }" v-bind:disabled="stateErase"> Erase </option>
+                            <select width="100" style="width: 100px"  id="mode_form" v-model="active_mode" v-bind:class="{ disabled: isDisabled }" v-bind:disabled="stateNew">
+                                <option class="radio-button" name="mode" value="new"> New </option>
+                                <option class="radio-button" name="mode" value="append"> Append </option>
+                                <option class="radio-button" name="mode" value="erase"> Erase </option>
                             </select>
                         </div>
                     </div>
