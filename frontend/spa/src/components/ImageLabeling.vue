@@ -11,12 +11,7 @@
                         <div class="row">
                             <div class="col">
                                 <select width="100" style="width: 100px" id="tools_form" v-on:change="tool_selected" v-model="active_tool">
-                                    <option class="radio-button" name="tool" value="freehand"> Freehand </option>
-                                    <option class="radio-button" name="tool" value="polygon"> Polygon </option>
-                                    <option class="radio-button" name="tool" value="rectangle"> Rectangle </option>
-                                    <option class="radio-button" name="tool" value="point"> Point </option>
-                                    <option class="radio-button" name="tool" value="circle" Circle </option>
-                                    <option class="radio-button" name="tool" value="select"> Select </option>
+                                    <option v-for="(value,key) in tools_list" name="tool" :value="key"">{{ value }}</option>
                                 </select>
                             </div>
                         </div>
@@ -263,6 +258,7 @@ export default {
                 { key: 'H', action: 'Temporarily hide labels<br><em>Useful for checking the edge of the label against the underlying image</em>' },
                 { key: '1, 2, ...', action: 'Select label class' },
             ],
+            tools_list: {},
             mode_disabled: false,
             overlap_mode_disabled: false,
             label_status_toggler: {user_complete: false},
@@ -318,7 +314,8 @@ export default {
     },
     mounted() {
         // initialise active label to the first label in the set
-
+        console.log("Mounted")
+        this.disableDrawTools();
         if (this.labels != undefined && this.labels.length > 0) {
             this.active_label = this.labels[0].label_class;
         }
@@ -635,6 +632,7 @@ export default {
             this.clear_canvas_event = !this.clear_canvas_event;
             console.log('clear canvas called', this.clear_canvas_event)
         },
+        
         changeRadio: function(){
             this.change_radio_event = !this.change_radio_event;
         },
@@ -644,7 +642,50 @@ export default {
             this.$store.dispatch('image_labeling/change_filter');
             this.set_first_image()
         },
-
+        
+        defaultDrawTools: function() {
+            this.tools_list = {};
+            this.tools_list["freehand"] = "Freehand";
+            this.tools_list["polygon"] = "Polygon";
+            this.tools_list["rectangle"] = "Rectangle";
+            this.tools_list["point"] = "Point";
+            this.tools_list["circle"] = "Circle";
+        },
+        
+        disableDrawTools: function() {
+            console.log("disableDrawTools")
+            var enabled_tools = [];
+            if (this.allowed_tools != null && this.allowed_tools != 'none') {
+                enabled_tools = this.allowed_tools.split(", ");
+            }
+            this.active_tool = this.default_tool;
+            enabled_tools.push(this.default_tool);
+            console.log(enabled_tools)
+            this.tools_list = {};
+            for (let i = 0; i < enabled_tools.length; i++) {
+                switch(enabled_tools[i]) {
+                    case 'freehand':
+                        this.tools_list["freehand"]="Freehand"
+                        break;
+                    case 'polygon':
+                        this.tools_list["polygon"]="Polygon"
+                        break;
+                    case 'rectangle':
+                        this.tools_list["rectangle"]="Rectangle"
+                        break;
+                    case 'point':
+                        this.tools_list["point"]="Point"
+                        break;
+                    case 'circle':
+                        this.tools_list["circle"]="Circle"
+                        break;
+                    case 'null':
+                        defaultDrawTools();
+                        break;
+                }
+            }
+        },
+        
     },
 }
 </script>
