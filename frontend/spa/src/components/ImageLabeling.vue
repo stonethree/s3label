@@ -2,134 +2,181 @@
     <div id="image_labeling" class="container" >
         <div id="drawingtools" class="row">
             <div class="col">
-            <div class="row justify-content-center">
-                <div id="tools" class="col border-right">
-                    <span>Tools</span>
-                    <form id="tools_form" @mousedown=changeRadio()>
-                        <input type="radio" class="radio-button" name="tool" value="freehand" v-model="active_tool" :class="{ disabled: disableDrawTools }" :disabled="stateFreehand"> Freehand
-                        <br>
-                        <input type="radio" class="radio-button" name="tool" value="polygon" v-model="active_tool" :class="{ disabled: disableDrawTools }" :disabled="statePoly"> Polygon
-                        <br>
-                        <input type="radio" class="radio-button" name="tool" value="rectangle" v-model="active_tool" :class="{ disabled: disableDrawTools }" :disabled="stateRect"> Rectangle
-                        <br>
-                        <input type="radio" class="radio-button" name="tool" value="point" v-model="active_tool" :class="{ disabled: disableDrawTools }" :disabled="statePoint"> Point
-                        <br>
-                        <input type="radio" class="radio-button" name="tool" value="circle" v-model="active_tool" :class="{ disabled: disableDrawTools }" :disabled="stateCircle"> Circle
-                        <br>
-                        <input type="radio" class="radio-button" name="tool" value="select" v-model="active_tool"> Select
-                    </form>
-                </div>
-                <div id="tool_modes" class="col border-right">
-                    <span>Modes</span>
-                    <form id="mode_form">
-                        <input type="radio" class="radio-button" name="mode" value="new" v-model="active_mode" v-bind:class="{ disabled: isDisabled }" v-bind:disabled="stateNew"> New
-                        <br>
-                        <input type="radio" class="radio-button" name="mode" value="append" v-model="active_mode" v-bind:class="{ disabled: isDisabled }" v-bind:disabled="stateAppend"> Append
-                        <br>
-                        <input type="radio" class="radio-button" name="mode" value="erase" v-model="active_mode" v-bind:class="{ disabled: isDisabled }" v-bind:disabled="stateErase"> Erase
-                    </form>
-                </div>
-                <div id="choose_overlap" class="col border-right">
-                    <span>Overlap Mode</span>
-                    <form>
-                        <input type="radio" class="radio-button" name="overlap_mode" value="overlap" v-model="active_overlap_mode" v-bind:class="{ disabled: isDisabled }" v-bind:disabled="stateOverlap"> Overlapping
-                        <br>
-                        <input type="radio" class="radio-button" name="overlap_mode" value="no-overlap" v-model="active_overlap_mode" v-bind:class="{ disabled: isDisabled }" v-bind:disabled="stateNoOverlap"> Non-overlapping
-                    </form>
-                </div>
-                <div id="semantic_labels" class="col border-right">
-                    <span>Label Classes</span>
-                    <form>
-                        <select v-model="active_label">                            
-                                <option v-for="label in labels" :key="label.label_class" name="semantic_label" :value="label.label_class">{{ label.label_class }}</option>
-                        </select>
-                    </form>
-                </div>
-                <div id="graphics_settings"  class="col border-right">
-                    <div id="stroke_slider_container">
-                        <span>Stroke thickness</span>
-                        <input id="stroke_thickness_slider" type="range" min="0" max="10" class="slider" v-model="stroke_slider_value">
+                <div class="row justify-content-center">
+                    <div id="tools" class="col border-right">
+                        <div class="row">
+                            <div class="col">Drawing Tool
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col">
+                                <select width="100" style="width: 100px" id="tools_form" v-on:change="tool_selected" v-model="active_tool">
+                                    <option v-for="(value,key) in tools_list" name="tool" :value="key">{{ value }}</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row" style="margin-bottom: 0.5rem">
+                        </div>
+                        <div class="row">
+                            <div class="col">Zoom
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col" v-bind:key="zoom_state">
+                                <i class="fa fa-search-minus" @click="keyDownHandler($event = {code: 'BracketLeft'})" style="cursor: pointer;"></i>
+                                {{ zoom_state }}%
+                                <i class="fa fa-search-plus" @click="keyDownHandler($event = {code: 'BracketRight'})" style="cursor: pointer;"></i>
+                            </div>
+                        </div>
                     </div>
-                    <div id="opacity_slider_container">
-                        <span>Opacity</span>
-                        <input id="opacity_slider" type="range" min="0" max="100" class="slider" v-model="opacity_slider_value">
+                     
+                    <div id="tool_modes" class="col border-right">
+                        <div class="row">
+                            <div class="col"> Freehand Mode
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col">
+                                <select width="100" style="width: 100px"  id="mode_form" v-model="active_mode" v-bind:disabled="mode_disabled">
+                                    <option class="radio-button" name="mode" value="new"> New </option>
+                                    <option class="radio-button" name="mode" value="append"> Append </option>
+                                    <option class="radio-button" name="mode" value="erase"> Erase </option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row" style="margin-bottom: 0.5rem">
+                        </div>
+                        <div class="row">
+                            <div class="col"> Allow Overlap
+                            </div>
+                        </div>
+                        <div class="row justify-content-left" >
+                            <div class="col">
+                                <select width="100" style="width: 100px"  id="overlap_mode" v-model="active_overlap_mode" v-bind:disabled="overlap_mode_disabled" title="Choose whether labels can overlap each other or not.">
+                                    <option class="radio-button" name="mode" value="overlap"> Yes </option>
+                                    <option class="radio-button" name="mode" value="no-overlap"> No </option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
-                </div>
-                <div id="image_settings"  class="col border-right">
-                    <div id="brightness_slider_container">
-                        <span>Brightness</span>
-                        <input id="brightness_slider" type="range" min="-100" max="100" class="slider" v-model="brightness_slider_value">
+                    
+                    <div class="col border-right">
+                        <div class="row">
+                            <div class="col">Label Class
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col">
+                                <select v-model="active_label">                            
+                                    <option v-for="label in labels" :key="label.label_class" name="semantic_label" :value="label.label_class">{{ label.label_class }}</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row" style="margin-bottom: .7rem;">
+                        </div>
+                        <div class="row">
+                            <div class="col">
+                                <button width="100" style="width: 100px; white-space: nowrap" type="submit" @click="clearCanvas">Clear canvas</button>
+                            </div>
+                        </div>
                     </div>
-                    <div id="contrast_slider_container">
-                        <span>Contrast</span>
-                        <input id="contrast_slider" type="range" min="-100" max="100" class="slider" v-model="contrast_slider_value">
+                    <div id="graphics_settings"  class="col border-right">
+                        <div id="stroke_slider_container">
+                            <span>Stroke thickness</span>
+                            <input id="stroke_thickness_slider" type="range" min="0" max="10" class="slider" v-model="stroke_slider_value">
+                        </div>
+                        <div id="opacity_slider_container">
+                            <span>Opacity</span>
+                            <input id="opacity_slider" type="range" min="0" max="100" class="slider" v-model="opacity_slider_value">
+                        </div>
                     </div>
-                    <div id="zoom_mode">
-                        <span>Zoom</span>
-                        <div v-bind:key="zoom_state">
-                            <i class="fa fa-search-minus" @click="keyDownHandler($event = {code: 'BracketLeft'})" style="cursor: pointer;"></i>
-                            {{ zoom_state }}%
-                            <i class="fa fa-search-plus" @click="keyDownHandler($event = {code: 'BracketRight'})" style="cursor: pointer;"></i>
+                    <div id="image_settings"  class="col border-right">
+                        <div id="brightness_slider_container">
+                            <span>Brightness</span>
+                            <input id="brightness_slider" type="range" min="-100" max="100" class="slider" v-model="brightness_slider_value">
+                        </div>
+                        <div id="contrast_slider_container">
+                            <span>Contrast</span>
+                            <input id="contrast_slider" type="range" min="-100" max="100" class="slider" v-model="contrast_slider_value">
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="row">
+                            <div class="col">
+                                <div class="modal-button">
+                                    <b-btn width="100" style="width:100px" v-b-modal.hotkeyModal>Hotkeys</b-btn>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row" style="margin-bottom: .5rem;">
+                        </div>
+                        <div class="row">
+                            <div class="col">
+                                <div class="modal-button">
+                                    <b-btn width="100" style="width:100px" v-if="label_examples != undefined" v-b-modal.exampleLabelingsModal>Examples</b-btn>
+                                    <b-btn width="100" style="width:100px" v-else v-b-modal.exampleLabelingsModal disabled>Examples</b-btn>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
-                <div id="clear_canvas_container" class="col">
-                    <button type="submit" @click="clearCanvas">Clear canvas</button>
-                </div>
-                <div class="col">
-                    <div class="row modal-button">
-                        <b-btn v-b-modal.hotkeyModal>Keyboard Shortcuts</b-btn>
-                    </div>
-                    <div class="row modal-button">
-                        <b-btn v-if="label_examples != undefined" v-b-modal.exampleLabelingsModal>Labeling Examples</b-btn>
-                        <b-btn v-else v-b-modal.exampleLabelingsModal disabled>Labeling Examples</b-btn>
-                    </div>
-                </div>
-            </div>
             </div>
         </div>
     
         <br>
-        <div class="row justify-content-center" style="width: fit-content; display: inline;">
+        <div class="row" style="padding-top:30px; padding-bottom:10px">
             <div class="col">
-                <div  id="labelstatusdiv">
-                    <div style="width: fit-content; height: 35px; margin: 0 auto;">
-                        <div @click="switch_image('previous_image')" class="icon-style">
-                            <span class="fa-stack"><i class="fa fa-arrow-circle-left"></i></span>
-                        </div>
-                        <label-status v-bind:label-id="label_id" v-bind:user-completed-toggle="label_status_toggler.user_complete" class="label-status-style"></label-status>
-                        <div @click="switch_image('next_image')" class="icon-style">
-                            <span class="fa-stack"><i class="fa fa-arrow-circle-right"></i></span>
-                        </div>
-                    </div>
+                <div @click="switch_image('previous_image')" class="icon-style-left">
+                    <span class="fa-stack"><i class="fa fa-arrow-circle-left"></i></span>
                 </div>
-                <drawing-canvas
-                            v-bind:active_tool="active_tool"
-                            v-bind:active_mode="active_mode"
-                            v-bind:active_overlap_mode="active_overlap_mode"
-                            v-bind:active_label="active_label"
-                            v-bind:input_data_id="input_data_id"
-                            v-bind:label_task_id="label_task.label_task_id"
-                            v-bind:stroke_thickness="stroke_thickness"
-                            v-bind:use_stroke="use_stroke"
-                            v-bind:opacity="opacity"
-                            v-bind:brightness="brightness"
-                            v-bind:contrast="contrast"
-                            v-bind:clear_canvas_event="clear_canvas_event"
-                            v-bind:delete_event="delete_event"
-                            v-bind:deselect_event="deselect_event"
-                            v-bind:undo_event="undo_event"
-                            v-bind:redo_event="redo_event"
-                            v-bind:hide_labels="hide_labels"
-                            v-bind:increase_circle_event="increase_circle_event"
-                            v-bind:decrease_circle_event="decrease_circle_event"
-                            v-bind:change_radio_event ="change_radio_event"
-                            v-bind:switch_label_event="switch_label_event"
-                            v-bind:zoom_level="zoom_level"
-                            ref="mySubComponent"
-                            class="row"
-                            ></drawing-canvas>
             </div>
+            <div class="col">
+                <label-status v-bind:label-id="label_id" v-bind:user-completed-toggle="label_status_toggler.user_complete" class="label-status-style" style="width:370px;"></label-status>
+            </div>
+            <div class="col">   
+                <span style="float:right">Filter</span>
+            </div>
+            <div class="col">
+                <select v-on:change="filtered" v-model="image_filter">
+                    <option value="filter_all">No image filter</option>
+                    <option value="filter_complete">Images you have finished labeling</option>
+                    <option value="filter_incomplete">Images you have not finished labeling</option>
+                </select>
+            </div>
+            <div class="col">
+                <div @click="switch_image('next_image')" class="icon-style-right">
+                    <span class="fa-stack"><i class="fa fa-arrow-circle-right"></i></span>
+                </div>
+            </div>
+        </div>
+        <div class="row justify-content-center">
+            <drawing-canvas
+                    v-bind:active_tool="active_tool"
+                    v-bind:active_mode="active_mode"
+                    v-bind:active_overlap_mode="active_overlap_mode"
+                    v-bind:active_label="active_label"
+                    v-bind:input_data_id="input_data_id"
+                    v-bind:label_task_id="label_task.label_task_id"
+                    v-bind:stroke_thickness="stroke_thickness"
+                    v-bind:use_stroke="use_stroke"
+                    v-bind:opacity="opacity"
+                    v-bind:brightness="brightness"
+                    v-bind:contrast="contrast"
+                    v-bind:clear_canvas_event="clear_canvas_event"
+                    v-bind:delete_event="delete_event"
+                    v-bind:deselect_event="deselect_event"
+                    v-bind:undo_event="undo_event"
+                    v-bind:redo_event="redo_event"
+                    v-bind:hide_labels="hide_labels"
+                    v-bind:increase_circle_event="increase_circle_event"
+                    v-bind:decrease_circle_event="decrease_circle_event"
+                    v-bind:change_radio_event ="change_radio_event"
+                    v-bind:switch_label_event="switch_label_event"
+                    v-bind:zoom_level="zoom_level"
+                    v-bind:image_filter="image_filter"
+                    ref="mySubComponent"
+                    >
+            </drawing-canvas>
             <!-- use a v-if to display error with slot if no images found: https://vuejs.org/v2/guide/components.html#Content-Distribution-with-Slots -->
         </div>
 
@@ -211,19 +258,13 @@ export default {
                 { key: 'H', action: 'Temporarily hide labels<br><em>Useful for checking the edge of the label against the underlying image</em>' },
                 { key: '1, 2, ...', action: 'Select label class' },
             ],
-            stateNew: true,
-            stateAppend: true,
-            stateErase: true,
-            stateOverlap: true,
-            stateNoOverlap: false,
+            tools_list: {},
+            mode_disabled: false,
+            overlap_mode_disabled: false,
             label_status_toggler: {user_complete: false},
-            stateFreehand: true,
-            statePoly: true,
-            stateRect: true,
-            statePoint: true,
-            stateCircle: true,
             save_timer: '',
             zoom_state: 100,
+            image_filter: "filter_all",
         };
     },
     created: function() {
@@ -263,93 +304,6 @@ export default {
         contrast: function() {
             return parseFloat(this.contrast_slider_value) / 100.;
         },
-        isDisabled: function() {
-            switch (this.active_tool) {
-                case 'freehand':
-                    this.stateNew = false;
-                    this.stateAppend = false;
-                    this.stateErase = false;
-                    this.stateOverlap = false;
-                    this.stateNoOverlap = false;
-                    break;
-                case 'polygon':
-                    this.active_overlap_mode = 'overlap';
-                    this.stateNew = false;
-                    this.stateAppend = false;
-                    this.stateErase = false;
-                    this.stateOverlap = false;
-                    this.stateNoOverlap = true;
-                    break;
-                case 'rectangle':
-                    this.active_mode = 'new';
-                    this.active_overlap_mode = 'overlap';
-                    this.stateNew = false;
-                    this.stateAppend = true;
-                    this.stateErase = true;
-                    this.stateOverlap = false;
-                    this.stateNoOverlap = true;
-                    break;
-                case 'point':
-                    this.active_mode = 'new';
-                    this.active_overlap_mode = 'overlap';
-                    this.stateNew = false;
-                    this.stateAppend = true;
-                    this.stateErase = true;
-                    this.stateOverlap = false;
-                    this.stateNoOverlap = true;
-                    break;
-                case 'circle':
-                    this.active_mode = 'new';
-                    this.active_overlap_mode = 'overlap';
-                    this.stateNew = false;
-                    this.stateAppend = true;
-                    this.stateErase = true;
-                    this.stateOverlap = false;
-                    this.stateNoOverlap = true;
-                    break;
-                case 'select':
-                    this.stateNew = true;
-                    this.stateAppend = true;
-                    this.stateErase = true;
-                    this.stateOverlap = true;
-                    this.stateNoOverlap = true;
-                    break;
-            }
-        },
-        disableDrawTools: function() {
-            var enabled_tools = [];
-            if (this.allowed_tools != null && this.allowed_tools != 'none') {
-                enabled_tools = this.allowed_tools.split(", ");
-            }
-            this.active_tool = this.default_tool;
-            enabled_tools.push(this.default_tool);
-            for (let i = 0; i < enabled_tools.length; i++) {
-                switch(enabled_tools[i]) {
-                    case 'freehand':
-                        this.stateFreehand = false;
-                        break;
-                    case 'polygon':
-                        this.statePoly = false;
-                        break;
-                    case 'rectangle':
-                        this.stateRect = false;
-                        break;
-                    case 'point':
-                        this.statePoint = false;
-                        break;
-                    case 'circle':
-                        this.stateCircle = false;
-                        break;
-                    case 'null':
-                        this.stateFreehand = false;
-                        this.statePoly = false;
-                        this.stateRect = false;
-                        this.statePoint = false;
-                        this.stateCircle = false;
-                        break;
-                }
-            }
-        },
         zoom_level: function() {
             return this.zoom_state;
         }
@@ -360,7 +314,9 @@ export default {
     },
     mounted() {
         // initialise active label to the first label in the set
-
+        console.log("Mounted")
+        this.disableDrawTools();
+        this.tool_selected();
         if (this.labels != undefined && this.labels.length > 0) {
             this.active_label = this.labels[0].label_class;
         }
@@ -404,12 +360,27 @@ export default {
     },
 
     methods: {
+        
+        tool_selected: function() {
+            console.log("tool_selected: "+this.active_tool)
+            if (this.active_tool == "freehand"){
+                this.mode_disabled = false;
+                this.overlap_mode_disabled = false;
+            }
+            else {
+                this.mode_disabled = true;
+                this.overlap_mode_disabled = true;
+                this.active_overlap_mode = "overlap"
+            }
+        },
+        
         set_first_image: async function () {
             var old_input_data_id = this.input_data_id;
             var vm = this;
 
             if (this.input_data_id_start != undefined) {
                 // an initial image is specified, so load this image
+                
                 await this.$store.dispatch('image_labeling/set_initial_image', this.input_data_id_start);
 
                 console.log('^^^^^^^^^^^ deciding if to load labels', vm.input_data_id, old_input_data_id)
@@ -426,7 +397,9 @@ export default {
             }
             else {
                 // no initial image specified. Request a new unlabeled image
-                await this.$store.dispatch('image_labeling/next_image', this.label_task.label_task_id);
+                
+                var payload = {'task_id':this.label_task.label_task_id,'label_filter':this.image_filter}
+                await this.$store.dispatch('image_labeling/next_image', payload);
 
                 if (vm.input_data_id != old_input_data_id) {
                     console.log('^^^^^^^^^^^loading labels2')
@@ -450,13 +423,13 @@ export default {
 
             var old_input_data_id = this.input_data_id;
             var old_label_id = this.label_id;
-
             var vm = this;
 
             //upload the labels from the previous image
-            this.save_progress();
-
-            await vm.$store.dispatch('image_labeling/' + next_or_previous, vm.label_task.label_task_id)    // switch to the next image
+            this.save_progress();;
+            
+            var payload = {'task_id': vm.label_task.label_task_id, 'label_filter': this.image_filter}
+            await vm.$store.dispatch('image_labeling/' + next_or_previous, payload)    // switch to the next image
             .then(function() {
                 console.log('should load labels now...............', vm.input_data_id, old_input_data_id, vm.label_id, old_label_id)
                 if (vm.input_data_id != old_input_data_id) {
@@ -660,25 +633,75 @@ export default {
             this.clear_canvas_event = !this.clear_canvas_event;
             console.log('clear canvas called', this.clear_canvas_event)
         },
+        
         changeRadio: function(){
             this.change_radio_event = !this.change_radio_event;
         },
 
+        filtered: function(){
+            this.save_progress();
+            this.$store.dispatch('image_labeling/change_filter');
+            this.set_first_image()
+        },
+        
+        defaultDrawTools: function() {
+            this.tools_list = {};
+            this.tools_list["freehand"] = "Freehand";
+            this.tools_list["polygon"] = "Polygon";
+            this.tools_list["rectangle"] = "Rectangle";
+            this.tools_list["point"] = "Point";
+            this.tools_list["circle"] = "Circle";
+            this.tools_list["select"] = "Select";
+        },
+        
+        disableDrawTools: function() {
+            console.log("disableDrawTools")
+            var enabled_tools = [];
+            if (this.allowed_tools != null && this.allowed_tools != 'none') {
+                enabled_tools = this.allowed_tools.split(", ");
+            }
+            this.active_tool = this.default_tool;
+            enabled_tools.push(this.default_tool);
+            console.log(enabled_tools)
+            this.tools_list = {};
+            for (let i = 0; i < enabled_tools.length; i++) {
+                switch(enabled_tools[i]) {
+                    case 'freehand':
+                        this.tools_list["freehand"]="Freehand"
+                        break;
+                    case 'polygon':
+                        this.tools_list["polygon"]="Polygon"
+                        break;
+                    case 'rectangle':
+                        this.tools_list["rectangle"]="Rectangle"
+                        break;
+                    case 'point':
+                        this.tools_list["point"]="Point"
+                        break;
+                    case 'circle':
+                        this.tools_list["circle"]="Circle"
+                        break;
+                    case 'null':
+                        defaultDrawTools();
+                        break;
+                }
+            }
+            this.tools_list["select"]="Select";
+        },
+        
     },
 }
 </script>
 
 <style>
-#drawing-tools { border:black }
 .modal-button { padding-top: 0.2em }
-.icon-style {
-    float: left;
-    width: fit-content;
-    height: fit-content;
+.icon-style-left {
+    float: right;
     cursor: pointer;
 }
-.label-status-style {
-    width: fit-content;
+.icon-style-right {
     float: left;
+    cursor: pointer;
 }
+
 </style>

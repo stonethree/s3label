@@ -76,3 +76,9 @@ Run the application. Application will then be running at http://localhost.8080
 ~~~ bash
 npm run dev
 ~~~
+
+### Running unit test
+Ensure pytest is intalled
+~~~ bash
+sudo apt install pytest
+~~~

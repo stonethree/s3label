@@ -155,6 +155,53 @@ def get_all_user_input_data(engine, user_id, label_task_id, n):
                                                       'label_task_id': label_task_id})
 
     return df
+    
+    
+def get_all_user_input_data_filtered(engine, user_id, label_task_id, label_filter):
+    """
+    Get the first input_data item that matches the filter.
+
+    :param engine:
+    :param user_id:
+    :param label_task_id:
+    :param label_filter: filter indicating user_complete or user_incomplete 
+    :return:
+    """
+
+    # Apply the filter
+
+    if label_filter == "filter_complete":
+        complete = True
+    else:
+        complete = False
+
+    fields = 'label_id, input_data_id, label_task_id, label_history_id, user_id, user_complete, needs_improvement, ' \
+             'admin_complete, paid, include_in_test_set, user_comment, admin_comment, timestamp_edit'
+
+    sql_query = """
+    SELECT {fields} FROM latest_label_history a WHERE user_id=%(user_id)s AND label_task_id=%(label_task_id)s AND user_complete={complete}
+    AND label_history_id > 0 ORDER BY label_id ASC""".format(fields=fields, complete=complete)
+
+    df = pd.read_sql_query(sql_query, engine, params={'user_id': user_id,
+                                                      'label_task_id': label_task_id})
+
+    return df
+    
+
+def get_first_user_input_data(engine, user_id, label_task_id, label_filter):
+    """
+    Get the first input_data item that matches the filter.
+
+    :param engine:
+    :param user_id:
+    :param label_task_id:
+    :param label_filter: filter indicating user_complete or user_incomplete 
+    :return:
+    """
+    df = get_all_user_input_data_filtered(engine, user_id, label_task_id, label_filter)
+    entry = df.iloc[0:1, :]
+    
+    return entry 
 
 
 def get_preceding_user_data_item(engine, user_id, label_task_id, current_input_data_id):
@@ -205,6 +252,59 @@ def get_next_user_data_item(engine, user_id, label_task_id, current_input_data_i
     if len(matching_indices) >= 1:
         idx = matching_indices[0]
         return df.iloc[idx - 1:idx, :]
+    else:
+        return pd.DataFrame(columns=df.columns)
+        
+        
+def get_preceding_user_data_item_filtered(engine, user_id, label_task_id, current_input_data_id, label_filter):
+    """
+    Get preceding input data that the user has viewed (whether they have actually labeled any of it or not)
+
+    :param engine:
+    :param user_id:
+    :param label_task_id:
+    :param current_input_data_id: current input data ID (we want to find the item before this in the list)
+    :label_filter: the filter according
+    :return:
+    """
+
+    # retrieve all data from database for that user and label task
+
+    df = get_all_user_input_data_filtered(engine, user_id, label_task_id, label_filter)
+
+    # here the list is in ascending order.
+
+    matching_indices = df.index[df['input_data_id'] == current_input_data_id].tolist()
+
+    if len(matching_indices) >= 1:
+        idx = matching_indices[0]
+        return df.iloc[idx - 1:idx, :]
+    else:
+        return pd.DataFrame(columns=df.columns)
+
+
+def get_next_user_data_item_filtered(engine, user_id, label_task_id, current_input_data_id, label_filter):
+    """
+    Get next input data that the user has viewed (whether they have actually labeled any of it or not)
+
+    :param engine:
+    :param user_id:
+    :param label_task_id:
+    :param current_input_data_id: current input data ID (we want to find the item before this in the list)
+    :return:
+    """
+
+    # retrieve all data from database for that user and label task
+
+    df = get_all_user_input_data_filtered(engine, user_id, label_task_id, label_filter)
+
+    # get the next input data item in the list (the list is in descending order of label ID, so we get the next item)
+
+    matching_indices = df.index[df['input_data_id'] == current_input_data_id].tolist()
+
+    if len(matching_indices) >= 1:
+        idx = matching_indices[0]
+        return df.iloc[idx + 1:idx + 2, :]
     else:
         return pd.DataFrame(columns=df.columns)
 
