@@ -316,6 +316,7 @@ export default {
         // initialise active label to the first label in the set
         console.log("Mounted")
         this.disableDrawTools();
+        this.tool_selected();
         if (this.labels != undefined && this.labels.length > 0) {
             this.active_label = this.labels[0].label_class;
         }
