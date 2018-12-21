@@ -11,7 +11,7 @@
                         <div class="row">
                             <div class="col">
                                 <select width="100" style="width: 100px" id="tools_form" v-on:change="tool_selected" v-model="active_tool">
-                                    <option v-for="(value,key) in tools_list" name="tool" :value="key"">{{ value }}</option>
+                                    <option v-for="(value,key) in tools_list" name="tool" :value="key">{{ value }}</option>
                                 </select>
                             </div>
                         </div>
@@ -76,7 +76,7 @@
                         </div>
                         <div class="row">
                             <div class="col">
-                                <button width="100" style="width: 100px; white-space: nowrap"type="submit" @click="clearCanvas">Clear canvas</button>
+                                <button width="100" style="width: 100px; white-space: nowrap" type="submit" @click="clearCanvas">Clear canvas</button>
                             </div>
                         </div>
                     </div>
@@ -650,6 +650,7 @@ export default {
             this.tools_list["rectangle"] = "Rectangle";
             this.tools_list["point"] = "Point";
             this.tools_list["circle"] = "Circle";
+            this.tools_list["select"] = "Select";
         },
         
         disableDrawTools: function() {
@@ -684,6 +685,7 @@ export default {
                         break;
                 }
             }
+            this.tools_list["select"]="Select";
         },
         
     },
