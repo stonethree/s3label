@@ -562,12 +562,15 @@ export default {
                 key_handled = true;
             }
             else if (e.code == 'BracketLeft') {
-                var mult = 0.5;
-                this.zoom_state *= mult;
+                var inc = -10;
+                this.zoom_state += inc;
+                if (this.zoom_state <= 10) {
+                    this.zoom_state = 10
+                }
             }
             else if (e.code == 'BracketRight') {
-                var mult = 2;
-                this.zoom_state *= mult;
+                var inc = 10;
+                this.zoom_state += inc;
             }
             if ((e.keyCode >= 48 && e.keyCode <= 57) || (e.keyCode >= 96 && e.keyCode <= 105)) {
                 // 0-9 only
