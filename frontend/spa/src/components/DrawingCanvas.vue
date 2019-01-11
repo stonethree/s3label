@@ -479,7 +479,7 @@ export default {
                     // check which labels the point lies within
                     for (var i = 0; i < this.labels.length; i++) {
                         var selected = false;
-                        if (isPointInLabel(coords.x, coords.y, this.labels[i]))
+                        if (isPointInLabel(tmpX, tmpY, this.labels[i]))
                         {
                             this.labels[i].selected = true;
                         } else {
