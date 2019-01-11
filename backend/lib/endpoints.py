@@ -276,7 +276,7 @@ def get_next_or_preceding_input_data_item_filtered(label_task_id, label_filter):
 
     # get the ID of the input data item to end the selection at
 
-    current_input_data_id = request.args.get('current_input_data_id', None)
+    current_label_id = request.args.get('current_label_id', None)
     action = request.args.get('action', None)
 
     if action is None or action not in ['next', 'previous']:
@@ -286,14 +286,14 @@ def get_next_or_preceding_input_data_item_filtered(label_task_id, label_filter):
         return resp
 
     try:
-        current_input_data_id = int(current_input_data_id)
+        current_label_id = int(current_label_id)
     except (ValueError, TypeError):
-        resp = make_response(jsonify(error='current_input_data_id must be an integer'), 400)
+        resp = make_response(jsonify(error='current_label_id must be an integer'), 400)
         resp.mimetype = "application/javascript"
         return resp
 
-    if current_input_data_id is None:
-        resp = make_response(jsonify(error='Need to specify current input data ID'), 400)
+    if current_label_id is None:
+        resp = make_response(jsonify(error='Need to specify current label ID'), 400)
         resp.mimetype = "application/javascript"
         return resp
 
@@ -302,13 +302,13 @@ def get_next_or_preceding_input_data_item_filtered(label_task_id, label_filter):
             df_input_data = sql_queries.get_preceding_user_data_item_filtered(engine,
                                                                      user_id=user_id_from_auth,
                                                                      label_task_id=label_task_id,
-                                                                     current_input_data_id=current_input_data_id,
+                                                                     current_label_id=current_label_id,
                                                                      label_filter=label_filter)
         else:
             df_input_data = sql_queries.get_next_user_data_item_filtered(engine,
                                                                 user_id=user_id_from_auth,
                                                                 label_task_id=label_task_id,
-                                                                current_input_data_id=current_input_data_id,
+                                                                current_label_id=current_label_id,
                                                                 label_filter=label_filter)
 
         resp = make_response(df_input_data.to_json(orient='records'), 200)

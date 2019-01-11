@@ -100,7 +100,7 @@ export async function getPrecedingLabeledImage(current_input_data_id, label_task
 }
 
 
-export async function getPrecedingLabeledImageFiltered(current_input_data_id, label_task_id, label_filter) {
+export async function getPrecedingLabeledImageFiltered(current_label_id, label_task_id, label_filter) {
     // get preceding labeled image
 
     let access_token = localStorage.getItem("s3_access_token");
@@ -112,7 +112,7 @@ export async function getPrecedingLabeledImageFiltered(current_input_data_id, la
     };
 
     return await axios
-        .get("labeled_data/label_tasks/" + label_task_id + "/filter/"+label_filter+"?action=previous&current_input_data_id=" + current_input_data_id, config)
+        .get("labeled_data/label_tasks/" + label_task_id + "/filter/"+label_filter+"?action=previous&current_label_id=" + current_label_id, config)
         .then(function(response) {
             if (response.data.length == 1) {
                 var preceding_data_item = response.data[0];
@@ -160,7 +160,7 @@ export async function getFollowingLabeledImage(current_input_data_id, label_task
 }
 
 
-export async function getFollowingLabeledImageFiltered(current_input_data_id, label_task_id, label_filter) {
+export async function getFollowingLabeledImageFiltered(current_label_id, label_task_id, label_filter) {
     // get following labeled image that has already been
 
     let access_token = localStorage.getItem("s3_access_token");
@@ -172,7 +172,7 @@ export async function getFollowingLabeledImageFiltered(current_input_data_id, la
     };
 
     return await axios
-        .get("labeled_data/label_tasks/" + label_task_id + "/filter/"+label_filter+"?action=next&current_input_data_id=" + current_input_data_id, config)
+        .get("labeled_data/label_tasks/" + label_task_id + "/filter/"+label_filter+"?action=next&current_label_id=" + current_label_id, config)
         .then(function(response) {
             if (response.data.length == 1) {
                 var following_data_item = response.data[0];

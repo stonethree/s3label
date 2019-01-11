@@ -412,7 +412,7 @@ export default {
             else {
                 // no initial image specified. Request a new unlabeled image
                 
-                var payload = {'task_id':this.label_task.label_task_id,'label_filter':this.image_filter}
+                var payload = {'task_id': vm.label_task.label_task_id, 'label_filter': this.image_filter}
                 await this.$store.dispatch('image_labeling/next_image', payload);
                 
                 vm.scroll.next_cont = true;
