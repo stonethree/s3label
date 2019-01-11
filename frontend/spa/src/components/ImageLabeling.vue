@@ -127,7 +127,12 @@
         <div class="row" style="padding-top:30px; padding-bottom:10px">
             <div class="col">
                 <div @click="switch_image('previous_image')" class="icon-style-left">
-                    <span class="fa-stack"><i class="fa fa-arrow-circle-left"></i></span>
+                    <span v-if="scroll.previous_cont" class="fa-stack">
+                        <i class="fa fa-arrow-circle-left"></i>
+                    </span>
+                    <span v-else class="fa-stack">
+                        <i class="fa fa-arrow-circle-left icon-dim"></i>
+                    </span>
                 </div>
             </div>
             <div class="col">
@@ -145,7 +150,12 @@
             </div>
             <div class="col">
                 <div @click="switch_image('next_image')" class="icon-style-right">
-                    <span class="fa-stack"><i class="fa fa-arrow-circle-right"></i></span>
+                    <span v-if="scroll.next_cont" class="fa-stack">
+                        <i class="fa fa-arrow-circle-right"></i>
+                    </span>
+                    <span v-else class="fa-stack">
+                        <i class="fa fa-arrow-circle-right icon-dim"></i>
+                    </span>
                 </div>
             </div>
         </div>
@@ -265,6 +275,10 @@ export default {
             save_timer: '',
             zoom_state: 100,
             image_filter: "filter_all",
+            scroll: {
+                next_cont:true,
+                previous_cont:false,
+            },
         };
     },
     created: function() {
@@ -400,6 +414,12 @@ export default {
                 
                 var payload = {'task_id':this.label_task.label_task_id,'label_filter':this.image_filter}
                 await this.$store.dispatch('image_labeling/next_image', payload);
+                
+                vm.scroll.next_cont = true;
+                vm.scroll.previous_cont = true;
+                if (vm.image_filter != "filter_all") {
+                    vm.scroll.previous_cont = false;
+                }
 
                 if (vm.input_data_id != old_input_data_id) {
                     console.log('^^^^^^^^^^^loading labels2')
@@ -409,6 +429,9 @@ export default {
                     if (labels_new != undefined) {
                         console.log('^^^^^^^^^^^ setting labels:', labels_new)
                         vm.$refs.mySubComponent.set_labels(labels_new);
+                    }
+                    else {
+                        vm.scroll.next_cont = false;
                     }
                 }
             }
@@ -432,6 +455,17 @@ export default {
             await vm.$store.dispatch('image_labeling/' + next_or_previous, payload)    // switch to the next image
             .then(function() {
                 console.log('should load labels now...............', vm.input_data_id, old_input_data_id, vm.label_id, old_label_id)
+                
+                //Update the previous_next scrolling icons
+                vm.scroll.next_cont = true;
+                vm.scroll.previous_cont = true;
+                if (vm.input_data_id == undefined) {
+                    vm.scroll.next_cont = false;
+                }
+                else if (vm.input_data_id == old_input_data_id) {
+                    vm.scroll.previous_cont = false;
+                }
+                
                 if (vm.input_data_id != old_input_data_id) {
                     console.log('loading image labels for:', vm.input_data_id, vm.label_task_id, vm.user_id)
                     
