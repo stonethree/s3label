@@ -118,6 +118,7 @@ export const StoreImageLabeling = {
                     
                 case "filter_complete":
                 case "filter_incomplete":
+                case "filter_admin":
                     if (getters.input_data_id == undefined) {
                         console.log(label_filter + ' - getting image:', input_data_id, label_id)
                         let data = await getFirstLabeledImageFiltered(label_task_id, label_filter);
@@ -186,6 +187,7 @@ export const StoreImageLabeling = {
                     
                 case "filter_complete":
                 case "filter_incomplete":
+                case "filter_admin":
                     if (getters.input_data_id == undefined) {
                         console.log(label_filter + ' - getting image: ', input_data_id, label_id)
                         let data = await getFirstLabeledImageFiltered(label_task_id, label_filter);

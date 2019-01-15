@@ -146,6 +146,7 @@
                     <option value="filter_all">No image filter</option>
                     <option value="filter_complete">Images you have finished labeling</option>
                     <option value="filter_incomplete">Images you have not finished labeling</option>
+                    <option value="filter_admin">Images that are marked ~Admin Complete~</option>
                 </select>
             </div>
             <div class="col">
@@ -473,7 +474,7 @@ export default {
                     loadLabels(vm.input_data_id, vm.label_task_id)
                     .then(function(lab_new) {
                         if (lab_new != undefined) {
-                            console.log('setting labels:', lab_new);
+                            //console.log('setting labels:', lab_new);
                             vm.$refs.mySubComponent.set_labels(lab_new);
                         }
                     });
