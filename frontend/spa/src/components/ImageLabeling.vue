@@ -412,7 +412,7 @@ export default {
             else {
                 // no initial image specified. Request a new unlabeled image
                 
-                var payload = {'task_id': vm.label_task.label_task_id, 'label_filter': this.image_filter}
+                var payload = {'task_id': this.label_task.label_task_id, 'label_filter': this.image_filter}
                 await this.$store.dispatch('image_labeling/next_image', payload);
                 
                 vm.scroll.next_cont = true;
@@ -451,7 +451,7 @@ export default {
             //upload the labels from the previous image
             this.save_progress();;
             
-            var payload = {'task_id': vm.label_task.label_task_id, 'label_filter': this.image_filter}
+            var payload = {'task_id': this.label_task.label_task_id, 'label_filter': this.image_filter}
             await vm.$store.dispatch('image_labeling/' + next_or_previous, payload)    // switch to the next image
             .then(function() {
                 console.log('should load labels now...............', vm.input_data_id, old_input_data_id, vm.label_id, old_label_id)
