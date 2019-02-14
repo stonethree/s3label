@@ -199,7 +199,24 @@ def get_first_user_input_data(engine, user_id, label_task_id, label_filter):
     :return:
     """
     df = get_all_user_input_data_filtered(engine, user_id, label_task_id, label_filter)
-    entry = df.iloc[0, :]
+    entry = df.iloc[0:1, :]
+    
+    return entry 
+    
+    
+def get_last_user_input_data(engine, user_id, label_task_id, label_filter):
+    """
+    Get the first input_data item that matches the filter.
+
+    :param engine:
+    :param user_id:
+    :param label_task_id:
+    :param label_filter: filter indicating user_complete or user_incomplete 
+    :return:
+    """
+    df = get_all_user_input_data_filtered(engine, user_id, label_task_id, label_filter)
+    count = len(df.index)
+    entry = df.iloc[count-1:count, :]
     
     return entry 
 
@@ -276,7 +293,7 @@ def get_preceding_user_data_item_filtered(engine, user_id, label_task_id, curren
 
     if len(matching_indices) >= 1:
         idx = matching_indices[len(matching_indices)-1]
-        return df.iloc[idx,:]
+        return df.iloc[idx:idx+1,:]
     else:
         return pd.DataFrame(columns=df.columns)
 
@@ -300,7 +317,7 @@ def get_next_user_data_item_filtered(engine, user_id, label_task_id, current_lab
         
     if len(matching_indices) >= 1:
         idx = matching_indices[0]
-        return df.iloc[idx, :]
+        return df.iloc[idx:idx+1, :]
     else:
         return pd.DataFrame(columns=df.columns)
 

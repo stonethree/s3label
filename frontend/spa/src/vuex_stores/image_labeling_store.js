@@ -4,6 +4,7 @@ import { getLatestLabeledImage,
          getUnlabeledImage,
          getPrecedingLabeledImageFiltered, 
          getFirstLabeledImageFiltered,
+         getLastLabeledImageFiltered,
          getFollowingLabeledImageFiltered,
          } from '../../static/label_loading'
 
@@ -120,7 +121,7 @@ export const StoreImageLabeling = {
                 case "filter_incomplete":
                     if (getters.input_data_id == undefined) {
                         console.log(label_filter + ' - getting image:', input_data_id, label_id)
-                        let data = await getFirstLabeledImageFiltered(label_task_id, label_filter);
+                        let data = await getLastLabeledImageFiltered(label_task_id, label_filter);
                         if (data != undefined) {
                             input_data_id = data.input_data_id;
                             label_id = data.label_id;
