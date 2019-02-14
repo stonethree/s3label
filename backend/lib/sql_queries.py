@@ -199,7 +199,7 @@ def get_first_user_input_data(engine, user_id, label_task_id, label_filter):
     :return:
     """
     df = get_all_user_input_data_filtered(engine, user_id, label_task_id, label_filter)
-    entry = df.iloc[0:1, :]
+    entry = df.iloc[0, :]
     
     return entry 
 
@@ -272,11 +272,11 @@ def get_preceding_user_data_item_filtered(engine, user_id, label_task_id, curren
     df = get_all_user_input_data_filtered(engine, user_id, label_task_id, label_filter)
 
     # here the list is in ascending order.  
-    matching_indices = df.index[df['label_id'] <= current_label_id].tolist()
+    matching_indices = df.index[df['label_id'] < current_label_id].tolist()
 
     if len(matching_indices) >= 1:
         idx = matching_indices[len(matching_indices)-1]
-        return df.iloc[idx - 1:idx, :]
+        return df.iloc[idx,:]
     else:
         return pd.DataFrame(columns=df.columns)
 
@@ -296,11 +296,11 @@ def get_next_user_data_item_filtered(engine, user_id, label_task_id, current_lab
     df = get_all_user_input_data_filtered(engine, user_id, label_task_id, label_filter)
 
     # get the next input data item in the list (the list is in descending order of label ID, so we get the next item)
-    matching_indices = df.index[df['label_id'] >= current_label_id].tolist()
+    matching_indices = df.index[df['label_id'] > current_label_id].tolist()
         
     if len(matching_indices) >= 1:
         idx = matching_indices[0]
-        return df.iloc[idx + 1:idx + 2, :]
+        return df.iloc[idx, :]
     else:
         return pd.DataFrame(columns=df.columns)
 

@@ -311,7 +311,9 @@ def get_next_or_preceding_input_data_item_filtered(label_task_id, label_filter):
                                                                 current_label_id=current_label_id,
                                                                 label_filter=label_filter)
 
-        resp = make_response(df_input_data.to_json(orient='records'), 200)
+        json = '['+df_input_data.to_json()+']'
+        logger.debug(json)
+        resp = make_response(json, 200)
         resp.mimetype = "application/javascript"
         return resp
     except Exception as e:
@@ -480,9 +482,9 @@ def get_first_user_input_data(label_task_id, user_id, label_filter):
                                                             user_id=user_id,
                                                             label_task_id=label_task_id,
                                                             label_filter=label_filter)
-        logger.debug(df_input_data.to_json(orient='records'))
-                                                            
-        resp = make_response(df_input_data.to_json(orient='records'), 200)
+        json = '['+df_input_data.to_json()+']'
+        logger.debug(json)
+        resp = make_response(json, 200)                                                   
         resp.mimetype = "application/javascript"
         return resp
     except Exception as e:
