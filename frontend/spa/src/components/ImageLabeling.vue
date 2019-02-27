@@ -301,7 +301,8 @@ export default {
         ]),
         ...mapGetters('image_labeling', [
             'input_data_id',
-            'label_id'
+            'label_id',
+            'label_valid'
         ]),
         stroke_thickness: function() {
             return Math.max(1, parseInt(this.stroke_slider_value));
@@ -407,6 +408,7 @@ export default {
                         console.log('setting labels:', labels_new)
                         vm.$refs.mySubComponent.set_labels(labels_new);
                     }
+                    this.$store.dispatch('image_labeling/label_is_valid');
                 }
             }
             else {
@@ -433,6 +435,7 @@ export default {
                     else {
                         vm.scroll.next_cont = false;
                     }
+                    this.$store.dispatch('image_labeling/label_is_valid');
                 }
             }
         },
@@ -477,25 +480,28 @@ export default {
                             vm.$refs.mySubComponent.set_labels(lab_new);
                         }
                     });
+                    this.$store.dispatch('image_labeling/label_is_valid');
                 }
             });
         },
 
         save_progress: async function() {
             // get current labels array from drawing canvas component (NB: this isn't the most elegant solution, but it will do for now)
-            var tmp = this.$refs.mySubComponent.fetch_labels();
-            console.log(tmp);
-            var lab = tmp.labels;
-            var edited = tmp.edited;
-            var vm = this;
-            
-            if (edited) {
-                await uploadLabels(this.input_data_id, this.label_task_id, lab) 
-                .catch(function(error) {
-                    console.log('error getting label ID:', error, vm.label_task_id, vm.input_data_id, vm.user_id);
-                })
+            if (this.label_valid) {
+                var tmp = this.$refs.mySubComponent.fetch_labels();
+                console.log(tmp);
+                var lab = tmp.labels;
+                var edited = tmp.edited;
+                var vm = this;
                 
-                console.log('current progress saved')
+                if (edited) {
+                    await uploadLabels(this.input_data_id, this.label_task_id, lab) 
+                    .catch(function(error) {
+                        console.log('error getting label ID:', error, vm.label_task_id, vm.input_data_id, vm.user_id);
+                    })
+                    
+                    console.log('current progress saved')
+                }
             }
         },
 

@@ -18,6 +18,7 @@ const SET_LABEL_ID = 'set_label_id';
 const CLEAR_LABEL_ID = 'clear_label_id'; 
 const SET_UNLABELED_IMAGES_AVAILABLE = 'set_unlabeled_images_available'; 
 const SET_PREVIOUS_IMAGES_AVAILABLE = 'set_previous_images_available'; 
+const SET_LABEL_VALID = 'set_label_valid';
  
 export const StoreImageLabeling = {
     namespaced: true,
@@ -26,6 +27,7 @@ export const StoreImageLabeling = {
         label_id: undefined,
         unlabeled_images_available: true,
         previous_images_available: true,
+        label_valid: false,
     },
     mutations: {
         [SET_INPUT_DATA_ID] (state, input_data_id) {
@@ -45,7 +47,10 @@ export const StoreImageLabeling = {
         },
         [SET_PREVIOUS_IMAGES_AVAILABLE] (state, images_are_available) {
             state.previous_images_available = images_are_available;
-        }
+        },
+        [SET_LABEL_VALID] (state, valid) {
++            state.label_valid = valid;
++       },
     },
     actions: {
         async set_initial_image ({ commit, rootGetters }, input_data_id) {
