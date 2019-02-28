@@ -49,8 +49,8 @@ export const StoreImageLabeling = {
             state.previous_images_available = images_are_available;
         },
         [SET_LABEL_VALID] (state, valid) {
-+            state.label_valid = valid;
-+       },
+            state.label_valid = valid;
+        },
     },
     actions: {
         async set_initial_image ({ commit, rootGetters }, input_data_id) {
@@ -89,10 +89,16 @@ export const StoreImageLabeling = {
             commit(CLEAR_LABEL_ID);
             commit(SET_UNLABELED_IMAGES_AVAILABLE, true);
             commit(SET_PREVIOUS_IMAGES_AVAILABLE, true);
-        }, 
+            commit(SET_LABEL_VALID, false);
+        },
+        
+        async label_is_valid({ commit }) {
+            commit(SET_LABEL_VALID, true);
+        },
 
         async previous_image ({ commit, getters, dispatch }, payload) {
             
+            commit(SET_LABEL_VALID, false);
             var label_task_id = payload.task_id;
             var label_filter = payload.label_filter;
 
@@ -159,6 +165,7 @@ export const StoreImageLabeling = {
         //async next_image ({ commit, getters, dispatch }, label_task_id) {
         async next_image ({ commit, getters, dispatch }, payload) {
 
+            commit(SET_LABEL_VALID, false);
             var label_task_id = payload.task_id;
             var label_filter = payload.label_filter;
 
@@ -235,6 +242,9 @@ export const StoreImageLabeling = {
         },
         label_id: state => {
             return state.label_id;
-        }
+        },
+        label_valid: state => {
+            return state.label_valid
+        },
     }
 }
