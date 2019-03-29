@@ -1,5 +1,7 @@
 # README
 
+[![Build Status](https://travis-ci.org/stonethree/s3label.svg?branch=master)](https://travis-ci.org/stonethree/s3label)
+
 ## Contents
 
 1. [Installation](README.md)
