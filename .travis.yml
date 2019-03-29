@@ -27,7 +27,7 @@ before_script:
 - conda info -a
 - cd backend
 - conda env update -f environment.yml
-- source activate flask_env
+- source activate s3label_env
 - export PYTHONPATH=$PYTHONPATH:.
 - psql -c 'create database s3_label_test;' -U postgres
 
