@@ -138,10 +138,10 @@
             <div class="col">
                 <label-status v-bind:label-id="label_id" v-bind:user-completed-toggle="label_status_toggler.user_complete" class="label-status-style" style="width:370px;"></label-status>
             </div>
-            <div class="col">   
+            <div class="col" v-if="label_task.enable_advanced_tools">   
                 <span style="float:right">Filter</span>
             </div>
-            <div class="col">
+            <div class="col" v-if="label_task.enable_advanced_tools">
                 <select v-on:change="filtered" v-model="image_filter">
                     <option value="filter_all">No image filter</option>
                     <option value="filter_complete">Images you have finished labeling</option>
