@@ -4,6 +4,7 @@ import { getLatestLabeledImage,
          getUnlabeledImage,
          getPrecedingLabeledImageFiltered, 
          getFirstLabeledImageFiltered,
+         getLastLabeledImageFiltered,
          getFollowingLabeledImageFiltered,
          } from '../../static/label_loading'
 
@@ -120,7 +121,7 @@ export const StoreImageLabeling = {
                 case "filter_incomplete":
                     if (getters.input_data_id == undefined) {
                         console.log(label_filter + ' - getting image:', input_data_id, label_id)
-                        let data = await getFirstLabeledImageFiltered(label_task_id, label_filter);
+                        let data = await getLastLabeledImageFiltered(label_task_id, label_filter);
                         if (data != undefined) {
                             input_data_id = data.input_data_id;
                             label_id = data.label_id;
@@ -128,7 +129,7 @@ export const StoreImageLabeling = {
                     }
                     else {
                         console.log(label_filter + ' - getting image:', input_data_id, label_id)
-                        let next_data = await getPrecedingLabeledImageFiltered(getters.input_data_id, label_task_id, label_filter);
+                        let next_data = await getPrecedingLabeledImageFiltered(getters.label_id, label_task_id, label_filter);
                         if (next_data != undefined) {
                             input_data_id = next_data.input_data_id;
                             label_id = next_data.label_id;
@@ -196,7 +197,7 @@ export const StoreImageLabeling = {
                     }
                     else {
                         console.log(label_filter + ' - getting image: ', input_data_id, label_id)
-                        let next_data = await getFollowingLabeledImageFiltered(getters.input_data_id, label_task_id, label_filter);
+                        let next_data = await getFollowingLabeledImageFiltered(getters.label_id, label_task_id, label_filter);
                         if (next_data != undefined) {
                             input_data_id = next_data.input_data_id;
                             label_id = next_data.label_id;

@@ -138,10 +138,10 @@
             <div class="col">
                 <label-status v-bind:label-id="label_id" v-bind:user-completed-toggle="label_status_toggler.user_complete" class="label-status-style" style="width:370px;"></label-status>
             </div>
-            <div class="col">   
+            <div class="col" v-if="label_task.enable_advanced_tools">   
                 <span style="float:right">Filter</span>
             </div>
-            <div class="col">
+            <div class="col" v-if="label_task.enable_advanced_tools">
                 <select v-on:change="filtered" v-model="image_filter">
                     <option value="filter_all">No image filter</option>
                     <option value="filter_complete">Images you have finished labeling</option>
@@ -412,7 +412,7 @@ export default {
             else {
                 // no initial image specified. Request a new unlabeled image
                 
-                var payload = {'task_id':this.label_task.label_task_id,'label_filter':this.image_filter}
+                var payload = {'task_id': this.label_task.label_task_id, 'label_filter': this.image_filter}
                 await this.$store.dispatch('image_labeling/next_image', payload);
                 
                 vm.scroll.next_cont = true;
@@ -451,7 +451,7 @@ export default {
             //upload the labels from the previous image
             this.save_progress();;
             
-            var payload = {'task_id': vm.label_task.label_task_id, 'label_filter': this.image_filter}
+            var payload = {'task_id': this.label_task.label_task_id, 'label_filter': this.image_filter}
             await vm.$store.dispatch('image_labeling/' + next_or_previous, payload)    // switch to the next image
             .then(function() {
                 console.log('should load labels now...............', vm.input_data_id, old_input_data_id, vm.label_id, old_label_id)

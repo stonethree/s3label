@@ -370,10 +370,10 @@ export default {
                     document.getElementById("span_label_filter_show_task").style.display = "block";
                 }
                 else if (this.image_filter == "filter_complete"){
-                    document.getElementById("span_label_filter_text").innerHTML = "There are no more finished images for this task."
+                    document.getElementById("span_label_filter_text").innerHTML = "There are no more images matching the filter criteria."
                 }
                 else if (this.image_filter == "filter_incomplete"){
-                    document.getElementById("span_label_filter_text").innerHTML = "There are no more unfinished images for this task."
+                    document.getElementById("span_label_filter_text").innerHTML = "There are no more images matching the filter criteria."
                 }
             }
         },

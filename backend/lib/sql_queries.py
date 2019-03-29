@@ -202,6 +202,23 @@ def get_first_user_input_data(engine, user_id, label_task_id, label_filter):
     entry = df.iloc[0:1, :]
     
     return entry 
+    
+    
+def get_last_user_input_data(engine, user_id, label_task_id, label_filter):
+    """
+    Get the first input_data item that matches the filter.
+
+    :param engine:
+    :param user_id:
+    :param label_task_id:
+    :param label_filter: filter indicating user_complete or user_incomplete 
+    :return:
+    """
+    df = get_all_user_input_data_filtered(engine, user_id, label_task_id, label_filter)
+    count = len(df.index)
+    entry = df.iloc[count-1:count, :]
+    
+    return entry 
 
 
 def get_preceding_user_data_item(engine, user_id, label_task_id, current_input_data_id):
@@ -256,55 +273,51 @@ def get_next_user_data_item(engine, user_id, label_task_id, current_input_data_i
         return pd.DataFrame(columns=df.columns)
         
         
-def get_preceding_user_data_item_filtered(engine, user_id, label_task_id, current_input_data_id, label_filter):
+def get_preceding_user_data_item_filtered(engine, user_id, label_task_id, current_label_id, label_filter):
     """
     Get preceding input data that the user has viewed (whether they have actually labeled any of it or not)
 
     :param engine:
     :param user_id:
     :param label_task_id:
-    :param current_input_data_id: current input data ID (we want to find the item before this in the list)
+    :param current_label_id: current label (we want to find the item before this in the list)
     :label_filter: the filter according
     :return:
     """
 
     # retrieve all data from database for that user and label task
-
     df = get_all_user_input_data_filtered(engine, user_id, label_task_id, label_filter)
 
-    # here the list is in ascending order.
-
-    matching_indices = df.index[df['input_data_id'] == current_input_data_id].tolist()
+    # here the list is in ascending order.  
+    matching_indices = df.index[df['label_id'] < current_label_id].tolist()
 
     if len(matching_indices) >= 1:
-        idx = matching_indices[0]
-        return df.iloc[idx - 1:idx, :]
+        idx = matching_indices[len(matching_indices)-1]
+        return df.iloc[idx:idx+1,:]
     else:
         return pd.DataFrame(columns=df.columns)
 
 
-def get_next_user_data_item_filtered(engine, user_id, label_task_id, current_input_data_id, label_filter):
+def get_next_user_data_item_filtered(engine, user_id, label_task_id, current_label_id, label_filter):
     """
     Get next input data that the user has viewed (whether they have actually labeled any of it or not)
 
     :param engine:
     :param user_id:
     :param label_task_id:
-    :param current_input_data_id: current input data ID (we want to find the item before this in the list)
+    :param current_label_id: current label (we want to find the item before this in the list)
     :return:
     """
 
     # retrieve all data from database for that user and label task
-
     df = get_all_user_input_data_filtered(engine, user_id, label_task_id, label_filter)
 
     # get the next input data item in the list (the list is in descending order of label ID, so we get the next item)
-
-    matching_indices = df.index[df['input_data_id'] == current_input_data_id].tolist()
-
+    matching_indices = df.index[df['label_id'] > current_label_id].tolist()
+        
     if len(matching_indices) >= 1:
         idx = matching_indices[0]
-        return df.iloc[idx + 1:idx + 2, :]
+        return df.iloc[idx:idx+1, :]
     else:
         return pd.DataFrame(columns=df.columns)
 
