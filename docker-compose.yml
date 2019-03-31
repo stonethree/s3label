@@ -1,0 +1,43 @@
+version: '3'
+
+services:
+  # web:
+  #   build: ci/docker/app
+  #   image: s3label_backend
+  #   command: gunicorn --bind 0.0.0.0:5000 wsgi:app
+  #   volumes:
+  #     - backend/:/usr/src/backend/
+  #   ports:
+  #     - 5000
+  #   environment:
+  #     - SECRET_KEY=please_change_me
+  #     - FLASK_APP=/usr/src/app/app.py
+  #     # - SQL_ENGINE=django.db.backends.postgresql
+  #     - SQL_DATABASE=postgres
+  #     - SQL_USER=postgres
+  #     - SQL_PASSWORD=postgres
+  #     - SQL_HOST=db
+  #     - SQL_PORT=5432
+  #     - DATABASE=postgres
+  #   depends_on:
+  #     - db
+  db:
+    build: ci/docker/db
+    image: s3label_db
+    environment:
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - 5432:5432
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+  # nginx:
+  #   build: ci/docker/nginx
+  #   image: s3label_frontend
+  #   ports:
+  #     - 1337:80
+  #   depends_on:
+  #     - web
+
+# Persist data beyond the lifecycle of the container
+volumes:
+  postgres_data:

@@ -15,13 +15,33 @@
 
 ## Installation
 
-### Backend setup
+### Using Docker
+
+1. Install Docker
+1. Create a folder on the host machine to store the database, so that it persists after the container is stopped:
+1. Run the Docker containers:
+
+~~~ bash
+docker-compose up -d
+~~~
+
+This will serve the front-end application using Nginx and the back-end (Flask) application using Gunicorn, as well as running the Postgres server.
+
+You can view status info on the docker containers and the exposed ports:
+
+~~~ bash
+docker-compose ps
+~~~
+
+### Manual installation
+
+#### Back-end setup
 
 Download and install PostgreSQL (version 9.4 or later; version 9.6 is officially tested).
 
 Download and install [Miniconda](https://conda.io/miniconda.html). Choose Python 3 for your platform.
 
-Switch to the backend directory and create an environment file
+Switch to the back-end directory and create an environment file
 
 ~~~ bash
 cd backend
@@ -44,19 +64,19 @@ psql -U <username> -d <database_name> -f create_db_tables.sql
 psql -U <username> -d <database_name> -f init_unit_test_data.sql
 ~~~
 
-In the backend directory, activate the environments
+In the back-end directory, activate the environments
 
 ~~~ bash
 source activate s3label_env
 ~~~
 
-Add your current path to the pythonpath variable
+E KHdd your current path to the pythonpath variable
 
 ~~~ bash
 export PYTHONPATH=$PYTHONPATH:.
 ~~~
 
-Run the backend application in development mode.
+Run the back-end application in development mode.
 
 ~~~ bash
 python main.py --image_folder <path to folder containing data> 
@@ -71,7 +91,7 @@ python main.py --image_folder <path to folder containing data>
 
 If you would like to run this in production, use Gunicorn, uWSGI or other production-grade server.
 
-#### Running unit tests
+##### Running unit tests
 
 Run the unit tests using the specified database connection settings:
 
@@ -79,9 +99,9 @@ Run the unit tests using the specified database connection settings:
 pytest -vs --username <username> --password <password> --ip <IP address> --port <port> --databasename <database_name> unit_tests
 ~~~
 
-### Front-end Setup
+#### Front-end Setup
 
-Install frontend dependencies
+Install front-end dependencies
 
 ~~~ bash
 cd ../frontend/spa/
