@@ -1,4 +1,4 @@
-# FEATURES
+# Features
 
 ## Format
 A general format of JSON is used which will allow this to work on any platform. 
