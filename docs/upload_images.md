@@ -34,6 +34,8 @@ To then make the images available for labeling, you will then need to create a *
     
         This will generate entries in the *Input Data Items* table in the database. 
         It will store the paths to all the images and create unique IDs and hashes of the images.
+        
+    ![Upload_images_UI](visuals/upload_images_2.png)
 
 1. Create a *dataset group* to contain the *dataset* and assign to a *label task* for labeling:
 

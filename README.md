@@ -8,6 +8,8 @@ S3Label is an open-source browser-based image labeling tool developed by [Stone 
 The goal of S3Label is to speed up the labeling of images for use in machine learning. 
 It is particularly focused on instance segmentation, semantic segmentation and keypoints, although could easily be extended to classification and other types of labeling tasks too.
 
+![S3Label_UI](docs/visuals/label_image.png)
+
 S3Label currently supports various types of labels:
 
 | Label type | Description |
