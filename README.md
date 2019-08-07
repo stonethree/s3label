@@ -2,26 +2,57 @@
 
 [![Build Status](https://travis-ci.org/stonethree/s3label.svg?branch=master)](https://travis-ci.org/stonethree/s3label)
 
-## Contents
+## Overview
 
-1. [Installation](README.md)
-2. [Importing Labels](./docs/import_label.md)
-3. [Exporting Labels](./docs/export_label.md)
-4. [Labels](./docs/label.md)
-5. [Features](./docs/features.md)
-6. [Payment Tracking](./docs/making_payments.md)
-7. [Useful SQL queries](./docs/useful_sql_queries.md)
-8. [Troubleshooting](./docs/troubleshoot.md)
+S3Label is an open-source browser-based image labeling tool developed by [Stone Three](https://www.stonethree.com/), a company in South Africa.
+The goal of S3Label is to speed up the labeling of images for use in machine learning. 
+It is particularly focused on instance segmentation, semantic segmentation and keypoints, although could easily be extended to classification and other types of labeling tasks too.
+
+S3Label currently supports various types of labels:
+
+| Label type | Description |
+| ------     | ------      |
+| Freehand | Click and drag a free-form polygon shape |
+| Polygon | Click the individual polygon vertices |
+| Rectangle | Click and drag to draw rectangular bounding boxes |
+| Circle | Click and drag to draw circle |
+
+The tool is designed to keep track of who labeled what data and to make the labeling process fast. 
+
+Two types of user roles are available: *admin* and *normal* users:
+
+| User role | Functionality available |
+| ------    | ------      |
+| Normal | Log in and label images. View own previously labeled images. |
+| Admin | Same as Normal user, but also able to upload images for labeling, as well as to approve any other user's labeling. |
+
+## Architecture
+
+* Front-end: VueJS
+* Back-end: Flask
+* Database: Postgres
+
+See [here](./docs/architecture.md) for a more thorough description and diagram of the S3Label architecture.
+
+## Tutorials
+
+1. [Logging in](docs/logging_in.md)
+1. [Importing images for labeling](docs/upload_images.md)
+1. [How to label images](./docs/how_to_label.md)
+1. [Exporting labels](./docs/export_label.md)
+1. [Payment tracking](./docs/making_payments.md)
+1. [Useful SQL queries](./docs/useful_sql_queries.md)
+1. [Roadmap](./docs/roadmap.md)
 
 ## Installation
 
-### Backend setup
+### Back-end setup
 
 Download and install PostgreSQL (version 9.4 or later; version 9.6 is officially tested).
 
 Download and install [Miniconda](https://conda.io/miniconda.html). Choose Python 3 for your platform.
 
-Switch to the backend directory and create an environment file
+Switch to the back-end directory and create an environment file
 
 ~~~ bash
 cd backend
@@ -44,7 +75,7 @@ psql -U <username> -d <database_name> -f create_db_tables.sql
 psql -U <username> -d <database_name> -f init_unit_test_data.sql
 ~~~
 
-In the backend directory, activate the environments
+In the back-end directory, activate the environments
 
 ~~~ bash
 source activate s3label_env
@@ -56,7 +87,7 @@ Add your current path to the pythonpath variable
 export PYTHONPATH=$PYTHONPATH:.
 ~~~
 
-Run the backend application in development mode.
+Run the back-end application in development mode.
 
 ~~~ bash
 python main.py --image_folder <path to folder containing data> 
