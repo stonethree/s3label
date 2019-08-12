@@ -41,7 +41,7 @@ See [here](./docs/architecture.md) for a more thorough description and diagram o
 1. [Logging in](docs/logging_in.md)
 1. [Importing images for labeling](docs/upload_images.md)
 1. [How to label images](./docs/how_to_label.md)
-1. [Exporting labels](./docs/export_label.md)
+1. [Exporting labels](docs/export_labels.md)
 1. [Payment tracking](./docs/making_payments.md)
 1. [Useful SQL queries](./docs/useful_sql_queries.md)
 1. [Roadmap](./docs/roadmap.md)
