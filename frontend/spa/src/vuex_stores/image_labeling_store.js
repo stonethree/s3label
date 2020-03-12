@@ -18,7 +18,8 @@ const CLEAR_INPUT_DATA_ID = 'clear_input_data_id';
 const SET_LABEL_ID = 'set_label_id'; 
 const CLEAR_LABEL_ID = 'clear_label_id'; 
 const SET_UNLABELED_IMAGES_AVAILABLE = 'set_unlabeled_images_available'; 
-const SET_PREVIOUS_IMAGES_AVAILABLE = 'set_previous_images_available'; 
+const SET_PREVIOUS_IMAGES_AVAILABLE = 'set_previous_images_available';
+const SET_LABEL_VALID = 'set_label_valid';
  
 export const StoreImageLabeling = {
     namespaced: true,
@@ -27,6 +28,7 @@ export const StoreImageLabeling = {
         label_id: undefined,
         unlabeled_images_available: true,
         previous_images_available: true,
+        label_valid: false,
     },
     mutations: {
         [SET_INPUT_DATA_ID] (state, input_data_id) {
@@ -46,7 +48,10 @@ export const StoreImageLabeling = {
         },
         [SET_PREVIOUS_IMAGES_AVAILABLE] (state, images_are_available) {
             state.previous_images_available = images_are_available;
-        }
+        },
+        [SET_LABEL_VALID] (state, valid) {
+            state.label_valid = valid;
+        },
     },
     actions: {
         async set_initial_image ({ commit, rootGetters }, input_data_id) {
@@ -85,10 +90,15 @@ export const StoreImageLabeling = {
             commit(CLEAR_LABEL_ID);
             commit(SET_UNLABELED_IMAGES_AVAILABLE, true);
             commit(SET_PREVIOUS_IMAGES_AVAILABLE, true);
+            commit(SET_LABEL_VALID, false);
         }, 
+        
+        async label_is_valid({ commit }) {
+            commit(SET_LABEL_VALID, true);
+        },
 
         async previous_image ({ commit, getters, dispatch }, payload) {
-            
+            commit(SET_LABEL_VALID, false);
             var label_task_id = payload.task_id;
             var label_filter = payload.label_filter;
 
@@ -119,8 +129,9 @@ export const StoreImageLabeling = {
                     
                 case "filter_complete":
                 case "filter_incomplete":
+                case "filter_admin":
                     if (getters.input_data_id == undefined) {
-                        console.log(label_filter + ' - getting image:', input_data_id, label_id)
+                        console.log(label_filter + ' - getting first image')
                         let data = await getLastLabeledImageFiltered(label_task_id, label_filter);
                         if (data != undefined) {
                             input_data_id = data.input_data_id;
@@ -128,7 +139,7 @@ export const StoreImageLabeling = {
                         }
                     }
                     else {
-                        console.log(label_filter + ' - getting image:', input_data_id, label_id)
+                        console.log(label_filter + ' - getting previous image:', getters.input_data_id, getters.label_id)
                         let next_data = await getPrecedingLabeledImageFiltered(getters.label_id, label_task_id, label_filter);
                         if (next_data != undefined) {
                             input_data_id = next_data.input_data_id;
@@ -154,7 +165,7 @@ export const StoreImageLabeling = {
 
         //async next_image ({ commit, getters, dispatch }, label_task_id) {
         async next_image ({ commit, getters, dispatch }, payload) {
-
+            commit(SET_LABEL_VALID, false);
             var label_task_id = payload.task_id;
             var label_filter = payload.label_filter;
 
@@ -187,8 +198,9 @@ export const StoreImageLabeling = {
                     
                 case "filter_complete":
                 case "filter_incomplete":
+                case "filter_admin":
                     if (getters.input_data_id == undefined) {
-                        console.log(label_filter + ' - getting image: ', input_data_id, label_id)
+                        console.log(label_filter + ' - getting first image')
                         let data = await getFirstLabeledImageFiltered(label_task_id, label_filter);
                         if (data != undefined) {
                             input_data_id = data.input_data_id;
@@ -196,7 +208,7 @@ export const StoreImageLabeling = {
                         }
                     }
                     else {
-                        console.log(label_filter + ' - getting image: ', input_data_id, label_id)
+                        console.log(label_filter + ' - getting next image: ', getters.input_data_id, getters.label_id)
                         let next_data = await getFollowingLabeledImageFiltered(getters.label_id, label_task_id, label_filter);
                         if (next_data != undefined) {
                             input_data_id = next_data.input_data_id;
@@ -231,6 +243,9 @@ export const StoreImageLabeling = {
         },
         label_id: state => {
             return state.label_id;
-        }
+        },
+        label_valid: state => {
+            return state.label_valid
+        },
     }
 }

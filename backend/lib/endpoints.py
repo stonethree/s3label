@@ -310,6 +310,7 @@ def get_next_or_preceding_input_data_item_filtered(label_task_id, label_filter):
                                                                 label_task_id=label_task_id,
                                                                 current_label_id=current_label_id,
                                                                 label_filter=label_filter)
+
         json = df_input_data.to_json(orient='records')
         # json = '['+df_input_data.to_json()+']'
         logger.debug(json)
@@ -987,7 +988,7 @@ def store_label(label_task_id, input_data_id):
     :param input_data_id: ID of the input data item that has been labeled
     :return:
     """
-
+    
     engine = current_app.config['engine']
 
     # get ID of user

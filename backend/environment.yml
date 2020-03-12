@@ -1,4 +1,4 @@
-name: s3label_env
+name: flask_env
 dependencies:
 - python=3.5.2
 - numpy

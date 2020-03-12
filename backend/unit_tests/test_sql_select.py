@@ -287,8 +287,7 @@ def test_get_label_tasks(refresh_db_once, db_connection_sqlalchemy):
                      'default_tool',
                      'allowed_tools',
                      'permit_overlap',
-                     'label_classes',
-                     'enable_advanced_tools']
+                     'label_classes']
 
     assert df.columns.tolist() == expected_cols
     assert_series_equal(df['label_task_id'], df_test['label_task_id'])
@@ -314,8 +313,7 @@ def test_get_label_tasks_for_specific_user(refresh_db_once, db_connection_sqlalc
                      'default_tool',
                      'allowed_tools',
                      'permit_overlap',
-                     'label_classes',
-                     'enable_advanced_tools']
+                     'label_classes']
 
     assert df.columns.tolist() == expected_cols
     assert_series_equal(df['label_task_id'], df_test['label_task_id'])
@@ -337,8 +335,7 @@ def test_get_label_task(refresh_db_once, db_connection_sqlalchemy):
                      'default_tool',
                      'allowed_tools',
                      'permit_overlap',
-                     'label_classes',
-                     'enable_advanced_tools']
+                     'label_classes']
 
     assert df.columns.tolist() == expected_cols
     assert_series_equal(df['label_task_id'], df_test['label_task_id'])

@@ -194,7 +194,7 @@ export default {
             }
         },
         toggle_admin_complete: function() {
-            if (this.labelId != undefined && this.mode == ADMIN_MODE) {
+            if (this.labelId != undefined && this.mode) {
                 this.status.admin_complete = !this.status.admin_complete;
                 this.update_label_field(this.labelId, 'admin_complete', this.status.admin_complete)
             }

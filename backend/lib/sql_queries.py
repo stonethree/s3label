@@ -1,6 +1,8 @@
 import pandas as pd
 from sqlalchemy.sql import text
+import logging
 
+logger = logging.getLogger(__name__)
 
 def get_user_id(engine, email, password):
     """
@@ -169,18 +171,20 @@ def get_all_user_input_data_filtered(engine, user_id, label_task_id, label_filte
     """
 
     # Apply the filter
-
+    filter = ""
     if label_filter == "filter_complete":
-        complete = True
-    else:
-        complete = False
+        filter = "AND (user_complete = True AND admin_complete = False) "
+    elif label_filter == "filter_incomplete":
+        filter = "AND user_complete = False "
+    elif label_filter == "filter_admin":
+        filter = "AND admin_complete = True "
 
     fields = 'label_id, input_data_id, label_task_id, label_history_id, user_id, user_complete, needs_improvement, ' \
              'admin_complete, paid, include_in_test_set, user_comment, admin_comment, timestamp_edit'
 
     sql_query = """
-    SELECT {fields} FROM latest_label_history a WHERE user_id=%(user_id)s AND label_task_id=%(label_task_id)s AND user_complete={complete}
-    AND label_history_id > 0 ORDER BY label_id ASC""".format(fields=fields, complete=complete)
+    SELECT {fields} FROM latest_label_history a WHERE user_id=%(user_id)s AND label_task_id=%(label_task_id)s {filter}
+    AND label_history_id > 0 ORDER BY label_id ASC""".format(fields=fields, filter=filter)
 
     df = pd.read_sql_query(sql_query, engine, params={'user_id': user_id,
                                                       'label_task_id': label_task_id})
@@ -290,6 +294,8 @@ def get_preceding_user_data_item_filtered(engine, user_id, label_task_id, curren
 
     # here the list is in ascending order.  
     matching_indices = df.index[df['label_id'] < current_label_id].tolist()
+    logger.debug(current_label_id)
+    logger.debug(matching_indices)
 
     if len(matching_indices) >= 1:
         idx = matching_indices[len(matching_indices)-1]

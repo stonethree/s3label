@@ -155,7 +155,7 @@ export function addPaddingOffset(labels, padX, padY) {
 export function removePaddingOffset(labels, padX, padY) {
     // subtract the padding from the left and top borders of the canvas, so that we don't include padding in the saved coordinates
     let new_labels = JSON.parse(JSON.stringify(labels));
-    console.log('pad X: ' + padX + ' padY: ' + padY);
+    //console.log('pad X: ' + padX + ' padY: ' + padY);
     for (let i = 0; i < new_labels.length; i++) {
         switch (new_labels[i].type) {
             case 'freehand':

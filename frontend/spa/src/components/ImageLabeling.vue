@@ -138,10 +138,10 @@
             <div class="col">
                 <label-status v-bind:label-id="label_id" v-bind:user-completed-toggle="label_status_toggler.user_complete" class="label-status-style" style="width:370px;"></label-status>
             </div>
-            <div class="col" v-if="label_task.enable_advanced_tools">   
+            <div class="col">   
                 <span style="float:right">Filter</span>
             </div>
-            <div class="col" v-if="label_task.enable_advanced_tools">
+            <div class="col">
                 <select v-on:change="filtered" v-model="image_filter">
                     <option value="filter_all">No image filter</option>
                     <option value="filter_complete">Images you have finished labeling</option>
@@ -282,7 +282,7 @@ export default {
         };
     },
     created: function() {
-        this.save_timer = setInterval(this.save_progress, 5000);
+        //this.save_timer = setInterval(this.save_progress, 5000);
     },
     components: {
         DrawingCanvas,
@@ -301,7 +301,8 @@ export default {
         ]),
         ...mapGetters('image_labeling', [
             'input_data_id',
-            'label_id'
+            'label_id',
+            'label_valid'
         ]),
         stroke_thickness: function() {
             return Math.max(1, parseInt(this.stroke_slider_value));
@@ -407,12 +408,13 @@ export default {
                         console.log('setting labels:', labels_new)
                         vm.$refs.mySubComponent.set_labels(labels_new);
                     }
+                    this.$store.dispatch('image_labeling/label_is_valid');
                 }
             }
             else {
                 // no initial image specified. Request a new unlabeled image
                 
-                var payload = {'task_id': this.label_task.label_task_id, 'label_filter': this.image_filter}
+                var payload = {'task_id':this.label_task.label_task_id,'label_filter':this.image_filter}
                 await this.$store.dispatch('image_labeling/next_image', payload);
                 
                 vm.scroll.next_cont = true;
@@ -433,6 +435,7 @@ export default {
                     else {
                         vm.scroll.next_cont = false;
                     }
+                    this.$store.dispatch('image_labeling/label_is_valid');
                 }
             }
         },
@@ -449,9 +452,10 @@ export default {
             var vm = this;
 
             //upload the labels from the previous image
+            console.log('switch image')
             this.save_progress();;
             
-            var payload = {'task_id': this.label_task.label_task_id, 'label_filter': this.image_filter}
+            var payload = {'task_id': vm.label_task.label_task_id, 'label_filter': this.image_filter}
             await vm.$store.dispatch('image_labeling/' + next_or_previous, payload)    // switch to the next image
             .then(function() {
                 console.log('should load labels now...............', vm.input_data_id, old_input_data_id, vm.label_id, old_label_id)
@@ -477,26 +481,37 @@ export default {
                             vm.$refs.mySubComponent.set_labels(lab_new);
                         }
                     });
+                    this.$store.dispatch('image_labeling/label_is_valid');
                 }
             });
         },
 
         save_progress: async function() {
             // get current labels array from drawing canvas component (NB: this isn't the most elegant solution, but it will do for now)
-            var tmp = this.$refs.mySubComponent.fetch_labels();
-            console.log(tmp);
-            var lab = tmp.labels;
-            var edited = tmp.edited;
-            var vm = this;
-            
-            if (edited) {
-                await uploadLabels(this.input_data_id, this.label_task_id, lab) 
-                .catch(function(error) {
-                    console.log('error getting label ID:', error, vm.label_task_id, vm.input_data_id, vm.user_id);
-                })
+            console.log('save_progress')
+            //if (this.label_valid) {
+                var tmp = this.$refs.mySubComponent.fetch_labels();
+                console.log(tmp);
+                var lab = tmp.labels;
+                var edited = tmp.edited;
+                var vm = this;
                 
-                console.log('current progress saved')
-            }
+                if (edited) {
+                    await uploadLabels(this.input_data_id, this.label_task_id, lab) 
+                    .catch(function(error) {
+                        console.log('error getting label ID:', error, vm.label_task_id, vm.input_data_id, vm.user_id);
+                    })
+                    
+                    console.log('current progress saved')
+                }
+                else {
+                    console.log('label not edited')
+                    
+                }
+            //}
+            //else {
+            //    console.log('label not valid')
+            //}
         },
 
         get_label_examples: function() {

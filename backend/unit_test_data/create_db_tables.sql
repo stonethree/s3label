@@ -35,9 +35,6 @@ create table label_tasks(
 	permit_overlap BOOLEAN DEFAULT false NOT NULL,
 	label_classes VARCHAR DEFAULT '[{"label_class": "foreground_object", "color": "[0,255,0]"}, {"label_class": "background", "color": "[0,0,255]"}]' NOT NULL);
 
-ALTER TABLE label_tasks ADD COLUMN enable_advanced_tools BOOLEAN DEFAULT FALSE NOT NULL;
-	COMMENT ON COLUMN label_tasks.enable_advanced_tools is 'If true, shows advanced labeling tools that are either experimental or more complex than needed for this task';
-
 create table example_labeling(
     example_labeling_id SERIAL PRIMARY KEY,
     label_task_id INTEGER REFERENCES label_tasks(label_task_id) ON DELETE CASCADE,

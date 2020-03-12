@@ -285,8 +285,6 @@ export async function uploadLabels(input_data_id, label_task_id, polygons) {
 
     console.log('uploading label with label task ID', label_task_id, 'and input data ID', input_data_id)
 
-    console.log(polygons);
-
     if (label_task_id == undefined || input_data_id == undefined) {
         console.log("Error: Input fields must all be defined in order to upload label:" + label_task_id + input_data_id)
     }
@@ -362,7 +360,7 @@ export async function loadLabels(input_data_id, label_task_id) {
                     }
 
                     if (checkLabelFormatValid(labels)) {
-                        console.log('Applied serialised label to image');
+                        console.log('Applied serialised label to image ',labels);
                         return labels;
                     } else {
                         console.error('Serialised label has wrong format: ' + labels);

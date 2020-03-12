@@ -375,6 +375,9 @@ export default {
                 else if (this.image_filter == "filter_incomplete"){
                     document.getElementById("span_label_filter_text").innerHTML = "There are no more images matching the filter criteria."
                 }
+                else if (this.image_filter == "filter_admin"){
+                    document.getElementById("span_label_filter_text").innerHTML = "There are no more ~Admin Complete~ images for this task."
+                }
             }
         },
 
