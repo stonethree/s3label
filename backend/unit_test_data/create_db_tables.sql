@@ -38,6 +38,9 @@ create table label_tasks(
 ALTER TABLE label_tasks ADD COLUMN enable_advanced_tools BOOLEAN DEFAULT FALSE NOT NULL;
 	COMMENT ON COLUMN label_tasks.enable_advanced_tools is 'If true, shows advanced labeling tools that are either experimental or more complex than needed for this task';
 
+ALTER TABLE label_tasks ADD COLUMN is_active BOOLEAN DEFAULT TRUE NOT NULL;
+	COMMENT ON COLUMN label_tasks.is_active is 'If false, users will not receive any new images from this label task';
+
 create table example_labeling(
     example_labeling_id SERIAL PRIMARY KEY,
     label_task_id INTEGER REFERENCES label_tasks(label_task_id) ON DELETE CASCADE,

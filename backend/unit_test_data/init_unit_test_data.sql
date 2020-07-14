@@ -17,7 +17,7 @@ INSERT INTO dataset_group_lists(dataset_group_id, dataset_id) VALUES (3, 3);
 INSERT INTO dataset_group_lists(dataset_group_id, dataset_id) VALUES (4, 4);
 
 INSERT INTO label_tasks(dataset_group_id, title, description, type) VALUES (1, 'Rock particle segmentation', 'Multi-instance segmentation for rock particles', 'instance_segmentation');
-INSERT INTO label_tasks(dataset_group_id, title, description, type) VALUES (2, 'Rock particle segmentation subset', 'Multi-instance segmentation for rock particles', 'instance_segmentation');
+INSERT INTO label_tasks(dataset_group_id, title, description, type, is_active) VALUES (2, 'Rock particle segmentation subset', 'Multi-instance segmentation for rock particles', 'instance_segmentation', false);
 INSERT INTO label_tasks(dataset_group_id, title, description, type) VALUES (3, 'Froth segmentation', 'Multi-instance segmentation for froth bubbles', 'instance_segmentation');
 INSERT INTO label_tasks(dataset_group_id, title, description, type) VALUES (3, 'Froth segmentation 2', 'Multi-instance segmentation for froth bubbles 2', 'instance_segmentation');
 INSERT INTO label_tasks(dataset_group_id, title, description, type) VALUES (1, 'Rock particle segmentation: Initially unlabeled', 'Multi-instance segmentation for rock particles', 'instance_segmentation');

@@ -112,7 +112,7 @@ def get_next_unlabeled_input_data_item(engine, label_task_id, shuffle=True, n=1)
     sql_query = """
         with unlabeled_items as (
             select * from labels_per_input_data_item
-            where label_task_id = %(label_task_id)s and label_id isnull and not input_data_id isnull
+            where label_task_id = %(label_task_id)s and label_id isnull and not input_data_id isnull and is_active
         )
         select * from unlabeled_items
         {order_by}
