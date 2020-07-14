@@ -19,6 +19,7 @@ const SET_LABEL_ID = 'set_label_id';
 const CLEAR_LABEL_ID = 'clear_label_id'; 
 const SET_UNLABELED_IMAGES_AVAILABLE = 'set_unlabeled_images_available'; 
 const SET_PREVIOUS_IMAGES_AVAILABLE = 'set_previous_images_available'; 
+const SET_LABEL_VALID = 'set_label_valid';
  
 export const StoreImageLabeling = {
     namespaced: true,
@@ -27,6 +28,7 @@ export const StoreImageLabeling = {
         label_id: undefined,
         unlabeled_images_available: true,
         previous_images_available: true,
+        label_valid: false,
     },
     mutations: {
         [SET_INPUT_DATA_ID] (state, input_data_id) {
@@ -46,7 +48,10 @@ export const StoreImageLabeling = {
         },
         [SET_PREVIOUS_IMAGES_AVAILABLE] (state, images_are_available) {
             state.previous_images_available = images_are_available;
-        }
+        },
+        [SET_LABEL_VALID] (state, valid) {
+            state.label_valid = valid;
+        },
     },
     actions: {
         async set_initial_image ({ commit, rootGetters }, input_data_id) {
@@ -85,10 +90,16 @@ export const StoreImageLabeling = {
             commit(CLEAR_LABEL_ID);
             commit(SET_UNLABELED_IMAGES_AVAILABLE, true);
             commit(SET_PREVIOUS_IMAGES_AVAILABLE, true);
-        }, 
+            commit(SET_LABEL_VALID, false);
+        },
+        
+        async label_is_valid({ commit }) {
+            commit(SET_LABEL_VALID, true);
+        },
 
         async previous_image ({ commit, getters, dispatch }, payload) {
             
+            commit(SET_LABEL_VALID, false);
             var label_task_id = payload.task_id;
             var label_filter = payload.label_filter;
 
@@ -155,6 +166,7 @@ export const StoreImageLabeling = {
         //async next_image ({ commit, getters, dispatch }, label_task_id) {
         async next_image ({ commit, getters, dispatch }, payload) {
 
+            commit(SET_LABEL_VALID, false);
             var label_task_id = payload.task_id;
             var label_filter = payload.label_filter;
 
@@ -231,6 +243,9 @@ export const StoreImageLabeling = {
         },
         label_id: state => {
             return state.label_id;
-        }
+        },
+        label_valid: state => {
+            return state.label_valid
+        },
     }
 }
