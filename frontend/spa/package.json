@@ -14,7 +14,7 @@
   "dependencies": {
     "axios": "^0.18.0",
     "bootstrap": "^4.1.0",
-    "bootstrap-vue": "^2.0.0-rc.8",
+    "bootstrap-vue": "^2.0.0-rc.12",
     "font-awesome": "^4.7.0",
     "moment": "^2.22.1",
     "polybooljs": "^1.2.0",
