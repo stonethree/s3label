@@ -1,0 +1,13 @@
+FROM continuumio/miniconda3
+
+COPY . /home/backend
+WORKDIR /home/backend
+
+RUN conda env update
+
+ENV PYTHONPATH=$PYTHONPATH:/home/
+
+ENTRYPOINT ["/opt/conda/envs/s3label_env/bin/python", "main.py", "--image_folder", "/tmp/images", \
+            "--username", "postgress", "--password", "thisispassword;", "--host", "127.0.0.1", \
+            "--port", "5423", "--database_name", "s3label", "--log_folder", "/tmp", \
+            "--log_file_name", "logs"]

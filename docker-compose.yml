@@ -1,0 +1,32 @@
+version: "3.9"
+services:
+    python_backend:
+        container_name: s3label_python_backend
+        image: s3label_python_backend:latest
+        build: 
+            context: "backend"
+            dockerfile: Dockerfile.python
+        ports:
+            - "5000:5000"
+        depends_on:
+            - "postgresql_backend"
+    postgresql_backend:
+        container_name: s3label_postgresql_backend
+        image: postgres:latest
+        # build:
+        #     context: "backend"
+        #     dockerfile: "Dockerfile.postgres"
+        ports:
+            - "5432:5432"
+        volumes:
+            - ./backend/unit_test_data:/docker-entrypoint-initdb.d
+            - ./postgres-data:/var/lib/postgresql/data
+        environment:
+            - "POSTGRES_PASSWORD=thisispassword"
+    frontend:
+        container_name: s3label_frontend
+        image: s3label_frontend:latest
+        build:
+            context: "frontend/spa"
+        ports:
+            - "8443:8443"

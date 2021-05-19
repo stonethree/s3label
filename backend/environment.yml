@@ -1,6 +1,5 @@
 name: s3label_env
 dependencies:
-- python=3.5.2
 - numpy
 - pandas=0.20
 - psycopg2

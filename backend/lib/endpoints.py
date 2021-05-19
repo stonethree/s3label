@@ -26,7 +26,7 @@ def homepage():
 
 
 @ebp.route('/image_labeler/api/v1.0/label_tasks', methods=['GET'])
-@fje.jwt_required
+@fje.jwt_required()
 def get_label_tasks():
     engine = current_app.config['engine']
     df_label_tasks = sql_queries.get_label_tasks(engine)
@@ -42,7 +42,7 @@ def get_label_tasks():
 
 
 @ebp.route('/image_labeler/api/v1.0/label_tasks/<int:label_task_id>', methods=['GET'])
-@fje.jwt_required
+@fje.jwt_required()
 def get_label_task(label_task_id):
     engine = current_app.config['engine']
     df_label_task = sql_queries.get_label_task(engine, label_task_id)
@@ -58,7 +58,7 @@ def get_label_task(label_task_id):
 
 
 @ebp.route('/image_labeler/api/v1.0/datasets', methods=['GET'])
-@fje.jwt_required
+# @fje.jwt_required()
 def get_list_of_datasets():
     engine = current_app.config['engine']
     df_datasets = sql_queries.get_all_datasets(engine)
@@ -74,7 +74,7 @@ def get_list_of_datasets():
 
 
 @ebp.route('/image_labeler/api/v1.0/image_paths', methods=['GET'])
-@fje.jwt_required
+@fje.jwt_required()
 def get_image_paths_in_folder():
     engine = current_app.config['engine']
 
@@ -116,7 +116,7 @@ def get_image_paths_in_folder():
 
 
 @ebp.route('/image_labeler/api/v1.0/input_images/<int:input_image_id>', methods=['GET'])
-# @fje.jwt_required
+# @fje.jwt_required()
 def get_image(input_image_id):
     engine = current_app.config['engine']
     image_folder = current_app.config['image_folder']
@@ -171,7 +171,7 @@ def get_image(input_image_id):
 
 
 @ebp.route('/image_labeler/api/v1.0/example_images/<int:example_labeling_id>', methods=['GET'])
-# @fje.jwt_required
+# @fje.jwt_required()
 def get_label_example_image(example_labeling_id):
     engine = current_app.config['engine']
     image_folder = current_app.config['image_folder']
@@ -189,7 +189,7 @@ def get_label_example_image(example_labeling_id):
 
 
 @ebp.route('/image_labeler/api/v1.0/labeled_data/label_tasks/<int:label_task_id>', methods=['GET'])
-@fje.jwt_required
+@fje.jwt_required()
 def get_next_or_preceding_input_data_item(label_task_id):
     """
     Get next or preceding data item that the user has labeled or viewed (ordered by label ID, i.e. when the label was
@@ -255,7 +255,7 @@ def get_next_or_preceding_input_data_item(label_task_id):
         
         
 @ebp.route('/image_labeler/api/v1.0/labeled_data/label_tasks/<int:label_task_id>/filter/<label_filter>', methods=['GET'])
-@fje.jwt_required
+@fje.jwt_required()
 def get_next_or_preceding_input_data_item_filtered(label_task_id, label_filter):
     """
     Get next or preceding data item for the user based on the filter.
@@ -324,7 +324,7 @@ def get_next_or_preceding_input_data_item_filtered(label_task_id, label_filter):
 
 
 @ebp.route('/image_labeler/api/v1.0/item_counts', methods=['GET'])
-@fje.jwt_required
+@fje.jwt_required()
 def get_labeled_and_unlabeled_item_counts():
     """
     Count the number of labeled and unlabeled input data items per user per label task
@@ -378,7 +378,7 @@ def get_labeled_and_unlabeled_item_counts():
 
 
 @ebp.route('/image_labeler/api/v1.0/all_data/label_tasks/<int:label_task_id>/users/<user_id>', methods=['GET'])
-@fje.jwt_required
+@fje.jwt_required()
 def get_all_user_input_data(label_task_id, user_id):
     """
     Get all the IDs of the input data that the user has viewed (labeled or not)
@@ -438,7 +438,7 @@ def get_all_user_input_data(label_task_id, user_id):
         return resp
         
 @ebp.route('/image_labeler/api/v1.0/all_data/label_tasks/<int:label_task_id>/users/<user_id>/first/filter/<label_filter>', methods=['GET'])
-@fje.jwt_required
+@fje.jwt_required()
 def get_first_user_input_data(label_task_id, user_id, label_filter):
     """
     Get the ID of the first input_data item that matches the filter.
@@ -496,7 +496,7 @@ def get_first_user_input_data(label_task_id, user_id, label_filter):
         
         
 @ebp.route('/image_labeler/api/v1.0/all_data/label_tasks/<int:label_task_id>/users/<user_id>/last/filter/<label_filter>', methods=['GET'])
-@fje.jwt_required
+@fje.jwt_required()
 def get_last_user_input_data(label_task_id, user_id, label_filter):
     """
     Get the ID of the last input_data item that matches the filter.
@@ -554,7 +554,7 @@ def get_last_user_input_data(label_task_id, user_id, label_filter):
 
 
 @ebp.route('/image_labeler/api/v1.0/examples/label_tasks/<int:label_task_id>', methods=['GET'])
-@fje.jwt_required
+@fje.jwt_required()
 def get_label_examples(label_task_id):
     """
     Get the example label images for this label task, to show user how to label
@@ -578,7 +578,7 @@ def get_label_examples(label_task_id):
 
 
 @ebp.route('/image_labeler/api/v1.0/labels/input_data/<int:input_data_id>/label_tasks/<int:label_task_id>', methods=['GET'])
-@fje.jwt_required
+@fje.jwt_required()
 def get_latest_label_history_for_logged_in_user(input_data_id, label_task_id):
     """
     Get the latest label history item for a particular user/label task/input data item combination
@@ -606,7 +606,7 @@ def get_latest_label_history_for_logged_in_user(input_data_id, label_task_id):
 
 
 @ebp.route('/image_labeler/api/v1.0/labels/input_data/<int:input_data_id>/label_tasks/<int:label_task_id>/users/<user_id>', methods=['GET'])
-@fje.jwt_required
+@fje.jwt_required()
 def get_latest_label_history_for_specified_user(input_data_id, label_task_id, user_id):
     """
     Get the latest label history item for a particular user/label task/input data item combination
@@ -644,7 +644,7 @@ def get_latest_label_history_for_specified_user(input_data_id, label_task_id, us
 
 @ebp.route('/image_labeler/api/v1.0/label_ids/label_tasks/<int:label_task_id>/input_data/<int:input_data_id>/user/<int:user_id>',
            methods=['GET'])
-@fje.jwt_required
+@fje.jwt_required()
 def get_label_id(user_id, label_task_id, input_data_id):
     """
     Store the label for a particular label task, user and input data item
@@ -695,7 +695,7 @@ def get_label_id(user_id, label_task_id, input_data_id):
 
 @ebp.route('/image_labeler/api/v1.0/labels/<int:label_id>',
            methods=['GET'])
-@fje.jwt_required
+@fje.jwt_required()
 def get_label(label_id):
     """
     Get the label
@@ -746,7 +746,7 @@ def get_label(label_id):
 
 
 @ebp.route('/image_labeler/api/v1.0/users', methods=['GET'])
-@fje.jwt_required
+@fje.jwt_required()
 def get_all_users():
     """
     Get list of users and their details
@@ -783,7 +783,7 @@ def get_all_users():
 
 
 @ebp.route('/image_labeler/api/v1.0/label_tasks/users/<int:user_id>', methods=['GET'])
-@fje.jwt_required
+@fje.jwt_required()
 def get_label_tasks_for_user(user_id):
     """
     Get list of label tasks that the user has already labeled data for
@@ -822,7 +822,7 @@ def get_label_tasks_for_user(user_id):
 
 
 @ebp.route('/image_labeler/api/v1.0/missing_input_data', methods=['GET'])
-@fje.jwt_required
+@fje.jwt_required()
 def find_missing_input_data():
     engine = current_app.config['engine']
 
@@ -887,7 +887,7 @@ def login():
 
 
 @ebp.route('/image_labeler/api/v1.0/user_id', methods=['GET'])
-@fje.jwt_required
+@fje.jwt_required()
 def get_user_id_from_access_token():
     """
     Get user's ID from their access token
@@ -906,7 +906,7 @@ def get_user_id_from_access_token():
 
 
 @ebp.route('/image_labeler/api/v1.0/unlabeled_images/label_tasks/<int:label_task_id>', methods=['GET'])     # TODO: should be PUT request?
-@fje.jwt_required
+@fje.jwt_required()
 def get_unlabeled_image_id(label_task_id):
     """
     Get ID of a new image for the given label task, that has not yet been labeled or being labeled by another user
@@ -978,7 +978,7 @@ def get_unlabeled_image_id(label_task_id):
 
 @ebp.route('/image_labeler/api/v1.0/label_history/label_tasks/<int:label_task_id>/input_data/<int:input_data_id>',
            methods=['POST'])
-@fje.jwt_required
+@fje.jwt_required()
 def store_label(label_task_id, input_data_id):
     """
     Store the label for a particular label task, user and input data item
@@ -1046,7 +1046,7 @@ def store_label(label_task_id, input_data_id):
 
 
 @ebp.route('/image_labeler/api/v1.0/input_data', methods=['POST'])
-@fje.jwt_required
+@fje.jwt_required()
 def upload_input_data_item():
     """
     Store the input data item's path
@@ -1126,7 +1126,7 @@ def upload_input_data_item():
 
 
 @ebp.route('/image_labeler/api/v1.0/images_on_disk', methods=['POST'])
-# @fje.jwt_required
+# @fje.jwt_required()
 def get_image_by_path():
     if not request.json:
         resp = make_response(jsonify(error='Must use JSON format'), 400)
@@ -1153,7 +1153,7 @@ def get_image_by_path():
 
 
 @ebp.route('/image_labeler/api/v1.0/labels/<int:label_id>', methods=['PATCH'])
-@fje.jwt_required
+@fje.jwt_required()
 def update_label_fields(label_id):
     """
     Update status fields of a specific label
@@ -1233,7 +1233,7 @@ def update_label_fields(label_id):
 
 
 @ebp.route('/image_labeler/api/v1.0/label_images/label_task_id/<int:label_task_id>', methods=['PUT'])
-@fje.jwt_required
+@fje.jwt_required()
 def generate_ground_truth_images(label_task_id):
     engine = current_app.config['engine']
 
@@ -1376,7 +1376,7 @@ def generate_ground_truth_images(label_task_id):
 
 
 @ebp.route('/image_labeler/api/v1.0/latest_label_history/label_task_id/<int:label_task_id>', methods=['POST'])
-@fje.jwt_required
+@fje.jwt_required()
 def get_latest_label_history_for_all_label_task(label_task_id):
     """
     Get the latest label history item for all the labels.
