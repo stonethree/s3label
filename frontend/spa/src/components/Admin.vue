@@ -15,8 +15,8 @@
 
 <script>
 
-import CheckUserLabeling from './CheckUserLabeling'
-import UploadImages from './UploadImages'
+import CheckUserLabeling from './CheckUserLabeling.vue'
+import UploadImages from './UploadImages.vue'
 
 export default {
     name: "admin_view",

@@ -213,8 +213,8 @@
 
 <script>
 
-import DrawingCanvas from './DrawingCanvas'
-import LabelStatus from './LabelStatus'
+import DrawingCanvas from './DrawingCanvas.vue'
+import LabelStatus from './LabelStatus.vue'
 
 import { uploadLabels,
          loadLabels,

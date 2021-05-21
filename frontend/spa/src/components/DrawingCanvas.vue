@@ -37,7 +37,7 @@ import { getLabel,
 
 import { drawAllLabels, drawCircle } from '../../static/DrawingOperations'
 
-import LabelStatus from './LabelStatus'
+import LabelStatus from './LabelStatus.vue'
 import { getLatestLabeledImage } from '../../static/label_loading';
 
 

@@ -53,7 +53,7 @@
 </template>
 
 <script>
-import ImageThumbnail from './ImageThumbnail'
+import ImageThumbnail from './ImageThumbnail.vue'
 
 import axios from "axios";
 import { mapGetters } from 'vuex';

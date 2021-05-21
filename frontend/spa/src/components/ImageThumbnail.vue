@@ -17,7 +17,7 @@ import axios from "axios";
 var baseUrl = process.env.API_ADDR;
 axios.defaults.baseURL = baseUrl;
 
-import LabelStatus from './LabelStatus'
+import LabelStatus from './LabelStatus.vue'
 
 import { getLabelId } from '../../static/label_loading'
 

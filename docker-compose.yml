@@ -8,19 +8,20 @@ services:
             dockerfile: Dockerfile.python
         ports:
             - "5000:5000"
+        volumes:
+            - /home/ryan/Documents/scratch/sensors/mlazure_dataset_eval:/image_data
         depends_on:
             - "postgresql_backend"
+        network_mode: host
     postgresql_backend:
         container_name: s3label_postgresql_backend
         image: postgres:latest
-        # build:
-        #     context: "backend"
-        #     dockerfile: "Dockerfile.postgres"
         ports:
             - "5432:5432"
         volumes:
             - ./backend/unit_test_data:/docker-entrypoint-initdb.d
             - ./postgres-data:/var/lib/postgresql/data
+            - /home/ryan/Documents/scratch/sensors/mlazure_dataset_eval:/image_data
         environment:
             - "POSTGRES_PASSWORD=thisispassword"
     frontend:
@@ -29,4 +30,7 @@ services:
         build:
             context: "frontend/spa"
         ports:
-            - "8443:8443"
+            - "8080:8080"
+        volumes:
+            - /home/ryan/Documents/scratch/sensors/mlazure_dataset_eval:/image_data
+        network_mode: host

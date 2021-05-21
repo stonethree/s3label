@@ -54,7 +54,7 @@ axios.defaults.baseURL = baseUrl;
 import { addPaddingOffset } from '../../static/LabelOperations'
 import { drawAllLabels } from '../../static/DrawingOperations'
 import { extractColor, formatColor } from '../../static/color_utilities'
-import LabelStatus from './LabelStatus'
+import LabelStatus from './LabelStatus.vue'
 
 
 export default {

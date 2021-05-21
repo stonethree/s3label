@@ -5,16 +5,16 @@ import 'font-awesome/css/font-awesome.css';
 
 import Vue from 'vue';
 import Vuex from 'vuex';
-import App from './App';
+import App from './App.vue';
 import VueRouter from 'vue-router';
 import BootstrapVue from 'bootstrap-vue';
 
-import Login from './components/Login';
-import Logout from './components/Logout';
-import LabelTaskChooser from './components/LabelTaskChooser';
-import ImageLabeler from './components/ImageLabeling';
-import ImageGrid from './components/ImageGrid';
-import Admin from './components/Admin';
+import Login from './components/Login.vue';
+import Logout from './components/Logout.vue';
+import LabelTaskChooser from './components/LabelTaskChooser.vue';
+import ImageLabeler from './components/ImageLabeling.vue';
+import ImageGrid from './components/ImageGrid.vue';
+import Admin from './components/Admin.vue';
 
 import { StoreLogin } from './vuex_stores/login_store';
 import { StoreLabelTask } from './vuex_stores/label_task_store';
