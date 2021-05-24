@@ -7,7 +7,7 @@ RUN conda env update
 
 ENV PYTHONPATH=$PYTHONPATH:/home/
 
-ENTRYPOINT ["/opt/conda/envs/s3label_env/bin/python", "main.py", "--image_folder", "/tmp/images", \
-            "--username", "postgres", "--password", "thisispassword", "--host", "127.0.0.1", \
-            "--port", "5432", "--database_name", "postgres", "--log_folder", "/tmp", \
+ENTRYPOINT ["/opt/conda/envs/s3label_env/bin/python", "main.py", "--image_folder", "/home/ubuntu/datasets", \
+            "--username", "postgres", "--password", "", "--host", "127.0.0.1", \
+            "--port", "5432", "--database_name", "s3_label_live", "--log_folder", "/tmp", \
             "--log_file_name", "logs"]

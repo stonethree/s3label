@@ -51,6 +51,10 @@ import axios from "axios";
 var baseUrl = process.env.API_ADDR;
 axios.defaults.baseURL = baseUrl;
 
+function convertPolygonToPaths(polygon) {
+    return polygon.regions;
+}
+
 import { addPaddingOffset } from '../../static/LabelOperations'
 import { drawAllLabels } from '../../static/DrawingOperations'
 import { extractColor, formatColor } from '../../static/color_utilities'
